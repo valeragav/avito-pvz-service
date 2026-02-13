@@ -1,17 +1,17 @@
 package routes
 
 import (
-	"github.com/VaLeraGav/avito-pvz-service/internal/container"
-	"github.com/VaLeraGav/avito-pvz-service/internal/http/handlers"
-	"github.com/VaLeraGav/avito-pvz-service/internal/http/handlers/auth"
-	"github.com/VaLeraGav/avito-pvz-service/internal/http/handlers/products"
-	"github.com/VaLeraGav/avito-pvz-service/internal/http/handlers/pvz"
-	"github.com/VaLeraGav/avito-pvz-service/internal/http/handlers/receptions"
-	"github.com/VaLeraGav/avito-pvz-service/internal/http/middleware"
-	"github.com/VaLeraGav/avito-pvz-service/pkg/logger"
 	"github.com/go-chi/chi"
 	middlewareChi "github.com/go-chi/chi/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/valeragav/avito-pvz-service/internal/container"
+	"github.com/valeragav/avito-pvz-service/internal/http/handlers"
+	"github.com/valeragav/avito-pvz-service/internal/http/handlers/auth"
+	"github.com/valeragav/avito-pvz-service/internal/http/handlers/products"
+	"github.com/valeragav/avito-pvz-service/internal/http/handlers/pvz"
+	"github.com/valeragav/avito-pvz-service/internal/http/handlers/receptions"
+	"github.com/valeragav/avito-pvz-service/internal/http/middleware"
+	"github.com/valeragav/avito-pvz-service/pkg/logger"
 )
 
 func NewRouter(cnt *container.DIContainer) *chi.Mux {

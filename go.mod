@@ -1,4 +1,4 @@
-module github.com/VaLeraGav/avito-pvz-service
+module github.com/valeragav/avito-pvz-service
 
 go 1.25.5
 

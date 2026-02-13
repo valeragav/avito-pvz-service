@@ -5,7 +5,7 @@ import (
 	"fmt"
 	nethttp "net/http"
 
-	"github.com/VaLeraGav/avito-pvz-service/pkg/logger"
+	"github.com/valeragav/avito-pvz-service/pkg/logger"
 )
 
 type Server struct {

@@ -3,7 +3,7 @@ package auth
 import (
 	"context"
 
-	"github.com/VaLeraGav/avito-pvz-service/internal/service/auth"
+	"github.com/valeragav/avito-pvz-service/internal/service/auth"
 )
 
 //go:generate mockgen -source=contract.go -destination=./mocks/service_mock.go -package=mocks

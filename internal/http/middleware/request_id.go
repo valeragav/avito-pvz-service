@@ -4,9 +4,9 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/VaLeraGav/avito-pvz-service/pkg/logger"
-	"github.com/VaLeraGav/avito-pvz-service/pkg/request_id"
 	"github.com/google/uuid"
+	"github.com/valeragav/avito-pvz-service/pkg/logger"
+	"github.com/valeragav/avito-pvz-service/pkg/request_id"
 )
 
 func RequestID(next http.Handler) http.Handler {

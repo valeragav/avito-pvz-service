@@ -3,8 +3,8 @@ package seed
 import (
 	"context"
 
-	"github.com/VaLeraGav/avito-pvz-service/internal/infrastructure/storage/product_types"
 	"github.com/google/uuid"
+	"github.com/valeragav/avito-pvz-service/internal/infrastructure/storage/product_types"
 )
 
 type ProductTypesSeed struct {

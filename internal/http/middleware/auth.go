@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/VaLeraGav/avito-pvz-service/internal/http/handlers/response"
-	"github.com/VaLeraGav/avito-pvz-service/internal/security"
-	"github.com/VaLeraGav/avito-pvz-service/internal/service/auth"
+	"github.com/valeragav/avito-pvz-service/internal/http/handlers/response"
+	"github.com/valeragav/avito-pvz-service/internal/security"
+	"github.com/valeragav/avito-pvz-service/internal/service/auth"
 )
 
 const prefixAuth = "Bearer "

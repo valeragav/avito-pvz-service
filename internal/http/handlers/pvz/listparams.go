@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/VaLeraGav/avito-pvz-service/pkg/listparams"
+	"github.com/valeragav/avito-pvz-service/pkg/listparams"
 )
 
 type PvzListParams struct {

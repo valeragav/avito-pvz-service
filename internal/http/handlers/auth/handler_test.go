@@ -9,16 +9,16 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/VaLeraGav/avito-pvz-service/internal/http/handlers/auth/mocks"
-	"github.com/VaLeraGav/avito-pvz-service/internal/http/handlers/response"
-	"github.com/VaLeraGav/avito-pvz-service/internal/infrastructure/storage"
-	"github.com/VaLeraGav/avito-pvz-service/internal/infrastructure/storage/user"
-	"github.com/VaLeraGav/avito-pvz-service/internal/service/auth"
-	"github.com/VaLeraGav/avito-pvz-service/internal/validation"
-	"github.com/VaLeraGav/avito-pvz-service/pkg/testutils"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/valeragav/avito-pvz-service/internal/http/handlers/auth/mocks"
+	"github.com/valeragav/avito-pvz-service/internal/http/handlers/response"
+	"github.com/valeragav/avito-pvz-service/internal/infrastructure/storage"
+	"github.com/valeragav/avito-pvz-service/internal/infrastructure/storage/user"
+	"github.com/valeragav/avito-pvz-service/internal/service/auth"
+	"github.com/valeragav/avito-pvz-service/internal/validation"
+	"github.com/valeragav/avito-pvz-service/pkg/testutils"
 	"go.uber.org/mock/gomock"
 )
 

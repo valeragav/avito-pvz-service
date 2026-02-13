@@ -1,14 +1,14 @@
 package routes
 
 import (
-	"github.com/VaLeraGav/avito-pvz-service/internal/http/handlers/products"
-	"github.com/VaLeraGav/avito-pvz-service/internal/http/handlers/pvz"
-	"github.com/VaLeraGav/avito-pvz-service/internal/http/handlers/receptions"
-	"github.com/VaLeraGav/avito-pvz-service/internal/http/middleware"
-	authService "github.com/VaLeraGav/avito-pvz-service/internal/service/auth"
+	"github.com/valeragav/avito-pvz-service/internal/http/handlers/products"
+	"github.com/valeragav/avito-pvz-service/internal/http/handlers/pvz"
+	"github.com/valeragav/avito-pvz-service/internal/http/handlers/receptions"
+	"github.com/valeragav/avito-pvz-service/internal/http/middleware"
+	authService "github.com/valeragav/avito-pvz-service/internal/service/auth"
 
-	"github.com/VaLeraGav/avito-pvz-service/internal/security"
 	"github.com/go-chi/chi"
+	"github.com/valeragav/avito-pvz-service/internal/security"
 )
 
 type PvzRoute struct {

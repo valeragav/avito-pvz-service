@@ -6,13 +6,13 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/VaLeraGav/avito-pvz-service/internal/http/handlers/response"
-	"github.com/VaLeraGav/avito-pvz-service/internal/infrastructure/storage"
-	"github.com/VaLeraGav/avito-pvz-service/internal/service/products"
-	"github.com/VaLeraGav/avito-pvz-service/internal/validation"
-	"github.com/VaLeraGav/avito-pvz-service/pkg/logger"
 	"github.com/go-chi/chi"
 	"github.com/google/uuid"
+	"github.com/valeragav/avito-pvz-service/internal/http/handlers/response"
+	"github.com/valeragav/avito-pvz-service/internal/infrastructure/storage"
+	"github.com/valeragav/avito-pvz-service/internal/service/products"
+	"github.com/valeragav/avito-pvz-service/internal/validation"
+	"github.com/valeragav/avito-pvz-service/pkg/logger"
 )
 
 type ProductsHandlers struct {

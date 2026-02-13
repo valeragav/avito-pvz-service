@@ -3,7 +3,7 @@ package auth
 import (
 	"context"
 
-	"github.com/VaLeraGav/avito-pvz-service/internal/infrastructure/storage/user"
+	"github.com/valeragav/avito-pvz-service/internal/infrastructure/storage/user"
 )
 
 type RepositoryUser interface {

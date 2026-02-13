@@ -3,8 +3,8 @@ package receptions
 import (
 	"time"
 
-	"github.com/VaLeraGav/avito-pvz-service/internal/service/receptions"
 	"github.com/google/uuid"
+	"github.com/valeragav/avito-pvz-service/internal/service/receptions"
 )
 
 type CreateRequest struct {

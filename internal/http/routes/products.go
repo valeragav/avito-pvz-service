@@ -2,11 +2,11 @@
 package routes
 
 import (
-	"github.com/VaLeraGav/avito-pvz-service/internal/http/handlers/products"
-	"github.com/VaLeraGav/avito-pvz-service/internal/http/middleware"
-	"github.com/VaLeraGav/avito-pvz-service/internal/security"
-	authService "github.com/VaLeraGav/avito-pvz-service/internal/service/auth"
 	"github.com/go-chi/chi"
+	"github.com/valeragav/avito-pvz-service/internal/http/handlers/products"
+	"github.com/valeragav/avito-pvz-service/internal/http/middleware"
+	"github.com/valeragav/avito-pvz-service/internal/security"
+	authService "github.com/valeragav/avito-pvz-service/internal/service/auth"
 )
 
 type ProductsRoute struct {

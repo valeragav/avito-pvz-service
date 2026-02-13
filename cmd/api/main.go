@@ -9,17 +9,17 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/VaLeraGav/avito-pvz-service/internal/container"
-	"github.com/VaLeraGav/avito-pvz-service/internal/http/routes"
-	"github.com/VaLeraGav/avito-pvz-service/internal/metrics"
-	serviceGrpc "github.com/VaLeraGav/avito-pvz-service/internal/servers/grpc"
-	serviceHttp "github.com/VaLeraGav/avito-pvz-service/internal/servers/http"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/valeragav/avito-pvz-service/internal/container"
+	"github.com/valeragav/avito-pvz-service/internal/http/routes"
+	"github.com/valeragav/avito-pvz-service/internal/metrics"
+	serviceGrpc "github.com/valeragav/avito-pvz-service/internal/servers/grpc"
+	serviceHttp "github.com/valeragav/avito-pvz-service/internal/servers/http"
 
-	"github.com/VaLeraGav/avito-pvz-service/internal/config"
-	"github.com/VaLeraGav/avito-pvz-service/pkg/closer"
-	"github.com/VaLeraGav/avito-pvz-service/pkg/dbconnect"
-	"github.com/VaLeraGav/avito-pvz-service/pkg/logger"
+	"github.com/valeragav/avito-pvz-service/internal/config"
+	"github.com/valeragav/avito-pvz-service/pkg/closer"
+	"github.com/valeragav/avito-pvz-service/pkg/dbconnect"
+	"github.com/valeragav/avito-pvz-service/pkg/logger"
 )
 
 var shutdownTimeout = 5 * time.Second

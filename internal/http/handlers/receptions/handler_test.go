@@ -9,15 +9,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/VaLeraGav/avito-pvz-service/internal/http/handlers/receptions/mocks"
-	"github.com/VaLeraGav/avito-pvz-service/internal/http/handlers/response"
-	"github.com/VaLeraGav/avito-pvz-service/internal/service/receptions"
-	"github.com/VaLeraGav/avito-pvz-service/internal/validation"
-	"github.com/VaLeraGav/avito-pvz-service/pkg/testutils"
 	"github.com/go-chi/chi"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/valeragav/avito-pvz-service/internal/http/handlers/receptions/mocks"
+	"github.com/valeragav/avito-pvz-service/internal/http/handlers/response"
+	"github.com/valeragav/avito-pvz-service/internal/service/receptions"
+	"github.com/valeragav/avito-pvz-service/internal/validation"
+	"github.com/valeragav/avito-pvz-service/pkg/testutils"
 	"go.uber.org/mock/gomock"
 )
 

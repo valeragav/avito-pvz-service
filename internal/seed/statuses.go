@@ -3,8 +3,8 @@ package seed
 import (
 	"context"
 
-	"github.com/VaLeraGav/avito-pvz-service/internal/infrastructure/storage/statuses"
 	"github.com/google/uuid"
+	"github.com/valeragav/avito-pvz-service/internal/infrastructure/storage/statuses"
 )
 
 type StatusesSeed struct {

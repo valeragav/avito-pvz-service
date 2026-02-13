@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"github.com/VaLeraGav/avito-pvz-service/internal/http/handlers/auth"
 	"github.com/go-chi/chi"
+	"github.com/valeragav/avito-pvz-service/internal/http/handlers/auth"
 )
 
 type AuthRoute struct {

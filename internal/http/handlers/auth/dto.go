@@ -1,8 +1,8 @@
 package auth
 
 import (
-	"github.com/VaLeraGav/avito-pvz-service/internal/service/auth"
 	"github.com/google/uuid"
+	"github.com/valeragav/avito-pvz-service/internal/service/auth"
 )
 
 type DummyLoginRequest struct {

@@ -6,13 +6,13 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/VaLeraGav/avito-pvz-service/internal/infrastructure/storage"
-	"github.com/VaLeraGav/avito-pvz-service/internal/infrastructure/storage/product_types"
-	"github.com/VaLeraGav/avito-pvz-service/internal/infrastructure/storage/products"
-	"github.com/VaLeraGav/avito-pvz-service/internal/infrastructure/storage/pvz"
-	"github.com/VaLeraGav/avito-pvz-service/internal/infrastructure/storage/receptions"
-	"github.com/VaLeraGav/avito-pvz-service/internal/infrastructure/storage/statuses"
 	"github.com/google/uuid"
+	"github.com/valeragav/avito-pvz-service/internal/infrastructure/storage"
+	"github.com/valeragav/avito-pvz-service/internal/infrastructure/storage/product_types"
+	"github.com/valeragav/avito-pvz-service/internal/infrastructure/storage/products"
+	"github.com/valeragav/avito-pvz-service/internal/infrastructure/storage/pvz"
+	"github.com/valeragav/avito-pvz-service/internal/infrastructure/storage/receptions"
+	"github.com/valeragav/avito-pvz-service/internal/infrastructure/storage/statuses"
 )
 
 type ProductsService struct {

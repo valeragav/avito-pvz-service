@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/VaLeraGav/avito-pvz-service/internal/metrics"
 	"github.com/go-chi/chi"
+	"github.com/valeragav/avito-pvz-service/internal/metrics"
 )
 
 func Metrics(next http.Handler) http.Handler {

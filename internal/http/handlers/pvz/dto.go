@@ -3,8 +3,8 @@ package pvz
 import (
 	"time"
 
-	"github.com/VaLeraGav/avito-pvz-service/internal/service/pvz"
 	"github.com/google/uuid"
+	"github.com/valeragav/avito-pvz-service/internal/service/pvz"
 )
 
 type CreateRequest struct {

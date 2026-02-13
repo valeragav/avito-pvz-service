@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/VaLeraGav/avito-pvz-service/pkg/logger"
-	"github.com/VaLeraGav/avito-pvz-service/pkg/request_id"
 	"github.com/go-chi/chi/middleware"
+	"github.com/valeragav/avito-pvz-service/pkg/logger"
+	"github.com/valeragav/avito-pvz-service/pkg/request_id"
 )
 
 func NewLogger(log *logger.Logger) func(next http.Handler) http.Handler {

@@ -3,11 +3,11 @@ package pvz
 import (
 	"time"
 
-	"github.com/VaLeraGav/avito-pvz-service/internal/infrastructure/storage/products"
-	"github.com/VaLeraGav/avito-pvz-service/internal/infrastructure/storage/pvz"
-	"github.com/VaLeraGav/avito-pvz-service/internal/infrastructure/storage/receptions"
-	"github.com/VaLeraGav/avito-pvz-service/pkg/listparams"
 	"github.com/google/uuid"
+	"github.com/valeragav/avito-pvz-service/internal/infrastructure/storage/products"
+	"github.com/valeragav/avito-pvz-service/internal/infrastructure/storage/pvz"
+	"github.com/valeragav/avito-pvz-service/internal/infrastructure/storage/receptions"
+	"github.com/valeragav/avito-pvz-service/pkg/listparams"
 )
 
 type CreateIn struct {

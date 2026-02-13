@@ -5,9 +5,9 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/VaLeraGav/avito-pvz-service/internal/infrastructure/storage"
-	"github.com/VaLeraGav/avito-pvz-service/internal/infrastructure/storage/user"
-	"github.com/VaLeraGav/avito-pvz-service/internal/security"
+	"github.com/valeragav/avito-pvz-service/internal/infrastructure/storage"
+	"github.com/valeragav/avito-pvz-service/internal/infrastructure/storage/user"
+	"github.com/valeragav/avito-pvz-service/internal/security"
 	"golang.org/x/crypto/bcrypt"
 )
 

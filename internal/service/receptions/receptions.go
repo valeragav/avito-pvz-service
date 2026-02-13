@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/VaLeraGav/avito-pvz-service/internal/infrastructure/storage"
-	"github.com/VaLeraGav/avito-pvz-service/internal/infrastructure/storage/receptions"
-	"github.com/VaLeraGav/avito-pvz-service/internal/infrastructure/storage/statuses"
 	"github.com/google/uuid"
+	"github.com/valeragav/avito-pvz-service/internal/infrastructure/storage"
+	"github.com/valeragav/avito-pvz-service/internal/infrastructure/storage/receptions"
+	"github.com/valeragav/avito-pvz-service/internal/infrastructure/storage/statuses"
 )
 
 type ReceptionsService struct {

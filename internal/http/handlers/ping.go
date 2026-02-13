@@ -3,7 +3,7 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/VaLeraGav/avito-pvz-service/internal/http/handlers/response"
+	"github.com/valeragav/avito-pvz-service/internal/http/handlers/response"
 )
 
 func PingHandler(w http.ResponseWriter, r *http.Request) {

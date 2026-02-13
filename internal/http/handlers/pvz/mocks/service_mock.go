@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	pvz "github.com/VaLeraGav/avito-pvz-service/internal/service/pvz"
+	pvz "github.com/valeragav/avito-pvz-service/internal/service/pvz"
 	gomock "go.uber.org/mock/gomock"
 )
 

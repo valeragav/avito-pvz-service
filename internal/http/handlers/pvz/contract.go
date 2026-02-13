@@ -3,7 +3,7 @@ package pvz
 import (
 	"context"
 
-	"github.com/VaLeraGav/avito-pvz-service/internal/service/pvz"
+	"github.com/valeragav/avito-pvz-service/internal/service/pvz"
 )
 
 //go:generate mockgen -source=contract.go -destination=./mocks/service_mock.go -package=mocks

@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	auth "github.com/VaLeraGav/avito-pvz-service/internal/service/auth"
+	auth "github.com/valeragav/avito-pvz-service/internal/service/auth"
 	gomock "go.uber.org/mock/gomock"
 )
 

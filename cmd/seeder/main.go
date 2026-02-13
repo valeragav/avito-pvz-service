@@ -5,15 +5,15 @@ import (
 	"flag"
 	"time"
 
-	"github.com/VaLeraGav/avito-pvz-service/internal/config"
-	"github.com/VaLeraGav/avito-pvz-service/internal/infrastructure/storage/cities"
-	"github.com/VaLeraGav/avito-pvz-service/internal/infrastructure/storage/product_types"
-	"github.com/VaLeraGav/avito-pvz-service/internal/infrastructure/storage/statuses"
-	"github.com/VaLeraGav/avito-pvz-service/internal/seed"
-	"github.com/VaLeraGav/avito-pvz-service/pkg/dbconnect"
-	"github.com/VaLeraGav/avito-pvz-service/pkg/logger"
-	"github.com/VaLeraGav/avito-pvz-service/pkg/seeder"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/valeragav/avito-pvz-service/internal/config"
+	"github.com/valeragav/avito-pvz-service/internal/infrastructure/storage/cities"
+	"github.com/valeragav/avito-pvz-service/internal/infrastructure/storage/product_types"
+	"github.com/valeragav/avito-pvz-service/internal/infrastructure/storage/statuses"
+	"github.com/valeragav/avito-pvz-service/internal/seed"
+	"github.com/valeragav/avito-pvz-service/pkg/dbconnect"
+	"github.com/valeragav/avito-pvz-service/pkg/logger"
+	"github.com/valeragav/avito-pvz-service/pkg/seeder"
 )
 
 func main() {

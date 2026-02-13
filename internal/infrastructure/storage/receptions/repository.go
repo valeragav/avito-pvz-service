@@ -6,10 +6,10 @@ import (
 	"fmt"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/VaLeraGav/avito-pvz-service/internal/infrastructure/storage"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/valeragav/avito-pvz-service/internal/infrastructure/storage"
 )
 
 type Repository struct {

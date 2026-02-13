@@ -3,8 +3,8 @@ package receptions
 import (
 	"context"
 
-	"github.com/VaLeraGav/avito-pvz-service/internal/service/receptions"
 	"github.com/google/uuid"
+	"github.com/valeragav/avito-pvz-service/internal/service/receptions"
 )
 
 //go:generate mockgen -source=contract.go -destination=./mocks/service_mock.go -package=mocks

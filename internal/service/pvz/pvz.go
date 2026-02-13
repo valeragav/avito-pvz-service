@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/VaLeraGav/avito-pvz-service/internal/infrastructure/storage/cities"
-	"github.com/VaLeraGav/avito-pvz-service/internal/infrastructure/storage/products"
-	"github.com/VaLeraGav/avito-pvz-service/internal/infrastructure/storage/pvz"
-	"github.com/VaLeraGav/avito-pvz-service/internal/infrastructure/storage/receptions"
 	"github.com/google/uuid"
+	"github.com/valeragav/avito-pvz-service/internal/infrastructure/storage/cities"
+	"github.com/valeragav/avito-pvz-service/internal/infrastructure/storage/products"
+	"github.com/valeragav/avito-pvz-service/internal/infrastructure/storage/pvz"
+	"github.com/valeragav/avito-pvz-service/internal/infrastructure/storage/receptions"
 )
 
 type PvzService struct {

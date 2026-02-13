@@ -13,8 +13,8 @@ import (
 	context "context"
 	reflect "reflect"
 
-	products "github.com/VaLeraGav/avito-pvz-service/internal/service/products"
 	uuid "github.com/google/uuid"
+	products "github.com/valeragav/avito-pvz-service/internal/service/products"
 	gomock "go.uber.org/mock/gomock"
 )
 

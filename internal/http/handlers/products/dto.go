@@ -3,8 +3,8 @@ package products
 import (
 	"time"
 
-	"github.com/VaLeraGav/avito-pvz-service/internal/service/products"
 	"github.com/google/uuid"
+	"github.com/valeragav/avito-pvz-service/internal/service/products"
 )
 
 type CreateRequest struct {

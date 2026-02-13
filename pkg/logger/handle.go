@@ -4,7 +4,7 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/VaLeraGav/avito-pvz-service/pkg/request_id"
+	"github.com/valeragav/avito-pvz-service/pkg/request_id"
 )
 
 // ctxHandler — обёртка для slog.Handler, добавляющая request_id из контекста

@@ -1,22 +1,22 @@
 package container
 
 import (
-	"github.com/VaLeraGav/avito-pvz-service/internal/config"
-	"github.com/VaLeraGav/avito-pvz-service/internal/infrastructure/storage/cities"
-	productTypesRepo "github.com/VaLeraGav/avito-pvz-service/internal/infrastructure/storage/product_types"
-	productsRepo "github.com/VaLeraGav/avito-pvz-service/internal/infrastructure/storage/products"
-	pvzRepo "github.com/VaLeraGav/avito-pvz-service/internal/infrastructure/storage/pvz"
-	receptionsRepo "github.com/VaLeraGav/avito-pvz-service/internal/infrastructure/storage/receptions"
-	"github.com/VaLeraGav/avito-pvz-service/internal/infrastructure/storage/statuses"
-	"github.com/VaLeraGav/avito-pvz-service/internal/infrastructure/storage/user"
-	"github.com/VaLeraGav/avito-pvz-service/internal/security"
-	"github.com/VaLeraGav/avito-pvz-service/internal/service/auth"
-	"github.com/VaLeraGav/avito-pvz-service/internal/service/products"
-	"github.com/VaLeraGav/avito-pvz-service/internal/service/pvz"
-	"github.com/VaLeraGav/avito-pvz-service/internal/service/receptions"
-	"github.com/VaLeraGav/avito-pvz-service/internal/validation"
-	"github.com/VaLeraGav/avito-pvz-service/pkg/logger"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/valeragav/avito-pvz-service/internal/config"
+	"github.com/valeragav/avito-pvz-service/internal/infrastructure/storage/cities"
+	productTypesRepo "github.com/valeragav/avito-pvz-service/internal/infrastructure/storage/product_types"
+	productsRepo "github.com/valeragav/avito-pvz-service/internal/infrastructure/storage/products"
+	pvzRepo "github.com/valeragav/avito-pvz-service/internal/infrastructure/storage/pvz"
+	receptionsRepo "github.com/valeragav/avito-pvz-service/internal/infrastructure/storage/receptions"
+	"github.com/valeragav/avito-pvz-service/internal/infrastructure/storage/statuses"
+	"github.com/valeragav/avito-pvz-service/internal/infrastructure/storage/user"
+	"github.com/valeragav/avito-pvz-service/internal/security"
+	"github.com/valeragav/avito-pvz-service/internal/service/auth"
+	"github.com/valeragav/avito-pvz-service/internal/service/products"
+	"github.com/valeragav/avito-pvz-service/internal/service/pvz"
+	"github.com/valeragav/avito-pvz-service/internal/service/receptions"
+	"github.com/valeragav/avito-pvz-service/internal/validation"
+	"github.com/valeragav/avito-pvz-service/pkg/logger"
 )
 
 type DIContainer struct {

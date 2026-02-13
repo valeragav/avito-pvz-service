@@ -6,7 +6,7 @@ import (
 	"io"
 	"log/slog"
 
-	"github.com/VaLeraGav/avito-pvz-service/pkg/logger"
+	"github.com/valeragav/avito-pvz-service/pkg/logger"
 )
 
 func InitTestLogger() {
