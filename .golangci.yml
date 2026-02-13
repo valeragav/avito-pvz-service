@@ -1,0 +1,113 @@
+version: "2"
+
+linters:
+  default: none
+  enable:
+    - asciicheck
+    - bidichk
+    - bodyclose
+    - copyloopvar
+    - dupl
+    - durationcheck
+    - errcheck
+    - errname
+    - errorlint
+    - exhaustive
+    - fatcontext
+    - gochecknoinits
+    - goconst
+    - gocritic
+    - gocyclo
+    - godoclint
+    - gosec
+    - govet
+    - ineffassign
+    - intrange
+    - makezero
+    - misspell
+    - modernize
+    - nakedret
+    - nestif
+    - nilerr
+    - nilnil
+    - noctx
+    - nolintlint
+    - perfsprint
+    - predeclared
+    - prealloc
+    - reassign
+    - revive
+    - sqlclosecheck
+    - staticcheck
+    - testifylint
+    - tparallel
+    - unconvert
+    - unparam
+    - unused
+    - usestdlibvars
+    - wastedassign
+    - whitespace
+    - promlinter
+    - protogetter
+    # - mnd
+    # - wrapcheck 
+
+  settings:
+    exhaustive:
+      default-signifies-exhaustive: true
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+    dupl:
+      threshold: 100
+    goconst:
+      min-len: 2
+      min-occurrences: 7
+    gocritic:
+      disabled-checks:
+        - wrapperFunc
+        - hugeParam
+        - rangeValCopy
+      enabled-tags:
+        - performance
+        - style
+        - experimental
+    gocyclo:
+      min-complexity: 20
+    govet:
+      enable:
+        - shadow
+    lll:
+      line-length: 140
+    misspell:
+      locale: US
+    revive:
+      rules:
+        - name: early-return
+        - name: indent-error-flow
+        - name: superfluous-else
+        - name: unreachable-code
+        - name: empty-block
+        - name: redefines-builtin-id
+  exclusions:
+    generated: lax
+    rules:
+        - linters:
+          - dupl
+          - goconst
+          - noctx
+          - usestdlibvars
+          path: _test\.go$
+        - linters:
+          - dupl
+          path: internal/seed/
+        - linters:
+          - errcheck
+          text: "Error return value of .*.Close.*is not checked"
+        - linters:
+          - errcheck
+          path: _test\.go$
+          text: "Error return value of .*(os\\.Remove|os\\.RemoveAll|Body\\.Close).*is not checked"
+        - linters:
+          - gosec
+          text: "G304: Potential file inclusion via variable"

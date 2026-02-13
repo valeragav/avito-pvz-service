@@ -1,10 +1,16 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
+
+	"github.com/VaLeraGav/avito-pvz-service/internal/http/handlers/response"
 )
 
 func PingHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "pong")
+	_, err := w.Write([]byte("pong"))
+
+	if err != nil {
+		response.WriteError(w, r.Context(), http.StatusBadRequest, "internal server error", err)
+		return
+	}
 }

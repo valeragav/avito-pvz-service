@@ -4,14 +4,14 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"os/signal"
 	"syscall"
 	"time"
 
 	"github.com/VaLeraGav/avito-pvz-service/internal/container"
-	"github.com/VaLeraGav/avito-pvz-service/internal/http/handlers"
+	"github.com/VaLeraGav/avito-pvz-service/internal/http/routes"
+	"github.com/VaLeraGav/avito-pvz-service/internal/metrics"
 	serviceGrpc "github.com/VaLeraGav/avito-pvz-service/internal/servers/grpc"
 	serviceHttp "github.com/VaLeraGav/avito-pvz-service/internal/servers/http"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -30,7 +30,8 @@ func main() {
 
 	cfg := config.LoadConfig(*envFile)
 
-	lg := logger.InitLogger("avito-pvz-service", cfg.Env, cfg.LogLevel)
+	lg := logger.New("avito-pvz-service", cfg.Env, cfg.LogLevel)
+	logger.MustSetGlobal(lg)
 
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
@@ -38,7 +39,9 @@ func main() {
 	c := closer.New()
 	defer shutdown(c, lg)
 
-	connPostgres, err := connectPostgres(cfg, lg)
+	metrics.Init()
+
+	connPostgres, err := connectPostgres(cfg)
 	if err != nil {
 		logger.Error("database connection error", "err", err)
 		return
@@ -49,38 +52,44 @@ func main() {
 		return nil
 	})
 
-	container := container.Init(cfg, lg, connPostgres)
-	router := handlers.NewRouter(container)
+	ct := container.New(cfg, lg, connPostgres)
+	err = ct.Init()
+	if err != nil {
+		logger.Error("container error", "err", err)
+		return
+	}
+
+	router := routes.NewRouter(ct)
 
 	// Create and start server HTTP
-	serviceHttp := newHTTPServer(cfg, router, lg)
+	httpService := newHTTPServer(cfg, router)
 	c.Add(func(ctx context.Context) error {
 		lg.Info("shutting down server http")
-		return serviceHttp.Shutdown(ctx)
+		return httpService.Shutdown(ctx)
 	})
 
 	// Create and start server gRPC
-	serviceGrpc, err := newGrpcServer(cfg, []serviceGrpc.RegisterFunc{})
+	grpcServer, err := newGrpcServer(cfg, []serviceGrpc.RegisterFunc{})
 	if err != nil {
 		logger.Error("serviceGrpc startup error", "err", err)
 		return
 	}
 	c.Add(func(ctx context.Context) error {
 		lg.Info("shutting down service grpc")
-		return serviceGrpc.Shutdown(ctx)
+		return grpcServer.Shutdown(ctx)
 	})
 
 	// Запуск HTTP сервера
 	errCh := make(chan error, 2)
 	go func() {
-		if err := serviceHttp.StartServer(ctx); err != nil {
+		if err := httpService.StartServer(ctx); err != nil {
 			errCh <- fmt.Errorf("HTTP server error: %w", err)
 		}
 	}()
 
 	// Запуск gRPC сервера
 	go func() {
-		if err := serviceGrpc.StartServer(ctx); err != nil {
+		if err := grpcServer.StartServer(ctx); err != nil {
 			errCh <- fmt.Errorf("gRPC server error: %w", err)
 		}
 	}()
@@ -94,22 +103,24 @@ func main() {
 	}
 }
 
-func newHTTPServer(cfg *config.Config, router http.Handler, lg *slog.Logger) *serviceHttp.Server {
+func newHTTPServer(cfg *config.Config, router http.Handler) *serviceHttp.Server {
 	return serviceHttp.NewServer(&http.Server{
 		Addr:         cfg.HTTPServer.Address,
 		Handler:      router,
-		ReadTimeout:  time.Duration(cfg.HTTPServer.Timeout) * time.Second,
-		WriteTimeout: time.Duration(cfg.HTTPServer.Timeout) * time.Second,
-		IdleTimeout:  120 * time.Second,
+		ReadTimeout:  cfg.HTTPServer.ReadTimeout,
+		WriteTimeout: cfg.HTTPServer.WriteTimeout,
+		IdleTimeout:  cfg.HTTPServer.IdleTimeout,
 	})
 }
 
-// TODO: конфики прокинуть
 func newGrpcServer(cfg *config.Config, registerFuncs []serviceGrpc.RegisterFunc) (*serviceGrpc.Server, error) {
-	return serviceGrpc.NewServer(":50051", registerFuncs)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	return serviceGrpc.NewServer(ctx, cfg.GRPC.Address, registerFuncs)
 }
 
-func connectPostgres(cfg *config.Config, lg *slog.Logger) (*pgxpool.Pool, error) {
+func connectPostgres(cfg *config.Config) (*pgxpool.Pool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -117,7 +128,7 @@ func connectPostgres(cfg *config.Config, lg *slog.Logger) (*pgxpool.Pool, error)
 		User:     cfg.Db.User,
 		Password: cfg.Db.Password,
 		Host:     cfg.Db.Host,
-		Port:     cfg.Db.ExternalPort,
+		Port:     cfg.Db.Port,
 		Dbname:   cfg.Db.NameDb,
 		Options:  cfg.Db.Option,
 	})
@@ -127,7 +138,7 @@ func connectPostgres(cfg *config.Config, lg *slog.Logger) (*pgxpool.Pool, error)
 	return conn, nil
 }
 
-func shutdown(c *closer.Closer, lg *slog.Logger) {
+func shutdown(c *closer.Closer, lg *logger.Logger) {
 	closeCtx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 	defer cancel()
 

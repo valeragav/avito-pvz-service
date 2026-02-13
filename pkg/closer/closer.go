@@ -2,81 +2,77 @@ package closer
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"strings"
 	"sync"
 )
 
 type Func func(ctx context.Context) error
 
 type Closer struct {
-	mu    sync.Mutex
-	funcs []Func
+	mu     sync.Mutex
+	funcs  []Func
+	closed bool
 }
 
 func New() *Closer {
-	return &Closer{
-		funcs: make([]Func, 0),
-	}
+	return &Closer{}
 }
 
 func (c *Closer) Add(f Func) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
+	if c.closed {
+		panic("closer: add after close")
+	}
+
 	c.funcs = append(c.funcs, f)
 }
 
 func (c *Closer) Close(ctx context.Context) error {
+	c.mu.Lock()
+
+	// if close is run multiple times
+	if c.closed {
+		c.mu.Unlock()
+		return nil
+	}
+	c.closed = true
+
+	// copy slice funcs
+	funcs := append([]Func(nil), c.funcs...)
+	c.mu.Unlock()
+
 	var (
-		msgs = make([]string, 0, len(c.funcs))
 		wg   sync.WaitGroup
+		mu   sync.Mutex
+		errs []error
 	)
 
-	wg.Add(len(c.funcs))
+	wg.Add(len(funcs))
 
-	for _, f := range c.funcs {
-		go func(f Func) {
+	for _, f := range funcs {
+		go func() {
 			defer wg.Done()
 
+			defer func() {
+				if r := recover(); r != nil {
+					mu.Lock()
+					errs = append(errs, fmt.Errorf("panic: %v", r))
+					mu.Unlock()
+				}
+			}()
+
 			if err := f(ctx); err != nil {
-				c.mu.Lock()
-				msgs = append(msgs, fmt.Sprintf("[!] %v", err))
-				c.mu.Unlock()
+				mu.Lock()
+				errs = append(errs, err)
+				mu.Unlock()
 			}
-
-		}(f)
+		}()
 	}
 
-	done := make(chan struct{})
-	go func() {
-		wg.Wait()
-		close(done)
-	}()
+	wg.Wait()
 
-	select {
-	case <-done:
-		break
-	case <-ctx.Done():
-		err := ctx.Err()
-		if len(msgs) > 0 {
-			err = fmt.Errorf(
-				"shutdown finished with error(s): \n%s\nshutdown cancelled: %s",
-				strings.Join(msgs, "\n"),
-				ctx.Err().Error(),
-			)
-		} else {
-			err = fmt.Errorf("shutdown cancelled: %v", ctx.Err())
-		}
-		return err
-	}
-
-	if len(msgs) > 0 {
-		return fmt.Errorf(
-			"shutdown finished with error(s): \n%s",
-			strings.Join(msgs, "\n"),
-		)
-	}
-
-	return nil
+	return errors.Join(errs...)
 }

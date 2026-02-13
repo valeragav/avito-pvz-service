@@ -1,0 +1,54 @@
+package middleware
+
+import (
+	"fmt"
+	"log/slog"
+	"net/http"
+	"time"
+
+	"github.com/VaLeraGav/avito-pvz-service/pkg/logger"
+	"github.com/VaLeraGav/avito-pvz-service/pkg/request_id"
+	"github.com/go-chi/chi/middleware"
+)
+
+func NewLogger(log *logger.Logger) func(next http.Handler) http.Handler {
+	return middleware.RequestLogger(&chiLoggerMiddleware{log})
+}
+
+type chiLoggerMiddleware struct {
+	log *logger.Logger
+}
+
+func (m *chiLoggerMiddleware) NewLogEntry(r *http.Request) middleware.LogEntry {
+	log := m.log.With(
+		slog.String(request_id.LogFieldRequestID, request_id.GetReqID(r.Context())),
+		slog.String("http_method", r.Method),
+		slog.String("remote_addr", r.RemoteAddr),
+		slog.String("uri", r.RequestURI),
+	)
+
+	log.Info("request started")
+
+	return &chiLoggerEntry{log: log}
+}
+
+type chiLoggerEntry struct {
+	log *logger.Logger
+}
+
+func (l *chiLoggerEntry) Write(status, bytes int, _ http.Header, elapsed time.Duration, _ any) {
+	l.log = l.log.With(
+		slog.Int("resp_status", status),
+		slog.Int("resp_bytes_length", bytes),
+		slog.String("resp_elapsed", elapsed.Round(time.Millisecond/100).String()),
+	)
+
+	l.log.Info("request completed")
+}
+
+func (l *chiLoggerEntry) Panic(v any, stack []byte) {
+	l.log = l.log.With(
+		slog.String("stack", string(stack)),
+		slog.String("panic", fmt.Sprintf("%+v", v)),
+	)
+}

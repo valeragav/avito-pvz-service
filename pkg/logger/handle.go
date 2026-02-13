@@ -22,7 +22,8 @@ func (h *ctxHandler) WithGroup(name string) slog.Handler {
 
 func (h *ctxHandler) Handle(ctx context.Context, r slog.Record) error {
 	if reqID := request_id.GetReqID(ctx); reqID != "" {
-		r.AddAttrs(slog.String(request_id.ReqIDKey, reqID))
+		r.AddAttrs(slog.String(request_id.LogFieldRequestID, reqID))
 	}
+
 	return h.Handler.Handle(ctx, r)
 }

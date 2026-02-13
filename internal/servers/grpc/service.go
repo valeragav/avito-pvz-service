@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"fmt"
 	"net"
 
 	"github.com/VaLeraGav/avito-pvz-service/pkg/logger"
@@ -17,10 +18,13 @@ type Server struct {
 	addr       string
 }
 
-func NewServer(addr string, registerFuncs []RegisterFunc, opts ...grpc.ServerOption) (*Server, error) {
-	lis, err := net.Listen("tcp", addr)
+func NewServer(ctx context.Context, addr string, registerFuncs []RegisterFunc, opts ...grpc.ServerOption) (*Server, error) {
+	const op = "grpc.NewServer"
+
+	lc := net.ListenConfig{}
+	lis, err := lc.Listen(ctx, "tcp", addr)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: listen %s: %w", op, addr, err)
 	}
 
 	s := grpc.NewServer(opts...)

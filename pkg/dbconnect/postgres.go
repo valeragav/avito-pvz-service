@@ -21,8 +21,6 @@ func Connect(ctx context.Context, cnt PostgresConnectCfg) (*pgxpool.Pool, error)
 		dsn += "?" + cnt.Options
 	}
 
-	fmt.Println(dsn)
-
 	pool, err := pgxpool.New(ctx, dsn)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create pool: %w", err)
