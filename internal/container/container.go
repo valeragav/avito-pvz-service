@@ -3,18 +3,12 @@ package container
 import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/valeragav/avito-pvz-service/internal/config"
-	"github.com/valeragav/avito-pvz-service/internal/infrastructure/storage/cities"
-	productTypesRepo "github.com/valeragav/avito-pvz-service/internal/infrastructure/storage/product_types"
-	productsRepo "github.com/valeragav/avito-pvz-service/internal/infrastructure/storage/products"
-	pvzRepo "github.com/valeragav/avito-pvz-service/internal/infrastructure/storage/pvz"
-	receptionsRepo "github.com/valeragav/avito-pvz-service/internal/infrastructure/storage/receptions"
-	"github.com/valeragav/avito-pvz-service/internal/infrastructure/storage/statuses"
-	"github.com/valeragav/avito-pvz-service/internal/infrastructure/storage/user"
+	"github.com/valeragav/avito-pvz-service/internal/infra/repo"
 	"github.com/valeragav/avito-pvz-service/internal/security"
-	"github.com/valeragav/avito-pvz-service/internal/service/auth"
-	"github.com/valeragav/avito-pvz-service/internal/service/products"
-	"github.com/valeragav/avito-pvz-service/internal/service/pvz"
-	"github.com/valeragav/avito-pvz-service/internal/service/receptions"
+	"github.com/valeragav/avito-pvz-service/internal/usecase/auth"
+	"github.com/valeragav/avito-pvz-service/internal/usecase/product"
+	"github.com/valeragav/avito-pvz-service/internal/usecase/pvz"
+	"github.com/valeragav/avito-pvz-service/internal/usecase/reception"
 	"github.com/valeragav/avito-pvz-service/internal/validation"
 	"github.com/valeragav/avito-pvz-service/pkg/logger"
 )
@@ -24,21 +18,21 @@ type DIContainer struct {
 	lg           *logger.Logger
 	connPostgres *pgxpool.Pool
 
-	UserRepo         *user.Repository
-	PvzRepo          *pvzRepo.Repository
-	CitiesRepo       *cities.Repository
-	ReceptionsRepo   *receptionsRepo.Repository
-	StatusesRepo     *statuses.Repository
-	ProductsRepo     *productsRepo.Repository
-	ProductTypesRepo *productTypesRepo.Repository
+	UserRepo         *repo.UserRepository
+	PvzRepo          *repo.PVZRepository
+	CitiesRepo       *repo.CityRepository
+	ReceptionsRepo   *repo.ReceptionRepository
+	StatusesRepo     *repo.ReceptionStatusRepository
+	ProductsRepo     *repo.ProductRepository
+	ProductTypesRepo *repo.ProductTypeRepository
 
 	JwtService *security.JwtService
 	Validator  *validation.Validator
 
-	AuthService       *auth.AuthService
-	PvzService        *pvz.PvzService
-	ReceptionsService *receptions.ReceptionsService
-	ProductsService   *products.ProductsService
+	AuthUseCase      *auth.AuthUseCase
+	PVZUseCase       *pvz.PVZUseCase
+	ReceptionUseCase *reception.ReceptionUseCase
+	ProductUseCase   *product.ProductUseCase
 }
 
 // аналог wire.go
@@ -52,13 +46,13 @@ func New(cfg *config.Config, lg *logger.Logger, connPostgres *pgxpool.Pool) *DIC
 }
 
 func (c *DIContainer) Init() error {
-	c.UserRepo = user.New(c.connPostgres)
-	c.PvzRepo = pvzRepo.New(c.connPostgres)
-	c.CitiesRepo = cities.New(c.connPostgres)
-	c.ReceptionsRepo = receptionsRepo.New(c.connPostgres)
-	c.StatusesRepo = statuses.New(c.connPostgres)
-	c.ProductsRepo = productsRepo.New(c.connPostgres)
-	c.ProductTypesRepo = productTypesRepo.New(c.connPostgres)
+	c.UserRepo = repo.NewUserRepository(c.connPostgres)
+	c.PvzRepo = repo.NewPvzRepository(c.connPostgres)
+	c.CitiesRepo = repo.NewCityRepository(c.connPostgres)
+	c.ReceptionsRepo = repo.NewReceptionRepository(c.connPostgres)
+	c.StatusesRepo = repo.NewReceptionStatusRepository(c.connPostgres)
+	c.ProductsRepo = repo.NewProductRepository(c.connPostgres)
+	c.ProductTypesRepo = repo.NewProductTypeRepository(c.connPostgres)
 
 	if _, err := c.GetJwtTokenService(); err != nil {
 		return err
@@ -66,10 +60,10 @@ func (c *DIContainer) Init() error {
 
 	c.GetValidation()
 
-	c.GetAuthService()
-	c.GetPvzService()
-	c.GetReceptionsService()
-	c.GetProductsService()
+	c.GetAuthUseCase()
+	c.GetPVZUseCase()
+	c.GetReceptionUseCase()
+	c.GetProductUseCase()
 
 	return nil
 }
@@ -79,7 +73,7 @@ func (c *DIContainer) GetJwtTokenService() (*security.JwtService, error) {
 		return c.JwtService, nil
 	}
 
-	jwtService, err := security.New(
+	jwtUseCase, err := security.New(
 		c.cfg.Jwt.RSAPrivateFile,
 		c.cfg.Jwt.RSAPublicFile,
 		c.cfg.Jwt.Iss,
@@ -89,7 +83,7 @@ func (c *DIContainer) GetJwtTokenService() (*security.JwtService, error) {
 		return nil, err
 	}
 
-	c.JwtService = jwtService
+	c.JwtService = jwtUseCase
 	return c.JwtService, nil
 }
 
@@ -101,33 +95,33 @@ func (c *DIContainer) GetValidation() *validation.Validator {
 	return c.Validator
 }
 
-func (c *DIContainer) GetAuthService() *auth.AuthService {
-	if c.AuthService == nil {
-		c.AuthService = auth.New(c.JwtService, c.UserRepo)
+func (c *DIContainer) GetAuthUseCase() *auth.AuthUseCase {
+	if c.AuthUseCase == nil {
+		c.AuthUseCase = auth.New(c.JwtService, c.UserRepo)
 	}
 
-	return c.AuthService
+	return c.AuthUseCase
 }
 
-func (c *DIContainer) GetPvzService() *pvz.PvzService {
-	if c.PvzService == nil {
-		c.PvzService = pvz.New(c.PvzRepo, c.CitiesRepo, c.ReceptionsRepo, c.ProductsRepo)
+func (c *DIContainer) GetPVZUseCase() *pvz.PVZUseCase {
+	if c.PVZUseCase == nil {
+		c.PVZUseCase = pvz.New(c.PvzRepo, c.CitiesRepo, c.ReceptionsRepo, c.ProductsRepo)
 	}
 
-	return c.PvzService
+	return c.PVZUseCase
 }
 
-func (c *DIContainer) GetReceptionsService() *receptions.ReceptionsService {
-	if c.ReceptionsService == nil {
-		c.ReceptionsService = receptions.New(c.ReceptionsRepo, c.StatusesRepo)
+func (c *DIContainer) GetReceptionUseCase() *reception.ReceptionUseCase {
+	if c.ReceptionUseCase == nil {
+		c.ReceptionUseCase = reception.New(c.ReceptionsRepo, c.StatusesRepo, c.PvzRepo)
 	}
 
-	return c.ReceptionsService
+	return c.ReceptionUseCase
 }
-func (c *DIContainer) GetProductsService() *products.ProductsService {
-	if c.ProductsService == nil {
-		c.ProductsService = products.New(c.ProductsRepo, c.ReceptionsRepo, c.ProductTypesRepo, c.PvzRepo)
+func (c *DIContainer) GetProductUseCase() *product.ProductUseCase {
+	if c.ProductUseCase == nil {
+		c.ProductUseCase = product.New(c.ProductsRepo, c.ReceptionsRepo, c.ProductTypesRepo, c.PvzRepo)
 	}
 
-	return c.ProductsService
+	return c.ProductUseCase
 }

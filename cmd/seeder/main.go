@@ -7,9 +7,8 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/valeragav/avito-pvz-service/internal/config"
-	"github.com/valeragav/avito-pvz-service/internal/infrastructure/storage/cities"
-	"github.com/valeragav/avito-pvz-service/internal/infrastructure/storage/product_types"
-	"github.com/valeragav/avito-pvz-service/internal/infrastructure/storage/statuses"
+	"github.com/valeragav/avito-pvz-service/internal/infra/repo"
+
 	"github.com/valeragav/avito-pvz-service/internal/seed"
 	"github.com/valeragav/avito-pvz-service/pkg/dbconnect"
 	"github.com/valeragav/avito-pvz-service/pkg/logger"
@@ -31,14 +30,14 @@ func main() {
 		return
 	}
 
-	citiesRepo := cities.New(connPostgres)
-	statusesRepo := statuses.New(connPostgres)
-	productTypesRepo := product_types.New(connPostgres)
+	citiesRepo := repo.NewCityRepository(connPostgres)
+	statusesRepo := repo.NewReceptionStatusRepository(connPostgres)
+	productTypesRepo := repo.NewProductTypeRepository(connPostgres)
 
 	sd := seeder.New()
-	sd.Add(seed.NewCitiesSeed(citiesRepo))
-	sd.Add(seed.NewStatusesSeed(statusesRepo))
-	sd.Add(seed.NewProductTypesSeed(productTypesRepo))
+	sd.Add(seed.NewCitySeed(citiesRepo))
+	sd.Add(seed.NewReceptionStatusSeed(statusesRepo))
+	sd.Add(seed.NewProductTypeSeed(productTypesRepo))
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

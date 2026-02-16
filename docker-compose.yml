@@ -64,6 +64,7 @@ services:
     command: >
       -source 'file:///migrations'
       -database 'postgres://root:root@postgres:5432/pvz-service_db?sslmode=disable' -verbose up
+    # command: ["-path", "/migrations", "-database", "postgresql://${DB_USER}:${DB_PASSWORD:-invalid}@postgres:5432/${DB_NAME}?sslmode=disable", "up"]
     networks:
       - avito-pvz-service_network
 

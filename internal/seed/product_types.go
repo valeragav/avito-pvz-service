@@ -4,33 +4,33 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/valeragav/avito-pvz-service/internal/infrastructure/storage/product_types"
+	"github.com/valeragav/avito-pvz-service/internal/domain"
+	"github.com/valeragav/avito-pvz-service/internal/infra/repo"
 )
 
-type ProductTypesSeed struct {
-	repo *product_types.Repository
+type ProductTypeSeed struct {
+	repo *repo.ProductTypeRepository
 }
 
-func NewProductTypesSeed(repo *product_types.Repository) *ProductTypesSeed {
-	return &ProductTypesSeed{repo: repo}
+func NewProductTypeSeed(repo *repo.ProductTypeRepository) *ProductTypeSeed {
+	return &ProductTypeSeed{repo: repo}
 }
 
-func (s *ProductTypesSeed) Name() string {
+func (s *ProductTypeSeed) Name() string {
 	return "Create ProductTypes"
 }
 
-func (s *ProductTypesSeed) Run(ctx context.Context) error {
+func (s *ProductTypeSeed) Run(ctx context.Context) error {
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
 	default:
-		_, err := s.repo.CreateBatch(ctx, ProductTypesEnt())
-		return err
+		return s.repo.CreateBatch(ctx, ProductTypesEnt())
 	}
 }
 
-func ProductTypesEnt() []product_types.ProductTypes {
-	return []product_types.ProductTypes{
+func ProductTypesEnt() []domain.ProductType {
+	return []domain.ProductType{
 		{
 			ID:   uuid.New(),
 			Name: "электроника",

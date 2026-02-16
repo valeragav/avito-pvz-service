@@ -6,16 +6,16 @@ import (
 	"strings"
 )
 
-type SortOrder string
+type sortOrder string
 
 const (
-	SortAsc  SortOrder = "asc"
-	SortDesc SortOrder = "desc"
+	SortAsc  sortOrder = "asc"
+	SortDesc sortOrder = "desc"
 )
 
 type Sort struct {
 	Field string
-	Order SortOrder
+	Order sortOrder
 }
 
 func ParseSort(q url.Values, defaults Sort) (Sort, error) {

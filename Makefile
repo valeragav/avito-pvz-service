@@ -6,51 +6,44 @@ endif
 
 PROJECT_NAME=avito-pvz-service
 
-## help: print this help message
+## help: Show this help message with available commands
 .PHONY: help
 help:
 	@echo 'Usage:'
 	@sed -n 's/^##//p' ${MAKEFILE_LIST} | column -t -s ':' |  sed -e 's/^/ /'
 
-## init: used to initialize the Go project, tidy, docker, migration, build and deploy
-.PHONY: init
-init:
-	docker compose up -d
-	go build -o build/package/$(PROJECT_NAME) cmd/api/main.go
-
-## fast-start: quick launch
+## fast-start: Run the application quickly without building a binary
 .PHONY: fast-start
 fast-start:
-	go run cmd/api/main.go
+	go run cmd/app/main.go
 
-## start: build start
+## start: Build and run the application binary
 .PHONY: start
 start:
-	go build -o build/package/$(PROJECT_NAME) cmd/api/main.go
+	go build -o build/package/$(PROJECT_NAME) cmd/app/main.go
 	build/package/$(PROJECT_NAME)
 
-## test: start test
+## test: Run all unit tests with verbose output
 .PHONY: test
 test:
 	go test -v -fullpath=true -timeout 30s ./...
 
-## lint: start lint
+## lint: Run code linter to check for errors and style issues, make sure to install golangci-lint
 .PHONY: lint
 lint:
 	golangci-lint run
 
-## deploy: executing the deployment command
+## swagger-init: Generate Swagger API documentation,  make sure to install swag CLI
 .PHONY: swagger-init
 swagger-init:
 	swag init -g cmd/api/main.go -o docs
 
-## gen: generate code
+## gen: Run go generate on all packages (e.g., code generation)
 .PHONY: gen
 gen:
 	go generate ./...
 
 # Migration
-
 DOCKER_NETWORK=avito-pvz-service_avito-pvz-service_network
 DATABASE_URL=postgres://$(DB_USER):$(DB_PASSWORD)@postgres:$(DB_INTERNAL_PORT)/$(DB_NAME)?$(DB_OPTION)
 
@@ -61,7 +54,7 @@ MIGRATE_RUN=docker run --rm \
 	-path=/migrations \
 	-database "$(DATABASE_URL)"
 
-## create-migration: create an empty migration
+## create-migration: Create an empty migration
 .PHONY: create-migration
 create-migration:
 	@read -p "Enter migration name: " NAME; \
@@ -70,19 +63,19 @@ create-migration:
 		migrate/migrate:v4.19.1 \
 		create -ext sql -dir /migrations -seq $$NAME
 
-## migrate-up: migration up
+## migrate-up: Migration up
 .PHONY: migrate-up
 migrate-up:
 	$(MIGRATE_RUN) up
 
-## migrate-down: migration down
+## migrate-down: Migration down
 .PHONY: migrate-down
 migrate-down:
 	@read -p "Number of migrations to rollback (default: 1): " NUM; \
 	NUM=$${NUM:-1}; \
 	$(MIGRATE_RUN) down $$NUM
 
-## migrate-version: migration version
+## migrate-version: Migration version
 .PHONY: migrate-version
 migrate-version:
 	$(MIGRATE_RUN) version

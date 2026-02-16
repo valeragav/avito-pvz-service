@@ -43,7 +43,11 @@ func (s *Seeder) Run(ctx context.Context) error {
 
 	var combinedErr error
 	for err := range errCh {
-		combinedErr = fmt.Errorf("%w; %w", combinedErr, err)
+		if combinedErr == nil {
+			combinedErr = err
+		} else {
+			combinedErr = fmt.Errorf("%w; %w", combinedErr, err)
+		}
 	}
 
 	return combinedErr

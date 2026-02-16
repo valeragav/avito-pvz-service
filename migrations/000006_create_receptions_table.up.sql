@@ -5,7 +5,7 @@ CREATE TABLE receptions (
   pvz_id UUID NOT NULL,
   status_id UUID NOT NULL,
   CONSTRAINT fk_receptions_pvz_id FOREIGN KEY (pvz_id) REFERENCES pvz (id),
-  CONSTRAINT fk_receptions_status_id FOREIGN KEY (status_id) REFERENCES statuses (id)
+  CONSTRAINT fk_receptions_status_id FOREIGN KEY (status_id) REFERENCES reception_statuses (id)
 );
 CREATE INDEX IF NOT EXISTS idx_receptions_pvz_id ON receptions (pvz_id);
 CREATE INDEX IF NOT EXISTS idx_receptions_status_id ON receptions (status_id);

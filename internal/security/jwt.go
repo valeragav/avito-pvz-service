@@ -8,11 +8,11 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/valeragav/avito-pvz-service/internal/domain"
 )
 
-type Claims struct {
-	// TODO: нужно ли enum
-	Role string `json:"role" binding:"required,oneof=employee moderator"`
+type claims struct {
+	Role string
 	jwt.RegisteredClaims
 }
 
@@ -58,8 +58,12 @@ func New(
 	}, nil
 }
 
-func (j JwtService) SignJwt(claims Claims) (string, error) {
-	claims.RegisteredClaims = j.RegisteredClaims()
+func (j JwtService) SignJwt(userClaims domain.UserClaims) (string, error) {
+	claims := claims{
+		Role: string(userClaims.Role),
+	}
+
+	claims.RegisteredClaims = j.registeredClaims()
 
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
 
@@ -71,7 +75,7 @@ func (j JwtService) SignJwt(claims Claims) (string, error) {
 	return signedToken, nil
 }
 
-func (j JwtService) RegisteredClaims() jwt.RegisteredClaims {
+func (j JwtService) registeredClaims() jwt.RegisteredClaims {
 	return jwt.RegisteredClaims{
 		ExpiresAt: jwt.NewNumericDate(time.Now().Add(j.AccessLifeTime)),
 		IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -79,8 +83,8 @@ func (j JwtService) RegisteredClaims() jwt.RegisteredClaims {
 	}
 }
 
-func (j JwtService) ValidateJwt(incomingToken string) (*Claims, error) {
-	claims := &Claims{}
+func (j JwtService) ValidateJwt(incomingToken string) (*domain.UserClaims, error) {
+	claims := &claims{}
 	keyFunc := func(token *jwt.Token) (any, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -102,5 +106,7 @@ func (j JwtService) ValidateJwt(incomingToken string) (*Claims, error) {
 		return nil, errors.New("unknown token publisher")
 	}
 
-	return claims, nil
+	return &domain.UserClaims{
+		Role: domain.Role(claims.Role),
+	}, nil
 }
