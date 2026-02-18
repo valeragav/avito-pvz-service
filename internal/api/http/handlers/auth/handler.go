@@ -33,6 +33,18 @@ func New(validator *validation.Validator, authService authService) *AuthHandlers
 	}
 }
 
+// @Summary Dummy login
+// @Description Authenticates a user and returns a JWT token for role.
+// @ID DummyLogin
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param input body DummyLoginRequest true "User credentials (email and password)"
+// @Success 200 {string} string "JWT token issued successfully"
+// @Failure 400 {object} response.Error "Invalid request or validation failed"
+// @Failure 401 {object} response.Error "Generate token failed"
+// @Failure 500 {object} response.Error "Internal server error"
+// @Router /dummyLogin [post]
 func (h *AuthHandlers) DummyLogin(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -61,6 +73,18 @@ func (h *AuthHandlers) DummyLogin(w http.ResponseWriter, r *http.Request) {
 	response.WriteString(w, ctx, http.StatusOK, string(*token))
 }
 
+// @Summary Register new user
+// @Description Creates a new user with role and returns created user data.
+// @ID Register
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param input body RegisterRequest true "User registration payload"
+// @Success 201 {object} RegisterResponse "User successfully created"
+// @Failure 400 {object} response.Error "Invalid request or validation failed"
+// @Failure 409 {object} response.Error "Email already exists"
+// @Failure 500 {object} response.Error "Internal server error"
+// @Router /register [post]
 func (h *AuthHandlers) Register(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -93,6 +117,18 @@ func (h *AuthHandlers) Register(w http.ResponseWriter, r *http.Request) {
 	response.WriteJSON(w, ctx, http.StatusCreated, res)
 }
 
+// @Summary User login
+// @Description Authenticate user and returns a JWT Bearer token.
+// @ID Login
+// @Tags Auth
+// @Accept json
+// @Produce json
+// @Param input body LoginRequest true "User credentials (email and password)"
+// @Success 200 {string} string "JWT access token"
+// @Failure 400 {object} response.Error "Invalid request or validation failed"
+// @Failure 401 {object} response.Error "Invalid email or password"
+// @Failure 500 {object} response.Error "Internal server error"
+// @Router /login [post]
 func (h *AuthHandlers) Login(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	var req LoginRequest

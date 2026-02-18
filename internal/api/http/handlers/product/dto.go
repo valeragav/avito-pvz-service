@@ -10,13 +10,13 @@ import (
 
 type CreateRequest struct {
 	Type  string    `json:"type" validate:"required,max=255"`
-	PvzID uuid.UUID `json:"pvzID" validate:"required,uuid"`
+	PvzID uuid.UUID `json:"pvzId" validate:"required,uuid"`
 }
 
 type CreateResponse struct {
 	ID          uuid.UUID `json:"id"`
 	Type        string    `json:"type"`
-	ReceptionID uuid.UUID `json:"receptionID"`
+	ReceptionID uuid.UUID `json:"receptionId"`
 	DateTime    time.Time `json:"dateTime"`
 }
 

@@ -82,8 +82,8 @@ func TestPvzHandlers_List(t *testing.T) {
 		requestQuery   string
 		pvzServiceMock func(*mocks.MockpvzService)
 		expectedCode   int
-		expected       []OutResponse
-		expectedError  *response.ErrorResponse
+		expected       []PVZListResponse
+		expectedError  *response.Error
 	}{
 		{
 			name:         "successful list",
@@ -101,7 +101,7 @@ func TestPvzHandlers_List(t *testing.T) {
 			name:         "invalid time data",
 			requestQuery: "?startDate=2026-01-01&endDate=2026-02-01",
 			expectedCode: http.StatusBadRequest,
-			expectedError: &response.ErrorResponse{
+			expectedError: &response.Error{
 				Message: "invalid startDate",
 			},
 		},
@@ -109,7 +109,7 @@ func TestPvzHandlers_List(t *testing.T) {
 			name:         "invalid pagination",
 			requestQuery: "?startDate=2026-01-01&endDate=2026-02-01",
 			expectedCode: http.StatusBadRequest,
-			expectedError: &response.ErrorResponse{
+			expectedError: &response.Error{
 				Message: "invalid startDate",
 			},
 		},
@@ -123,7 +123,7 @@ func TestPvzHandlers_List(t *testing.T) {
 					List(gomock.Any(), gomock.Any()).
 					Return(nil, errors.New("storage error"))
 			},
-			expectedError: &response.ErrorResponse{
+			expectedError: &response.Error{
 				Message: "internal server error",
 				Details: "storage error",
 			},
@@ -150,7 +150,7 @@ func TestPvzHandlers_List(t *testing.T) {
 			assert.Equal(t, tt.expectedCode, w.Code)
 
 			if tt.expected != nil {
-				var res []OutResponse
+				var res []PVZListResponse
 				err := json.NewDecoder(w.Body).Decode(&res)
 				require.NoError(t, err)
 
@@ -158,7 +158,7 @@ func TestPvzHandlers_List(t *testing.T) {
 			}
 
 			if tt.expectedError != nil {
-				var errorRes response.ErrorResponse
+				var errorRes response.Error
 				err := json.NewDecoder(w.Body).Decode(&errorRes)
 				require.NoError(t, err)
 				assert.Equal(t, tt.expectedError, &errorRes)
@@ -188,7 +188,7 @@ func TestPvzHandlers_Create(t *testing.T) {
 		pvzServiceMock func(*mocks.MockpvzService)
 		expectedCode   int
 		expected       *CreateResponse
-		expectedError  *response.ErrorResponse
+		expectedError  *response.Error
 	}{
 		{
 			name: "successful create",
@@ -221,7 +221,7 @@ func TestPvzHandlers_Create(t *testing.T) {
 			name:         "empty body",
 			requestBody:  "",
 			expectedCode: http.StatusBadRequest,
-			expectedError: &response.ErrorResponse{
+			expectedError: &response.Error{
 				Message: "request body is empty",
 			},
 		},
@@ -239,7 +239,7 @@ func TestPvzHandlers_Create(t *testing.T) {
 					Create(gomock.Any(), gomock.Any()).
 					Return(nil, errors.New("storage error"))
 			},
-			expectedError: &response.ErrorResponse{
+			expectedError: &response.Error{
 				Message: "internal server error",
 				Details: "storage error",
 			},
@@ -250,7 +250,7 @@ func TestPvzHandlers_Create(t *testing.T) {
 				"ID": uuid.NewString(),
 			},
 			expectedCode: http.StatusBadRequest,
-			expectedError: &response.ErrorResponse{
+			expectedError: &response.Error{
 				Message: "field 'City' failed on the 'required' validation",
 			},
 		},
@@ -286,7 +286,7 @@ func TestPvzHandlers_Create(t *testing.T) {
 			}
 
 			if tt.expectedError != nil {
-				var errorRes response.ErrorResponse
+				var errorRes response.Error
 				err := json.NewDecoder(w.Body).Decode(&errorRes)
 				require.NoError(t, err)
 

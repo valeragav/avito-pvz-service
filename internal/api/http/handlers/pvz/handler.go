@@ -21,19 +21,30 @@ type pvzService interface {
 	List(ctx context.Context, pvzListParams *dto.PVZListParams) ([]*domain.PVZ, error)
 }
 
-type PvzHandlers struct {
+type PVZHandlers struct {
 	validator  *validation.Validator
 	pvzService pvzService
 }
 
-func New(validator *validation.Validator, pvzService pvzService) *PvzHandlers {
-	return &PvzHandlers{
+func New(validator *validation.Validator, pvzService pvzService) *PVZHandlers {
+	return &PVZHandlers{
 		validator,
 		pvzService,
 	}
 }
 
-func (h *PvzHandlers) List(w http.ResponseWriter, r *http.Request) {
+// @Summary List PVZ points
+// @Description Get a list of PVZ points with optional filters. Requires JWT-Token with Employee or Moderator role.
+// @Tags PVZ
+// @Security ApiKeyAuth
+// @Param city query string false "Filter by city"
+// @Param limit query int false "Limit number of results"
+// @Param page query int false "Page for pagination"
+// @Success 200 {array} PVZListResponse "List of PVZ points"
+// @Failure 400 {object} response.Error "Bad request"
+// @Failure 500 {object} response.Error "Internal server error"
+// @Router /pvz [get]
+func (h *PVZHandlers) List(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	pvzListParams, err := getParsePvzParam(r)
 	if err != nil {
@@ -57,7 +68,21 @@ func (h *PvzHandlers) List(w http.ResponseWriter, r *http.Request) {
 	response.WriteJSON(w, ctx, http.StatusOK, res)
 }
 
-func (h *PvzHandlers) Create(w http.ResponseWriter, r *http.Request) {
+// @Summary Create PVZ
+// @Description Create new PVZ. Requires JWT-Token with Employee role.
+// @ID CreatePVZ
+// @Tags PVZ
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param input body CreateRequest true "PVZ creation data"
+// @Success 200 {object} CreateResponse "PVZ successfully created"
+// @Failure 400 {object} response.Error "Invalid request or validation failed"
+// @Failure 404 {object} response.Error "City not found"
+// @Failure 409 {object} response.Error "Pvz with this id already exists"
+// @Failure 500 {object} response.Error "Internal server error"
+// @Router 	/pvz [post]
+func (h *PVZHandlers) Create(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	var req CreateRequest

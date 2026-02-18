@@ -35,6 +35,20 @@ func New(validator *validation.Validator, productService productService) *Produc
 	}
 }
 
+// @Summary Delete the last product of a PVZ
+// @Description Deletes the most recently added product for the given PVZ ID.
+// @ID DeleteLastProduct
+// @Tags PVZ
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param pvzID path string true "PVZ ID (UUID)"
+// @Success 200 {object} response.Empty "Successfully deleted"
+// @Failure 400 {object} response.Error "pvzID is not recorded"
+// @Failure 400 {object} response.Error "Invalid pvzID format"
+// @Failure 409 {object} response.Error "No products to delete"
+// @Failure 500 {object} response.Error "Internal server error"
+// @Router /pvz/{pvzID}/delete_last_product  [post]
 func (h *ProductHandlers) DeleteLastProduct(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -63,6 +77,20 @@ func (h *ProductHandlers) DeleteLastProduct(w http.ResponseWriter, r *http.Reque
 	response.WriteJSON(w, ctx, http.StatusOK, nil)
 }
 
+// @Summary Create a new product
+// @Description Creates a new product in the PVZ system.
+// @ID CreateProduct
+// @Tags Product
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param input body CreateRequest true "Product creation payload"
+// @Success 201 {object} CreateResponse "Product successfully created"
+// @Failure 400 {object} response.Error "Invalid request or validation failed"
+// @Failure 400 {object} response.Error "No reception is currently in progress"
+// @Failure 409 {object} response.Error "Product already exists or conflict error"
+// @Failure 500 {object} response.Error "Internal server error"
+// @Router /products [post]
 func (h *ProductHandlers) Create(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 

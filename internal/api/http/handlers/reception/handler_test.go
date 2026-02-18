@@ -37,7 +37,7 @@ func TestReceptionsHandlers_Create(t *testing.T) {
 		receptionsServiceMock func(*mocks.MockreceptionService)
 		expectedCode          int
 		expected              *CreateResponse
-		expectedError         *response.ErrorResponse
+		expectedError         *response.Error
 	}{
 		{
 			name: "success",
@@ -70,7 +70,7 @@ func TestReceptionsHandlers_Create(t *testing.T) {
 			name:         "empty body",
 			requestBody:  "",
 			expectedCode: http.StatusBadRequest,
-			expectedError: &response.ErrorResponse{
+			expectedError: &response.Error{
 				Message: "request body is empty",
 			},
 		},
@@ -78,7 +78,7 @@ func TestReceptionsHandlers_Create(t *testing.T) {
 			name:         "validation failed",
 			requestBody:  CreateRequest{},
 			expectedCode: http.StatusBadRequest,
-			expectedError: &response.ErrorResponse{
+			expectedError: &response.Error{
 				Message: "field 'PvzID' failed on the 'required' validation",
 			},
 		},
@@ -126,7 +126,7 @@ func TestReceptionsHandlers_Create(t *testing.T) {
 			}
 
 			if tt.expectedError != nil {
-				var errorRes response.ErrorResponse
+				var errorRes response.Error
 				err := json.NewDecoder(w.Body).Decode(&errorRes)
 				require.NoError(t, err)
 
@@ -152,7 +152,7 @@ func TestReceptionsHandlers_CloseLastReception(t *testing.T) {
 		receptionsServiceMock func(*mocks.MockreceptionService)
 		expectedCode          int
 		expected              *CreateResponse
-		expectedError         *response.ErrorResponse
+		expectedError         *response.Error
 	}{
 		{
 			name:  "success",
@@ -182,7 +182,7 @@ func TestReceptionsHandlers_CloseLastReception(t *testing.T) {
 			name:         "missing pvzID",
 			pvzID:        "",
 			expectedCode: http.StatusBadRequest,
-			expectedError: &response.ErrorResponse{
+			expectedError: &response.Error{
 				Message: "pvzID is not recorded",
 			},
 		},
@@ -190,7 +190,7 @@ func TestReceptionsHandlers_CloseLastReception(t *testing.T) {
 			name:         "invalid uuid",
 			pvzID:        "invalid",
 			expectedCode: http.StatusBadRequest,
-			expectedError: &response.ErrorResponse{
+			expectedError: &response.Error{
 				Message: "invalid pvz format",
 			},
 		},
@@ -203,7 +203,7 @@ func TestReceptionsHandlers_CloseLastReception(t *testing.T) {
 					Return(nil, errors.New("storage error"))
 			},
 			expectedCode: http.StatusInternalServerError,
-			expectedError: &response.ErrorResponse{
+			expectedError: &response.Error{
 				Message: "internal server error",
 				Details: "storage error",
 			},
@@ -240,7 +240,7 @@ func TestReceptionsHandlers_CloseLastReception(t *testing.T) {
 			}
 
 			if tt.expectedError != nil {
-				var errorRes response.ErrorResponse
+				var errorRes response.Error
 				err := json.NewDecoder(w.Body).Decode(&errorRes)
 				require.NoError(t, err)
 

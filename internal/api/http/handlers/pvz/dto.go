@@ -20,7 +20,7 @@ type CreateResponse struct {
 	RegistrationDate time.Time `json:"registrationDate"`
 }
 
-type OutResponse struct {
+type PVZListResponse struct {
 	Pvz        PvzResponse             `json:"pvz"`
 	Receptions []ReceptionsWithProduct `json:"receptions"`
 }
@@ -80,8 +80,8 @@ func ToCreateResponse(out domain.PVZ) CreateResponse {
 	}
 }
 
-func ToListResponse(pvzs []*domain.PVZ) []OutResponse {
-	result := make([]OutResponse, 0, len(pvzs))
+func ToListResponse(pvzs []*domain.PVZ) []PVZListResponse {
+	result := make([]PVZListResponse, 0, len(pvzs))
 	for _, pvz := range pvzs {
 		var city string
 		if pvz.City != nil {
@@ -127,7 +127,7 @@ func ToListResponse(pvzs []*domain.PVZ) []OutResponse {
 			})
 		}
 
-		result = append(result, OutResponse{
+		result = append(result, PVZListResponse{
 			Pvz:        pvzResp,
 			Receptions: receptionsResp,
 		})

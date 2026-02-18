@@ -34,6 +34,20 @@ func New(validator *validation.Validator, receptionService receptionService) *Re
 		receptionService,
 	}
 }
+
+// @Summary Create Reception
+// @Description Create a new reception entry. Requires JWT-Token with Employee role.
+// @ID CreateReception
+// @Tags Reception
+// @Security ApiKeyAuth
+// @Accept json
+// @Produce json
+// @Param input body CreateRequest true "Reception creation data"
+// @Success 201 {object} CreateResponse "Reception successfully created"
+// @Failure 400 {object} response.Error "Invalid request or validation failed"
+// @Failure 404 {object} response.Error "PVZ not found"
+// @Failure 500 {object} response.Error "Internal server error"
+// @Router /receptions [post]
 func (h *ReceptionHandlers) Create(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
@@ -67,6 +81,18 @@ func (h *ReceptionHandlers) Create(w http.ResponseWriter, r *http.Request) {
 	response.WriteJSON(w, ctx, http.StatusCreated, res)
 }
 
+// @Summary Close Last Reception
+// @Description Close the last reception for a given PVZ ID. Requires JWT-Token with Employee role.
+// @ID CloseLastReception
+// @Tags PVZ
+// @Security ApiKeyAuth
+// @Produce json
+// @Param pvzID path string true "PVZ ID"
+// @Success 200 {object} CloseLastReceptionResponse "Successfully closed last reception"
+// @Failure 400 {object} response.Error "Invalid or missing PVZ ID"
+// @Failure 404 {object} response.Error "No open reception found for this PVZ"
+// @Failure 500 {object} response.Error "Internal server error"
+// @Router /pvz/{pvzID}/close_last_reception [post]
 func (h *ReceptionHandlers) CloseLastReception(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 

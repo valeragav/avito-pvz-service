@@ -36,7 +36,7 @@ lint:
 ## swagger-init: Generate Swagger API documentation,  make sure to install swag CLI
 .PHONY: swagger-init
 swagger-init:
-	swag init -g cmd/api/main.go -o docs
+	swag init -g internal/api/swagger.go -o docs
 
 ## gen: Run go generate on all packages (e.g., code generation)
 .PHONY: gen

@@ -12,20 +12,20 @@ import (
 	"github.com/valeragav/avito-pvz-service/internal/security"
 )
 
-type PvzRoute struct {
-	pvzHandlers        *pvz.PvzHandlers
+type PVZRoute struct {
+	pvzHandlers        *pvz.PVZHandlers
 	receptionsHandlers *reception.ReceptionHandlers
 	productsHandlers   *product.ProductHandlers
 	jwtService         *security.JwtService
 }
 
-func NewPvzRoute(
-	pvzHandlers *pvz.PvzHandlers,
+func NewPVZRoute(
+	pvzHandlers *pvz.PVZHandlers,
 	receptionsHandlers *reception.ReceptionHandlers,
 	productsHandlers *product.ProductHandlers,
 	jwtService *security.JwtService,
-) *PvzRoute {
-	return &PvzRoute{
+) *PVZRoute {
+	return &PVZRoute{
 		pvzHandlers,
 		receptionsHandlers,
 		productsHandlers,
@@ -33,7 +33,7 @@ func NewPvzRoute(
 	}
 }
 
-func (router PvzRoute) Init(r chi.Router) {
+func (router PVZRoute) Init(r chi.Router) {
 	r.Route("/pvz", func(b chi.Router) {
 		b.Use(middleware.AuthMiddleware(router.jwtService))
 

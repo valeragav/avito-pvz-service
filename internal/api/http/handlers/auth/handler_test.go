@@ -34,7 +34,7 @@ func TestAuthHandlers_DummyLogin(t *testing.T) {
 		expectedCode    int
 		authServiceMock func(*mocks.MockauthService)
 		expected        string
-		expectedError   *response.ErrorResponse
+		expectedError   *response.Error
 	}{
 		{
 			name:         "successful login",
@@ -53,7 +53,7 @@ func TestAuthHandlers_DummyLogin(t *testing.T) {
 			name:         "empty body",
 			requestBody:  "",
 			expectedCode: http.StatusBadRequest,
-			expectedError: &response.ErrorResponse{
+			expectedError: &response.Error{
 				Message: "request body is empty",
 				Details: "",
 			},
@@ -62,7 +62,7 @@ func TestAuthHandlers_DummyLogin(t *testing.T) {
 			name:         "validation failed - empty role",
 			requestBody:  `{"role":""}`,
 			expectedCode: http.StatusBadRequest,
-			expectedError: &response.ErrorResponse{
+			expectedError: &response.Error{
 				Message: "field 'Role' failed on the 'required' validation",
 				Details: "",
 			},
@@ -71,7 +71,7 @@ func TestAuthHandlers_DummyLogin(t *testing.T) {
 			name:         "validation failed - invalid role",
 			requestBody:  `{"role":"test"}`,
 			expectedCode: http.StatusBadRequest,
-			expectedError: &response.ErrorResponse{
+			expectedError: &response.Error{
 				Message: "field 'Role' failed on the 'oneofci' validation",
 				Details: "",
 			},
@@ -105,7 +105,7 @@ func TestAuthHandlers_DummyLogin(t *testing.T) {
 			}
 
 			if tt.expectedError != nil {
-				var errorRes response.ErrorResponse
+				var errorRes response.Error
 				err := json.NewDecoder(w.Body).Decode(&errorRes)
 				require.NoError(t, err)
 
@@ -135,7 +135,7 @@ func TestAuthHandlers_Register(t *testing.T) {
 		expectedCode    int
 		authServiceMock func(*mocks.MockauthService)
 		expected        *RegisterResponse
-		expectedError   *response.ErrorResponse
+		expectedError   *response.Error
 	}{
 		{
 			name: "successful register - employee",
@@ -192,7 +192,7 @@ func TestAuthHandlers_Register(t *testing.T) {
 				"role":     userRoleEmployee,
 			},
 			expectedCode: http.StatusBadRequest,
-			expectedError: &response.ErrorResponse{
+			expectedError: &response.Error{
 				Message: "field 'Email' failed on the 'required' validation",
 			},
 		},
@@ -204,7 +204,7 @@ func TestAuthHandlers_Register(t *testing.T) {
 				"role":     userRoleEmployee,
 			},
 			expectedCode: http.StatusBadRequest,
-			expectedError: &response.ErrorResponse{
+			expectedError: &response.Error{
 				Message: "field 'Email' failed on the 'email' validation",
 			},
 		},
@@ -216,7 +216,7 @@ func TestAuthHandlers_Register(t *testing.T) {
 				"role":     "test",
 			},
 			expectedCode: http.StatusBadRequest,
-			expectedError: &response.ErrorResponse{
+			expectedError: &response.Error{
 				Message: "field 'Role' failed on the 'oneofci' validation",
 			},
 		},
@@ -228,7 +228,7 @@ func TestAuthHandlers_Register(t *testing.T) {
 				"role":     userRoleEmployee,
 			},
 			expectedCode: http.StatusBadRequest,
-			expectedError: &response.ErrorResponse{
+			expectedError: &response.Error{
 				Message: "email already exists",
 				Details: domain.ErrAlreadyExists.Error(),
 			},
@@ -247,7 +247,7 @@ func TestAuthHandlers_Register(t *testing.T) {
 				"role":     userRoleEmployee,
 			},
 			expectedCode: http.StatusInternalServerError,
-			expectedError: &response.ErrorResponse{
+			expectedError: &response.Error{
 				Message: "internal server error",
 				Details: "infra error",
 			},
@@ -291,7 +291,7 @@ func TestAuthHandlers_Register(t *testing.T) {
 			}
 
 			if tt.expectedError != nil {
-				var errorRes response.ErrorResponse
+				var errorRes response.Error
 				err := json.NewDecoder(w.Body).Decode(&errorRes)
 				require.NoError(t, err)
 
@@ -318,7 +318,7 @@ func TestAuthHandlers_Login(t *testing.T) {
 		expectedCode    int
 		authServiceMock func(*mocks.MockauthService)
 		expected        string
-		expectedError   *response.ErrorResponse
+		expectedError   *response.Error
 	}{
 		{
 			name: "successful login - employee",
@@ -342,7 +342,7 @@ func TestAuthHandlers_Login(t *testing.T) {
 				"password": validPassword,
 			},
 			expectedCode: http.StatusBadRequest,
-			expectedError: &response.ErrorResponse{
+			expectedError: &response.Error{
 				Message: "field 'Email' failed on the 'required' validation",
 			},
 		},
@@ -353,7 +353,7 @@ func TestAuthHandlers_Login(t *testing.T) {
 				"password": validPassword,
 			},
 			expectedCode: http.StatusBadRequest,
-			expectedError: &response.ErrorResponse{
+			expectedError: &response.Error{
 				Message: "field 'Email' failed on the 'email' validation",
 			},
 		},
@@ -370,7 +370,7 @@ func TestAuthHandlers_Login(t *testing.T) {
 					Login(gomock.Any(), gomock.Any()).
 					Return(nil, domain.ErrInvalidEmailOrPassword)
 			},
-			expectedError: &response.ErrorResponse{
+			expectedError: &response.Error{
 				Message: domain.ErrInvalidEmailOrPassword.Error(),
 				Details: domain.ErrInvalidEmailOrPassword.Error(),
 			},
@@ -388,7 +388,7 @@ func TestAuthHandlers_Login(t *testing.T) {
 					Login(gomock.Any(), gomock.Any()).
 					Return(nil, domain.ErrAlreadyExists)
 			},
-			expectedError: &response.ErrorResponse{
+			expectedError: &response.Error{
 				Message: "email already exists",
 				Details: domain.ErrAlreadyExists.Error(),
 			},
@@ -425,7 +425,7 @@ func TestAuthHandlers_Login(t *testing.T) {
 			}
 
 			if tt.expectedError != nil {
-				var errorRes response.ErrorResponse
+				var errorRes response.Error
 				err := json.NewDecoder(w.Body).Decode(&errorRes)
 				require.NoError(t, err)
 

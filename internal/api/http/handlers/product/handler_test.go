@@ -35,7 +35,7 @@ func TestProductsHandlers_DeleteLastProduct(t *testing.T) {
 		pvzIDParam    string
 		expectedCode  int
 		productMock   func(*mocks.MockproductService)
-		expectedError *response.ErrorResponse
+		expectedError *response.Error
 	}{
 		{
 			name:         "successful delete",
@@ -52,7 +52,7 @@ func TestProductsHandlers_DeleteLastProduct(t *testing.T) {
 			name:         "missing pvzID",
 			pvzIDParam:   "",
 			expectedCode: http.StatusBadRequest,
-			expectedError: &response.ErrorResponse{
+			expectedError: &response.Error{
 				Message: "pvzID is not recorded",
 			},
 		},
@@ -60,7 +60,7 @@ func TestProductsHandlers_DeleteLastProduct(t *testing.T) {
 			name:         "invalid pvzID format",
 			pvzIDParam:   "not-uuid",
 			expectedCode: http.StatusBadRequest,
-			expectedError: &response.ErrorResponse{
+			expectedError: &response.Error{
 				Message: "invalid pvzID format",
 			},
 		},
@@ -74,7 +74,7 @@ func TestProductsHandlers_DeleteLastProduct(t *testing.T) {
 					DeleteLastProduct(gomock.Any(), productID).
 					Return(nil, errors.New("storage error"))
 			},
-			expectedError: &response.ErrorResponse{
+			expectedError: &response.Error{
 				Message: "internal server error",
 				Details: "storage error",
 			},
@@ -105,7 +105,7 @@ func TestProductsHandlers_DeleteLastProduct(t *testing.T) {
 			assert.Equal(t, tt.expectedCode, w.Code)
 
 			if tt.expectedError != nil {
-				var errorRes response.ErrorResponse
+				var errorRes response.Error
 				err := json.NewDecoder(w.Body).Decode(&errorRes)
 				require.NoError(t, err)
 
@@ -137,7 +137,7 @@ func TestProductsHandlers_CreateProduct(t *testing.T) {
 		expectedCode  int
 		productMock   func(*mocks.MockproductService)
 		expected      *CreateResponse
-		expectedError *response.ErrorResponse
+		expectedError *response.Error
 	}{
 		{
 			name: "successful create",
@@ -172,7 +172,7 @@ func TestProductsHandlers_CreateProduct(t *testing.T) {
 			name:         "empty body",
 			requestBody:  "",
 			expectedCode: http.StatusBadRequest,
-			expectedError: &response.ErrorResponse{
+			expectedError: &response.Error{
 				Message: "request body is empty",
 			},
 		},
@@ -189,7 +189,7 @@ func TestProductsHandlers_CreateProduct(t *testing.T) {
 					Create(gomock.Any(), gomock.Any()).
 					Return(nil, errors.New("storage error"))
 			},
-			expectedError: &response.ErrorResponse{
+			expectedError: &response.Error{
 				Message: "internal server error",
 				Details: "storage error",
 			},
@@ -228,7 +228,7 @@ func TestProductsHandlers_CreateProduct(t *testing.T) {
 			}
 
 			if tt.expectedError != nil {
-				var errorRes response.ErrorResponse
+				var errorRes response.Error
 				err := json.NewDecoder(w.Body).Decode(&errorRes)
 				require.NoError(t, err)
 

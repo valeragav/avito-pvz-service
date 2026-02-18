@@ -4,6 +4,10 @@ import (
 	"github.com/go-chi/chi"
 	middlewareChi "github.com/go-chi/chi/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	httpSwagger "github.com/swaggo/http-swagger"
+
+	_ "github.com/valeragav/avito-pvz-service/docs"
+
 	"github.com/valeragav/avito-pvz-service/internal/api/http/handlers"
 	"github.com/valeragav/avito-pvz-service/internal/api/http/handlers/auth"
 	"github.com/valeragav/avito-pvz-service/internal/api/http/handlers/product"
@@ -27,6 +31,7 @@ func NewRouter(cnt *container.DIContainer) *chi.Mux {
 
 	router.Handle("/metrics", promhttp.Handler())
 	router.HandleFunc("/ping", handlers.PingHandler)
+	router.Handle("/swagger/*", httpSwagger.Handler())
 
 	authHandlers := auth.New(cnt.Validator, cnt.AuthUseCase)
 	pvzHandlers := pvz.New(cnt.Validator, cnt.PVZUseCase)
@@ -36,7 +41,7 @@ func NewRouter(cnt *container.DIContainer) *chi.Mux {
 	authRoute := NewAuthRoute(authHandlers)
 	authRoute.Init(router)
 
-	pvzRoute := NewPvzRoute(pvzHandlers, receptionsHandlers, productsHandlers, cnt.JwtService)
+	pvzRoute := NewPVZRoute(pvzHandlers, receptionsHandlers, productsHandlers, cnt.JwtService)
 	pvzRoute.Init(router)
 
 	productsRoute := NewProductsRoute(productsHandlers, cnt.JwtService)
