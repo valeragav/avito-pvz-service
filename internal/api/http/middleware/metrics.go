@@ -8,6 +8,16 @@ import (
 	"github.com/valeragav/avito-pvz-service/internal/metrics"
 )
 
+type responseWriter struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func (rw *responseWriter) WriteHeader(code int) {
+	rw.statusCode = code
+	rw.ResponseWriter.WriteHeader(code)
+}
+
 func Metrics(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		startTime := time.Now()
@@ -32,14 +42,4 @@ func Metrics(next http.Handler) http.Handler {
 		metrics.RestRequestDurationObserve(method, path, duration)
 		metrics.RestResponseInc(method, path, rw.statusCode)
 	})
-}
-
-type responseWriter struct {
-	http.ResponseWriter
-	statusCode int
-}
-
-func (rw *responseWriter) WriteHeader(code int) {
-	rw.statusCode = code
-	rw.ResponseWriter.WriteHeader(code)
 }

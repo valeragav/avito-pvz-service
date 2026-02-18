@@ -6,7 +6,7 @@ import (
 
 func Init() {
 	prometheus.MustRegister(
-		createdPvz,
+		createdPVZ,
 		createdProducts,
 		createdReceptions,
 		httpRequestsTotal,

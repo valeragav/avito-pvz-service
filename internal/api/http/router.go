@@ -22,6 +22,7 @@ func NewRouter(cnt *container.DIContainer) *chi.Mux {
 	router.Use(middleware.RequestID)
 	router.Use(middleware.Cors(nil))
 	router.Use(middleware.NewLogger(logger.GetLogger()))
+	router.Use(middlewareChi.Recoverer) // обязательно после NewLogger
 	router.Use(middleware.Metrics)
 
 	router.Handle("/metrics", promhttp.Handler())

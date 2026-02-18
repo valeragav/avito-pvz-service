@@ -19,7 +19,7 @@ type DIContainer struct {
 	connPostgres *pgxpool.Pool
 
 	UserRepo         *repo.UserRepository
-	PvzRepo          *repo.PVZRepository
+	PVZRepo          *repo.PVZRepository
 	CitiesRepo       *repo.CityRepository
 	ReceptionsRepo   *repo.ReceptionRepository
 	StatusesRepo     *repo.ReceptionStatusRepository
@@ -47,7 +47,7 @@ func New(cfg *config.Config, lg *logger.Logger, connPostgres *pgxpool.Pool) *DIC
 
 func (c *DIContainer) Init() error {
 	c.UserRepo = repo.NewUserRepository(c.connPostgres)
-	c.PvzRepo = repo.NewPvzRepository(c.connPostgres)
+	c.PVZRepo = repo.NewPVZRepository(c.connPostgres)
 	c.CitiesRepo = repo.NewCityRepository(c.connPostgres)
 	c.ReceptionsRepo = repo.NewReceptionRepository(c.connPostgres)
 	c.StatusesRepo = repo.NewReceptionStatusRepository(c.connPostgres)
@@ -105,7 +105,7 @@ func (c *DIContainer) GetAuthUseCase() *auth.AuthUseCase {
 
 func (c *DIContainer) GetPVZUseCase() *pvz.PVZUseCase {
 	if c.PVZUseCase == nil {
-		c.PVZUseCase = pvz.New(c.PvzRepo, c.CitiesRepo, c.ReceptionsRepo, c.ProductsRepo)
+		c.PVZUseCase = pvz.New(c.PVZRepo, c.CitiesRepo, c.ReceptionsRepo, c.ProductsRepo)
 	}
 
 	return c.PVZUseCase
@@ -113,14 +113,14 @@ func (c *DIContainer) GetPVZUseCase() *pvz.PVZUseCase {
 
 func (c *DIContainer) GetReceptionUseCase() *reception.ReceptionUseCase {
 	if c.ReceptionUseCase == nil {
-		c.ReceptionUseCase = reception.New(c.ReceptionsRepo, c.StatusesRepo, c.PvzRepo)
+		c.ReceptionUseCase = reception.New(c.ReceptionsRepo, c.StatusesRepo, c.PVZRepo)
 	}
 
 	return c.ReceptionUseCase
 }
 func (c *DIContainer) GetProductUseCase() *product.ProductUseCase {
 	if c.ProductUseCase == nil {
-		c.ProductUseCase = product.New(c.ProductsRepo, c.ReceptionsRepo, c.ProductTypesRepo, c.PvzRepo)
+		c.ProductUseCase = product.New(c.ProductsRepo, c.ReceptionsRepo, c.ProductTypesRepo, c.PVZRepo)
 	}
 
 	return c.ProductUseCase

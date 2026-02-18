@@ -61,7 +61,7 @@ func LoadConfig(configPath string) *Config {
 	}
 
 	if err != nil {
-		log.Fatal("Error loading .env file: %w", err)
+		log.Fatalf("Error loading .env file: %v", err)
 	}
 
 	return &Config{

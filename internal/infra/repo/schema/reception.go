@@ -28,7 +28,7 @@ func NewReception(d *domain.Reception) *Reception {
 	}
 }
 
-func NewDomainReception(d *Reception) *domain.Reception {
+func NewDomainReception(d Reception) *domain.Reception {
 	return &domain.Reception{
 		ID:       d.ID,
 		DateTime: d.DateTime,
@@ -37,7 +37,7 @@ func NewDomainReception(d *Reception) *domain.Reception {
 	}
 }
 
-func NewDomainReceptionList(d []*Reception) []*domain.Reception {
+func NewDomainReceptionList(d []Reception) []*domain.Reception {
 	var res = make([]*domain.Reception, 0, len(d))
 	for _, record := range d {
 		res = append(res, NewDomainReception(record))
@@ -45,7 +45,7 @@ func NewDomainReceptionList(d []*Reception) []*domain.Reception {
 	return res
 }
 
-func NewDomainReceptionWithStatus(d *ReceptionWithStatus) *domain.Reception {
+func NewDomainReceptionWithStatus(d ReceptionWithStatus) *domain.Reception {
 	return &domain.Reception{
 		ID:       d.Reception.ID,
 		PvzID:    d.Reception.PvzID,
@@ -58,7 +58,7 @@ func NewDomainReceptionWithStatus(d *ReceptionWithStatus) *domain.Reception {
 	}
 }
 
-func NewDomainReceptionWithStatusList(d []*ReceptionWithStatus) []*domain.Reception {
+func NewDomainReceptionWithStatusList(d []ReceptionWithStatus) []*domain.Reception {
 	var res = make([]*domain.Reception, 0, len(d))
 	for _, record := range d {
 		res = append(res, NewDomainReceptionWithStatus(record))

@@ -1,44 +1,42 @@
 package metrics
 
 import (
-	"github.com/google/uuid"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+// TODO: сделать отдельную структуру, чтобы тесты или при нагрузочном тестировании не портили метрику
+
 var (
-	createdPvz = prometheus.NewCounterVec(
+	createdPVZ = prometheus.NewCounter(
 		prometheus.CounterOpts{
 			Name: "created_pvz_total",
 			Help: "Total number of created Pvz.",
 		},
-		[]string{"city"},
 	)
 
-	createdProducts = prometheus.NewCounterVec(
+	createdProducts = prometheus.NewCounter(
 		prometheus.CounterOpts{
 			Name: "created_products_total",
 			Help: "Total number of created products.",
 		},
-		[]string{"pvz_id"},
 	)
 
-	createdReceptions = prometheus.NewCounterVec(
+	createdReceptions = prometheus.NewCounter(
 		prometheus.CounterOpts{
 			Name: "created_receptions_total",
 			Help: "Total number of created receptions.",
 		},
-		[]string{"pvz_id"},
 	)
 )
 
-func CreatedPvzInc(city string) {
-	createdPvz.WithLabelValues(city).Inc()
+func CreatedPVZInc() {
+	createdPVZ.Inc()
 }
 
-func CreatedProductsInc(pvzId uuid.UUID) {
-	createdProducts.WithLabelValues(pvzId.String()).Inc()
+func CreatedProductsInc() {
+	createdProducts.Inc()
 }
 
-func CreatedReceptionsInc(pvzId uuid.UUID) {
-	createdReceptions.WithLabelValues(pvzId.String()).Inc()
+func CreatedReceptionsInc() {
+	createdReceptions.Inc()
 }

@@ -8,17 +8,17 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/valeragav/avito-pvz-service/internal/domain"
+	"github.com/valeragav/avito-pvz-service/internal/infra"
 	"github.com/valeragav/avito-pvz-service/internal/infra/repo/schema"
 )
 
 type UserRepository struct {
-	db  *pgxpool.Pool
+	db  infra.DBTX
 	sqb sq.StatementBuilderType
 }
 
-func NewUserRepository(db *pgxpool.Pool) *UserRepository {
+func NewUserRepository(db infra.DBTX) *UserRepository {
 	return &UserRepository{
 		db:  db,
 		sqb: sq.StatementBuilder.PlaceholderFormat(sq.Dollar),

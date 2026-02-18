@@ -17,7 +17,7 @@ func NewReceptionStatus(d *domain.ReceptionStatus) *ReceptionStatus {
 	}
 }
 
-func NewDomainReceptionStatus(d *ReceptionStatus) *domain.ReceptionStatus {
+func NewDomainReceptionStatus(d ReceptionStatus) *domain.ReceptionStatus {
 	return &domain.ReceptionStatus{
 		ID:   d.ID,
 		Name: domain.ReceptionStatusCode(d.Name),

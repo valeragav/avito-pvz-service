@@ -20,6 +20,7 @@ func Connect(ctx context.Context, cnt PostgresConnectCfg) (*pgxpool.Pool, error)
 	if cnt.Options != "" {
 		dsn += "?" + cnt.Options
 	}
+	fmt.Println(dsn)
 
 	pool, err := pgxpool.New(ctx, dsn)
 	if err != nil {

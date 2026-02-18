@@ -26,7 +26,7 @@ func NewPVZ(d *domain.PVZ) *PVZ {
 	}
 }
 
-func NewDomainPVZ(d *PVZ) *domain.PVZ {
+func NewDomainPVZ(d PVZ) *domain.PVZ {
 	return &domain.PVZ{
 		ID:               d.ID,
 		RegistrationDate: d.RegistrationDate,
@@ -34,7 +34,7 @@ func NewDomainPVZ(d *PVZ) *domain.PVZ {
 	}
 }
 
-func NewDomainPVZList(d []*PVZ) []*domain.PVZ {
+func NewDomainPVZList(d []PVZ) []*domain.PVZ {
 	var res = make([]*domain.PVZ, 0, len(d))
 	for _, record := range d {
 		res = append(res, NewDomainPVZ(record))
@@ -42,7 +42,7 @@ func NewDomainPVZList(d []*PVZ) []*domain.PVZ {
 	return res
 }
 
-func NewDomainPVZWithCityName(d *PVZWithCityName) *domain.PVZ {
+func NewDomainPVZWithCityName(d PVZWithCityName) *domain.PVZ {
 	return &domain.PVZ{
 		ID:               d.PVZ.ID,
 		RegistrationDate: d.PVZ.RegistrationDate,
@@ -54,7 +54,7 @@ func NewDomainPVZWithCityName(d *PVZWithCityName) *domain.PVZ {
 	}
 }
 
-func NewDomainPVZWithCityNameList(d []*PVZWithCityName) []*domain.PVZ {
+func NewDomainPVZWithCityNameList(d []PVZWithCityName) []*domain.PVZ {
 	var res = make([]*domain.PVZ, 0, len(d))
 	for _, record := range d {
 		res = append(res, NewDomainPVZWithCityName(record))

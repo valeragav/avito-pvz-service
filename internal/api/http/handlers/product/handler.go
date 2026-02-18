@@ -12,6 +12,7 @@ import (
 	"github.com/valeragav/avito-pvz-service/internal/api/http/handlers/response"
 	"github.com/valeragav/avito-pvz-service/internal/domain"
 	"github.com/valeragav/avito-pvz-service/internal/dto"
+	"github.com/valeragav/avito-pvz-service/internal/metrics"
 	"github.com/valeragav/avito-pvz-service/internal/validation"
 	"github.com/valeragav/avito-pvz-service/pkg/logger"
 )
@@ -89,8 +90,9 @@ func (h *ProductHandlers) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res := ToCreateResponse(*productRes)
+	metrics.CreatedProductsInc()
 
+	res := ToCreateResponse(*productRes)
 	response.WriteJSON(w, ctx, http.StatusCreated, res)
 }
 

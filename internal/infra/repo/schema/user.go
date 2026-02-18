@@ -35,7 +35,7 @@ func (User) TableName() string {
 }
 
 func (u User) InsertColumns() []string {
-	return []string{"id", "email", "password", "role"}
+	return []string{"id", "email", "password_hash", "role"}
 }
 
 func (u User) Columns() []string {

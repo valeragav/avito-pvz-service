@@ -37,18 +37,16 @@ type chiLoggerEntry struct {
 }
 
 func (l *chiLoggerEntry) Write(status, bytes int, _ http.Header, elapsed time.Duration, _ any) {
-	l.log = l.log.With(
+	l.log.Info("request completed",
 		slog.Int("resp_status", status),
 		slog.Int("resp_bytes_length", bytes),
 		slog.String("resp_elapsed", elapsed.Round(time.Millisecond/100).String()),
 	)
-
-	l.log.Info("request completed")
 }
 
 func (l *chiLoggerEntry) Panic(v any, stack []byte) {
-	l.log = l.log.With(
+	l.log.Error("panic recovered",
+		slog.String("panic", fmt.Sprintf("%v", v)),
 		slog.String("stack", string(stack)),
-		slog.String("panic", fmt.Sprintf("%+v", v)),
 	)
 }

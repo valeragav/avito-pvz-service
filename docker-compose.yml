@@ -88,8 +88,9 @@ services:
   grafana:
     image: grafana/grafana:12.3
     container_name: avito-pvz-service_grafana
-    links:
-      - prometheus:prometheus
+    volumes:
+      - ./deploy/grafana/grafana.yml:/etc/grafana/provisioning/datasources/datasource.yaml
+      - avito-pvz-service_grafana-data:/var/lib/grafana
     ports:
       - "3030:3000"
     environment:
@@ -113,6 +114,7 @@ services:
 volumes:
   avito-pvz-service_pgdata:
   avito-pvz-service_pgdata_test:
+  avito-pvz-service_grafana-data:
 
 networks:
   avito-pvz-service_network:

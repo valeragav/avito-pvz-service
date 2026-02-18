@@ -6,17 +6,17 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/valeragav/avito-pvz-service/internal/domain"
+	"github.com/valeragav/avito-pvz-service/internal/infra"
 	"github.com/valeragav/avito-pvz-service/internal/infra/repo/schema"
 )
 
 type ProductTypeRepository struct {
-	db  *pgxpool.Pool
+	db  infra.DBTX
 	sqb sq.StatementBuilderType
 }
 
-func NewProductTypeRepository(db *pgxpool.Pool) *ProductTypeRepository {
+func NewProductTypeRepository(db infra.DBTX) *ProductTypeRepository {
 	return &ProductTypeRepository{
 		db:  db,
 		sqb: sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
@@ -60,10 +60,7 @@ func (r ProductTypeRepository) CreateBatch(ctx context.Context, productTypes []d
 		qb = qb.Values(productType.ID, productType.Name)
 	}
 
-	_, err := CollectRows(ctx, r.db, qb, pgx.RowToStructByName[*schema.ProductType])
-	if err != nil {
-		return err
-	}
+	qb = qb.Suffix("ON CONFLICT (name) DO NOTHING")
 
-	return nil
+	return Exec(ctx, r.db, qb)
 }

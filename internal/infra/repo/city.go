@@ -3,25 +3,47 @@ package repo
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/valeragav/avito-pvz-service/internal/domain"
+	"github.com/valeragav/avito-pvz-service/internal/infra"
 	"github.com/valeragav/avito-pvz-service/internal/infra/repo/schema"
 )
 
 type CityRepository struct {
-	db  *pgxpool.Pool
+	db  infra.DBTX
 	sqb sq.StatementBuilderType
 }
 
-func NewCityRepository(db *pgxpool.Pool) *CityRepository {
+func NewCityRepository(db infra.DBTX) *CityRepository {
 	return &CityRepository{
 		db:  db,
 		sqb: sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
 	}
+}
+
+func (r CityRepository) Create(ctx context.Context, city domain.City) (*domain.City, error) {
+	if city.ID == uuid.Nil {
+		city.ID = uuid.New()
+	}
+
+	record := schema.NewCity(&city)
+
+	qb := r.sqb.
+		Insert(record.TableName()).
+		Columns(record.InsertColumns()...).
+		Values(record.Values()...).
+		Suffix(fmt.Sprintf("RETURNING %s", strings.Join(record.Columns(), ", ")))
+
+	result, err := CollectOneRow(ctx, r.db, qb, pgx.RowToStructByName[schema.City])
+	if err != nil {
+		return nil, err
+	}
+
+	return schema.NewDomainCities(&result), nil
 }
 
 func (r *CityRepository) Get(ctx context.Context, filter domain.City) (*domain.City, error) {
@@ -48,7 +70,6 @@ func (r *CityRepository) Get(ctx context.Context, filter domain.City) (*domain.C
 	return schema.NewDomainCities(&result), nil
 }
 
-// use it if there are many records
 func (r CityRepository) CreateBatchPgx(ctx context.Context, cities []domain.City) error {
 	batch := &pgx.Batch{}
 
@@ -92,10 +113,7 @@ func (r CityRepository) CreateBatch(ctx context.Context, cities []domain.City) e
 		qb = qb.Values(city.ID, city.Name)
 	}
 
-	_, err := CollectRows(ctx, r.db, qb, pgx.RowToStructByName[schema.City])
-	if err != nil {
-		return err
-	}
+	qb = qb.Suffix("ON CONFLICT (name) DO NOTHING")
 
-	return nil
+	return Exec(ctx, r.db, qb)
 }

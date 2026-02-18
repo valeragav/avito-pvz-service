@@ -37,7 +37,7 @@ func NewDomainProduct(d *Product) *domain.Product {
 	}
 }
 
-func NewDomainProductWithTypeName(d *ProductWithTypeName) *domain.Product {
+func NewDomainProductWithTypeName(d ProductWithTypeName) *domain.Product {
 	return &domain.Product{
 		ID:          d.Product.ID,
 		DateTime:    d.DateTime,
@@ -50,7 +50,7 @@ func NewDomainProductWithTypeName(d *ProductWithTypeName) *domain.Product {
 	}
 }
 
-func NewDomainProductWithTypeNameList(d []*ProductWithTypeName) []*domain.Product {
+func NewDomainProductWithTypeNameList(d []ProductWithTypeName) []*domain.Product {
 	var res = make([]*domain.Product, 0, len(d))
 	for _, record := range d {
 		res = append(res, NewDomainProductWithTypeName(record))

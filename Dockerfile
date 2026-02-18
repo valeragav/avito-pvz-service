@@ -8,7 +8,8 @@ RUN go mod download
 COPY . .
 
 RUN apk add --no-cache bash protobuf protobuf-dev git make vim
-RUN go build -o avito-pvz-service ./cmd/api
+
+RUN go build -o avito-pvz-service ./cmd/app
 
 ENV PATH="/go/bin:$PATH"
 

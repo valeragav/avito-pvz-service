@@ -8,18 +8,17 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/valeragav/avito-pvz-service/internal/domain"
 	"github.com/valeragav/avito-pvz-service/internal/infra"
 	"github.com/valeragav/avito-pvz-service/internal/infra/repo/schema"
 )
 
 type ProductRepository struct {
-	db  *pgxpool.Pool
+	db  infra.DBTX
 	sqb sq.StatementBuilderType
 }
 
-func NewProductRepository(db *pgxpool.Pool) *ProductRepository {
+func NewProductRepository(db infra.DBTX) *ProductRepository {
 	return &ProductRepository{
 		db:  db,
 		sqb: sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
@@ -47,6 +46,37 @@ func (r ProductRepository) Create(ctx context.Context, product domain.Product) (
 	return schema.NewDomainProduct(&productCreate), nil
 }
 
+func (r ProductRepository) Get(ctx context.Context, filter domain.Product) (*domain.Product, error) {
+	where := sq.Eq{}
+	if filter.ID != uuid.Nil {
+		where["products.id"] = filter.ID
+	}
+	if !filter.DateTime.IsZero() {
+		where["products.date_time"] = filter.DateTime
+	}
+	if filter.TypeID != uuid.Nil {
+		where["products.type_id"] = filter.TypeID
+	}
+	if filter.ReceptionID != uuid.Nil {
+		where["products.reception_id"] = filter.ReceptionID
+	}
+
+	record := schema.NewProduct(&filter)
+
+	qb := r.sqb.
+		Select(schema.ProductWithTypeName{}.Columns()...).
+		From(record.TableName()).
+		Join("product_types ON product_types.id = products.type_id").
+		Where(where)
+
+	results, err := CollectOneRow(ctx, r.db, qb, pgx.RowToStructByName[schema.ProductWithTypeName])
+	if err != nil {
+		return nil, err
+	}
+
+	return schema.NewDomainProductWithTypeName(results), nil
+}
+
 func (r *ProductRepository) GetLastProductInReception(ctx context.Context, receptionID uuid.UUID) (*domain.Product, error) {
 	qb := r.sqb.
 		Select(schema.ProductWithTypeName{}.Columns()...).
@@ -61,7 +91,7 @@ func (r *ProductRepository) GetLastProductInReception(ctx context.Context, recep
 		return nil, err
 	}
 
-	return schema.NewDomainProductWithTypeName(&result), nil
+	return schema.NewDomainProductWithTypeName(result), nil
 }
 
 func (r *ProductRepository) DeleteProduct(ctx context.Context, productID uuid.UUID) error {
@@ -86,31 +116,14 @@ func (r *ProductRepository) DeleteProduct(ctx context.Context, productID uuid.UU
 	return nil
 }
 
-func (r *ProductRepository) GetWithProductType(ctx context.Context, productID uuid.UUID) (*domain.Product, error) {
-	qb := r.sqb.Select(
-		schema.ProductWithTypeName{}.Columns()...,
-	).
-		From(schema.Product{}.TableName()).
-		Join("product_types pt ON product_types.id = products.type_id").
-		Where(sq.Eq{"p.reception_id": productID})
-
-	results, err := CollectOneRow(ctx, r.db, qb, pgx.RowToStructByName[*schema.ProductWithTypeName])
-	if err != nil {
-		return nil, err
-	}
-
-	return schema.NewDomainProductWithTypeName(results), nil
-}
-
 func (r *ProductRepository) ListByReceptionIDsWithTypeName(ctx context.Context, receptionIDs []uuid.UUID) ([]*domain.Product, error) {
-	qb := r.sqb.Select(
-		schema.ProductWithTypeName{}.Columns()...,
-	).
+	qb := r.sqb.
+		Select(schema.ProductWithTypeName{}.Columns()...).
 		From(schema.Product{}.TableName()).
 		Join("product_types ON product_types.id = products.type_id").
 		Where(sq.Eq{"products.reception_id": receptionIDs})
 
-	results, err := CollectRows(ctx, r.db, qb, pgx.RowToStructByName[*schema.ProductWithTypeName])
+	results, err := CollectRows(ctx, r.db, qb, pgx.RowToStructByName[schema.ProductWithTypeName])
 	if err != nil {
 		return nil, err
 	}

@@ -8,17 +8,17 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/valeragav/avito-pvz-service/internal/domain"
+	"github.com/valeragav/avito-pvz-service/internal/infra"
 	"github.com/valeragav/avito-pvz-service/internal/infra/repo/schema"
 )
 
 type ReceptionRepository struct {
-	db  *pgxpool.Pool
+	db  infra.DBTX
 	sqb sq.StatementBuilderType
 }
 
-func NewReceptionRepository(db *pgxpool.Pool) *ReceptionRepository {
+func NewReceptionRepository(db infra.DBTX) *ReceptionRepository {
 	return &ReceptionRepository{
 		db:  db,
 		sqb: sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
@@ -43,7 +43,7 @@ func (r ReceptionRepository) Create(ctx context.Context, reception domain.Recept
 		return nil, err
 	}
 
-	return schema.NewDomainReception(&productCreate), nil
+	return schema.NewDomainReception(productCreate), nil
 }
 
 func (r *ReceptionRepository) GetList(ctx context.Context, filter domain.Reception) ([]*domain.Reception, error) {
@@ -56,21 +56,7 @@ func (r *ReceptionRepository) GetList(ctx context.Context, filter domain.Recepti
 		From(record.TableName()).
 		Where(where)
 
-	results, err := CollectRows(ctx, r.db, qb, pgx.RowToStructByName[*schema.Reception])
-	if err != nil {
-		return nil, err
-	}
-
-	return schema.NewDomainReceptionList(results), nil
-}
-
-func (r *ReceptionRepository) GetByIDs(ctx context.Context, receptionIDs []uuid.UUID) ([]*domain.Reception, error) {
-	qb := r.sqb.
-		Select(schema.Reception{}.Columns()...).
-		From(schema.Reception{}.TableName()).
-		Where(sq.Eq{schema.ReceptionCols.PvzID: receptionIDs})
-
-	results, err := CollectRows(ctx, r.db, qb, pgx.RowToStructByName[*schema.Reception])
+	results, err := CollectRows(ctx, r.db, qb, pgx.RowToStructByName[schema.Reception])
 	if err != nil {
 		return nil, err
 	}
@@ -93,18 +79,17 @@ func (r *ReceptionRepository) Get(ctx context.Context, filter domain.Reception) 
 		return nil, err
 	}
 
-	return schema.NewDomainReception(&result), nil
+	return schema.NewDomainReception(result), nil
 }
 
-func (r *ReceptionRepository) ListByIDsWithStatus(ctx context.Context, receptionIDs []uuid.UUID) ([]*domain.Reception, error) {
-	// TODO: нужно ли делать запросом или лучше строит строки из entity
+func (r *ReceptionRepository) ListByIDsWithStatus(ctx context.Context, pvzIDs []uuid.UUID) ([]*domain.Reception, error) {
 	qb := r.sqb.
 		Select(schema.ReceptionWithStatus{}.Columns()...).
-		From(schema.Reception{}.TableName() + " r").
-		Join("reception_statuses ON s.id = r.status_id").
-		Where(sq.Eq{"r.pvz_id": receptionIDs})
+		From(schema.Reception{}.TableName()).
+		Join("reception_statuses ON reception_statuses.id = receptions.status_id").
+		Where(sq.Eq{"receptions.pvz_id": pvzIDs})
 
-	results, err := CollectRows(ctx, r.db, qb, pgx.RowToStructByName[*schema.ReceptionWithStatus])
+	results, err := CollectRows(ctx, r.db, qb, pgx.RowToStructByName[schema.ReceptionWithStatus])
 	if err != nil {
 		return nil, err
 	}
@@ -130,7 +115,7 @@ func (r *ReceptionRepository) FindByStatus(ctx context.Context, statusName domai
 		return nil, err
 	}
 
-	return schema.NewDomainReceptionWithStatus(&result), nil
+	return schema.NewDomainReceptionWithStatus(result), nil
 }
 
 func (r *ReceptionRepository) Update(ctx context.Context, receptionID uuid.UUID, update domain.Reception) (*domain.Reception, error) {
@@ -161,7 +146,7 @@ func (r *ReceptionRepository) Update(ctx context.Context, receptionID uuid.UUID,
 		return nil, err
 	}
 
-	return schema.NewDomainReception(&result), nil
+	return schema.NewDomainReception(result), nil
 }
 
 func ToWhereMap(elem domain.Reception) sq.Eq {

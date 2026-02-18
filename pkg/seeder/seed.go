@@ -3,7 +3,6 @@ package seeder
 import (
 	"context"
 	"fmt"
-	"sync"
 )
 
 type Seed interface {
@@ -24,31 +23,19 @@ func (s *Seeder) Add(seed Seed) {
 }
 
 func (s *Seeder) Run(ctx context.Context) error {
-	var wg sync.WaitGroup
-	errCh := make(chan error, len(s.seeds))
-
-	wg.Add(len(s.seeds))
-
-	for _, seed := range s.seeds {
-		go func(seed Seed) {
-			defer wg.Done()
-			if err := seed.Run(ctx); err != nil {
-				errCh <- fmt.Errorf("failed to run seed %q: %w", seed.Name(), err)
-			}
-		}(seed)
-	}
-
-	wg.Wait()
-	close(errCh)
-
 	var combinedErr error
-	for err := range errCh {
-		if combinedErr == nil {
-			combinedErr = err
-		} else {
-			combinedErr = fmt.Errorf("%w; %w", combinedErr, err)
+	for _, seed := range s.seeds {
+
+		// Пришлось отказаться от асинхронных запросов так одновременно выполняете seed.Run,
+		// а внутри они все используют один и тот же tx (infra.DBTX), что и приводит к conn busy.
+		if err := seed.Run(ctx); err != nil {
+			wrappedErr := fmt.Errorf("failed to run seed %q: %w", seed.Name(), err)
+			if combinedErr == nil {
+				combinedErr = wrappedErr
+			} else {
+				combinedErr = fmt.Errorf("%w; %w", combinedErr, wrappedErr)
+			}
 		}
 	}
-
 	return combinedErr
 }

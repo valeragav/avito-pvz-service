@@ -72,6 +72,8 @@ func (s *PVZUseCase) Create(ctx context.Context, createIn dto.PVZCreate) (*domai
 		return nil, fmt.Errorf("%s: failed to create pvz: %w", op, err)
 	}
 
+	pvzRes.City = city
+
 	return pvzRes, nil
 }
 
@@ -134,11 +136,12 @@ func (s *PVZUseCase) List(ctx context.Context, pvzListParams *dto.PVZListParams)
 			productsWithTypeName := mapReceptionIDProducts[reception.ID]
 
 			receptionsWithProducts = append(receptionsWithProducts, &domain.Reception{
-				ID:       reception.ID,
-				PvzID:    reception.PvzID,
-				DateTime: reception.DateTime,
-				StatusID: reception.StatusID,
-				Products: productsWithTypeName,
+				ID:              reception.ID,
+				PvzID:           reception.PvzID,
+				DateTime:        reception.DateTime,
+				StatusID:        reception.StatusID,
+				Products:        productsWithTypeName,
+				ReceptionStatus: reception.ReceptionStatus,
 			})
 		}
 
@@ -147,6 +150,7 @@ func (s *PVZUseCase) List(ctx context.Context, pvzListParams *dto.PVZListParams)
 			RegistrationDate: pvz.RegistrationDate,
 			CityID:           pvz.CityID,
 			Receptions:       receptionsWithProducts,
+			City:             pvz.City,
 		})
 	}
 

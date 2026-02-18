@@ -6,17 +6,17 @@ import (
 	sq "github.com/Masterminds/squirrel"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/valeragav/avito-pvz-service/internal/domain"
+	"github.com/valeragav/avito-pvz-service/internal/infra"
 	"github.com/valeragav/avito-pvz-service/internal/infra/repo/schema"
 )
 
 type ReceptionStatusRepository struct {
-	db  *pgxpool.Pool
+	db  infra.DBTX
 	sqb sq.StatementBuilderType
 }
 
-func NewReceptionStatusRepository(db *pgxpool.Pool) *ReceptionStatusRepository {
+func NewReceptionStatusRepository(db infra.DBTX) *ReceptionStatusRepository {
 	return &ReceptionStatusRepository{
 		db:  db,
 		sqb: sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
@@ -44,7 +44,7 @@ func (r *ReceptionStatusRepository) Get(ctx context.Context, filter domain.Recep
 		return nil, err
 	}
 
-	return schema.NewDomainReceptionStatus(&result), nil
+	return schema.NewDomainReceptionStatus(result), nil
 }
 
 func (r ReceptionStatusRepository) CreateBatch(ctx context.Context, statuses []domain.ReceptionStatus) error {
@@ -60,10 +60,7 @@ func (r ReceptionStatusRepository) CreateBatch(ctx context.Context, statuses []d
 		qb = qb.Values(status.ID, status.Name)
 	}
 
-	_, err := CollectRows(ctx, r.db, qb, pgx.RowToStructByName[schema.ReceptionStatus])
-	if err != nil {
-		return err
-	}
+	qb = qb.Suffix("ON CONFLICT (name) DO NOTHING")
 
-	return nil
+	return Exec(ctx, r.db, qb)
 }
