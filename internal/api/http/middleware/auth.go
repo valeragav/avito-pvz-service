@@ -19,7 +19,17 @@ type JwtService interface {
 	ValidateJwt(string) (*domain.UserClaims, error)
 }
 
-func AuthMiddleware(jwtService JwtService) func(next http.Handler) http.Handler {
+type AuthMiddleware struct {
+	jwtService JwtService
+}
+
+func NewAuthMiddleware(jwtService JwtService) *AuthMiddleware {
+	return &AuthMiddleware{
+		jwtService,
+	}
+}
+
+func (a AuthMiddleware) Init() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()
@@ -36,7 +46,7 @@ func AuthMiddleware(jwtService JwtService) func(next http.Handler) http.Handler 
 				return
 			}
 
-			claims, err := jwtService.ValidateJwt(jvtToken)
+			claims, err := a.jwtService.ValidateJwt(jvtToken)
 			if err != nil {
 				response.WriteError(w, ctx, http.StatusUnauthorized, err.Error(), nil)
 				return
@@ -50,7 +60,7 @@ func AuthMiddleware(jwtService JwtService) func(next http.Handler) http.Handler 
 	}
 }
 
-func RequireRoles(roles ...domain.Role) func(next http.Handler) http.Handler {
+func (a AuthMiddleware) RequireRoles(roles ...domain.Role) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx := r.Context()

@@ -34,7 +34,7 @@ func New(cfg *config.Config, lg *logger.Logger, db *pgxpool.Pool) (*App, error) 
 	productRepo := postgres.NewProductRepository(db)
 	productTypeRepo := postgres.NewProductTypeRepository(db)
 
-	// infra services
+	// services
 	jwtService, err := security.New(
 		cfg.Jwt.RSAPrivateFile,
 		cfg.Jwt.RSAPublicFile,

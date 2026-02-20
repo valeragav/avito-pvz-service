@@ -203,11 +203,11 @@ func TestPVZUseCase_List(t *testing.T) {
 	endDate := time.Now()
 
 	params := &dto.PVZListParams{
-		Pagination: listparams.Pagination{
+		Pagination: &listparams.Pagination{
 			Limit: 10,
 			Page:  0,
 		},
-		Filter: dto.PVZFilter{
+		Filter: &dto.PVZFilter{
 			StartDate: &startDate,
 			EndDate:   &endDate,
 		},

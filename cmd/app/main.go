@@ -60,6 +60,11 @@ func connectPostgres(cfg *config.Config, c *closer.Closer) (*pgxpool.Pool, error
 		Port:     cfg.Db.Port,
 		Dbname:   cfg.Db.NameDb,
 		Options:  cfg.Db.Option,
+
+		MaxConns:        cfg.Db.MaxConns,
+		MinConns:        cfg.Db.MinConns,
+		MaxConnLifetime: cfg.Db.MaxConnLifetime,
+		MaxConnIdleTime: cfg.Db.MaxConnIdleTime,
 	})
 	if err != nil {
 		return nil, err

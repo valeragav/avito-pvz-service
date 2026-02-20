@@ -16,7 +16,8 @@ import (
 //go:generate mockgen -source=pvz.go -destination=./mocks/pvz_mocks.go -package=mocks
 type pvzRepo interface {
 	Create(ctx context.Context, pvz domain.PVZ) (*domain.PVZ, error)
-	ListPvzByAcceptanceDateAndCity(ctx context.Context, pagination listparams.Pagination, startDate *time.Time, endDate *time.Time) ([]*domain.PVZ, error)
+	ListPvzByAcceptanceDateAndCity(ctx context.Context, pagination *listparams.Pagination, startDate *time.Time, endDate *time.Time) ([]*domain.PVZ, error)
+	GetList(ctx context.Context, pagination *listparams.Pagination) ([]*domain.PVZ, error)
 }
 
 type cityRepo interface {
@@ -77,10 +78,37 @@ func (s *PVZUseCase) Create(ctx context.Context, createIn dto.PVZCreate) (*domai
 	return pvzRes, nil
 }
 
+func (s *PVZUseCase) ListOverview(ctx context.Context, pvzListParams *dto.PVZListParams) ([]*domain.PVZ, error) {
+	const op = "pvz.ListOverview"
+
+	var pagination *listparams.Pagination
+	if pvzListParams != nil {
+		pagination = pvzListParams.Pagination
+	}
+
+	pvzEnts, err := s.pvzRepo.GetList(ctx, pagination)
+	if err != nil {
+		return nil, fmt.Errorf("%s: failed to get list pvz: %w", op, err)
+	}
+	return pvzEnts, nil
+}
+
+// TODO: поменять название ListFull
 func (s *PVZUseCase) List(ctx context.Context, pvzListParams *dto.PVZListParams) ([]*domain.PVZ, error) {
 	const op = "pvz.List"
 
-	pvzEnts, err := s.pvzRepo.ListPvzByAcceptanceDateAndCity(ctx, pvzListParams.Pagination, pvzListParams.Filter.StartDate, pvzListParams.Filter.EndDate)
+	var pagination *listparams.Pagination
+	var startDate, endDate *time.Time
+
+	if pvzListParams != nil {
+		pagination = pvzListParams.Pagination
+		if pvzListParams.Filter != nil {
+			startDate = pvzListParams.Filter.StartDate
+			endDate = pvzListParams.Filter.EndDate
+		}
+	}
+
+	pvzEnts, err := s.pvzRepo.ListPvzByAcceptanceDateAndCity(ctx, pagination, startDate, endDate)
 	if err != nil {
 		return nil, fmt.Errorf("%s: failed to get list pvz: %w", op, err)
 	}

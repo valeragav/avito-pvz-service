@@ -102,7 +102,7 @@ func TestPVZRepository_GetList(t *testing.T) {
 			pvzList[i].ID = created.ID
 		}
 
-		gotList, err := pvzRepo.GetList(ctx)
+		gotList, err := pvzRepo.GetList(ctx, nil)
 		require.NoError(t, err)
 		require.Len(t, gotList, len(pvzList))
 
@@ -120,7 +120,7 @@ func TestPVZRepository_GetList(t *testing.T) {
 		// или создаём новую транзакцию без вставок
 		WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
 			emptyRepo := postgres.NewPVZRepository(tx)
-			list, err := emptyRepo.GetList(ctx)
+			list, err := emptyRepo.GetList(ctx, nil)
 			require.NoError(t, err)
 			assert.Len(t, list, 0)
 		})
@@ -181,7 +181,7 @@ func TestPVZRepository_ListPvzByAcceptanceDateAndCity(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		pagination := listparams.Pagination{Limit: 10, Page: 1}
+		pagination := &listparams.Pagination{Limit: 10, Page: 1}
 
 		start := now.Add(-2 * time.Hour)
 		end := now.Add(-1 * time.Minute)
@@ -243,7 +243,7 @@ func TestPVZRepository_ListPvzByAcceptanceDateAndCity_Pagination(t *testing.T) {
 			require.NoError(t, err)
 		}
 
-		pagination := listparams.Pagination{Limit: 2, Page: 1}
+		pagination := &listparams.Pagination{Limit: 2, Page: 1}
 		start := now.Add(-10 * time.Hour)
 		end := now
 		page1, err := pvzRepo.ListPvzByAcceptanceDateAndCity(ctx, pagination, &start, &end)
@@ -253,13 +253,13 @@ func TestPVZRepository_ListPvzByAcceptanceDateAndCity_Pagination(t *testing.T) {
 		// проверяем сортировку DESC
 		assert.True(t, page1[0].RegistrationDate.After(page1[1].RegistrationDate) || page1[0].RegistrationDate.Equal(page1[1].RegistrationDate))
 
-		pagination = listparams.Pagination{Limit: 2, Page: 2}
+		pagination = &listparams.Pagination{Limit: 2, Page: 2}
 		page2, err := pvzRepo.ListPvzByAcceptanceDateAndCity(ctx, pagination, &start, &end)
 		require.NoError(t, err)
 		assert.Len(t, page2, 2)
 		assert.True(t, page2[0].RegistrationDate.After(page2[1].RegistrationDate) || page2[0].RegistrationDate.Equal(page2[1].RegistrationDate))
 
-		pagination = listparams.Pagination{Limit: 2, Page: 3}
+		pagination = &listparams.Pagination{Limit: 2, Page: 3}
 		page3, err := pvzRepo.ListPvzByAcceptanceDateAndCity(ctx, pagination, &start, &end)
 		require.NoError(t, err)
 		assert.Len(t, page3, 1) // последняя страница содержит 1 элемент

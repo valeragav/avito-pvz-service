@@ -59,8 +59,23 @@ func (mr *MockpvzRepoMockRecorder) Create(ctx, pvz any) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockpvzRepo)(nil).Create), ctx, pvz)
 }
 
+// GetList mocks base method.
+func (m *MockpvzRepo) GetList(ctx context.Context, pagination *listparams.Pagination) ([]*domain.PVZ, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetList", ctx, pagination)
+	ret0, _ := ret[0].([]*domain.PVZ)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetList indicates an expected call of GetList.
+func (mr *MockpvzRepoMockRecorder) GetList(ctx, pagination any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetList", reflect.TypeOf((*MockpvzRepo)(nil).GetList), ctx, pagination)
+}
+
 // ListPvzByAcceptanceDateAndCity mocks base method.
-func (m *MockpvzRepo) ListPvzByAcceptanceDateAndCity(ctx context.Context, pagination listparams.Pagination, startDate, endDate *time.Time) ([]*domain.PVZ, error) {
+func (m *MockpvzRepo) ListPvzByAcceptanceDateAndCity(ctx context.Context, pagination *listparams.Pagination, startDate, endDate *time.Time) ([]*domain.PVZ, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListPvzByAcceptanceDateAndCity", ctx, pagination, startDate, endDate)
 	ret0, _ := ret[0].([]*domain.PVZ)

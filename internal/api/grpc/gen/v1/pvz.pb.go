@@ -4,7 +4,7 @@
 // 	protoc        v3.21.12
 // source: pvz.proto
 
-package gen
+package v1
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -226,7 +226,7 @@ const file_pvz_proto_rawDesc = "" +
 	"\n" +
 	"PVZService\x12C\n" +
 	"\n" +
-	"GetPVZList\x12\x19.pvz.v1.GetPVZListRequest\x1a\x1a.pvz.v1.GetPVZListResponseBBZ@github.com/valeragav/avito-pvz-service/internal/api/grpc/gen;genb\x06proto3"
+	"GetPVZList\x12\x19.pvz.v1.GetPVZListRequest\x1a\x1a.pvz.v1.GetPVZListResponseBDZBgithub.com/valeragav/avito-pvz-service/internal/api/grpc/gen/v1;v1b\x06proto3"
 
 var (
 	file_pvz_proto_rawDescOnce sync.Once

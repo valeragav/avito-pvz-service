@@ -59,6 +59,11 @@ type Db struct {
 	NameDb   string `yaml:"name_db"`
 	User     string `yaml:"user"`
 	Password string `yaml:"password"`
+
+	MaxConns        int32         `yaml:"max_conns"`
+	MinConns        int32         `yaml:"min_conns"`
+	MaxConnLifetime time.Duration `yaml:"max_conn_lifetime"`
+	MaxConnIdleTime time.Duration `yaml:"max_conn_idle_time"`
 }
 
 type Jwt struct {
@@ -117,6 +122,11 @@ func LoadConfig(configPath string) *Config {
 			NameDb:   MustGet[string]("DB_NAME"),
 			User:     MustGet[string]("DB_USER"),
 			Password: MustGet[string]("DB_PASSWORD"),
+
+			MaxConns:        MustGet[int32]("DB_MAX_CONNS"),
+			MinConns:        MustGet[int32]("DB_MIN_CONNS"),
+			MaxConnLifetime: MustGet[time.Duration]("DB_MAX_CONN_LIFETIME"),
+			MaxConnIdleTime: MustGet[time.Duration]("DB_MAX_CONN_IDLE_TIME"),
 		},
 		Jwt: Jwt{
 			AccessLifeTime: MustGet[time.Duration]("JWT_ASSERT_LIFE_TIME"),
@@ -172,6 +182,13 @@ func parseEnvValue[T any](key, raw string) (T, error) {
 			return zero, fmt.Errorf("env %s: invalid int64 value: %w", key, err)
 		}
 		return any(v).(T), nil
+
+	case int32:
+		v, err := strconv.ParseInt(raw, 10, 32)
+		if err != nil {
+			return zero, fmt.Errorf("env %s: invalid int64 value: %w", key, err)
+		}
+		return any(int32(v)).(T), nil
 
 	case bool:
 		v, err := strconv.ParseBool(raw)

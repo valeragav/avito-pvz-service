@@ -6,25 +6,24 @@ import (
 	"github.com/valeragav/avito-pvz-service/internal/api/http/handlers/reception"
 	"github.com/valeragav/avito-pvz-service/internal/api/http/middleware"
 	"github.com/valeragav/avito-pvz-service/internal/domain"
-	"github.com/valeragav/avito-pvz-service/internal/security"
 )
 
 type ReceptionsRoute struct {
+	authMiddleware     *middleware.AuthMiddleware
 	receptionsHandlers *reception.ReceptionHandlers
-	jwtService         *security.JwtService
 }
 
-func NewReceptionsRoute(receptionsHandlers *reception.ReceptionHandlers, jwtService *security.JwtService) *ReceptionsRoute {
+func NewReceptionsRoute(authMiddleware *middleware.AuthMiddleware, receptionsHandlers *reception.ReceptionHandlers) *ReceptionsRoute {
 	return &ReceptionsRoute{
+		authMiddleware,
 		receptionsHandlers,
-		jwtService,
 	}
 }
 
 func (router ReceptionsRoute) Init(r chi.Router) {
 	r.Route("/receptions", func(b chi.Router) {
-		b.Use(middleware.AuthMiddleware(router.jwtService))
+		b.Use(router.authMiddleware.Init())
 
-		b.With(middleware.RequireRoles(domain.EmployeeRole)).Post("/", router.receptionsHandlers.Create)
+		b.With(router.authMiddleware.RequireRoles(domain.EmployeeRole)).Post("/", router.receptionsHandlers.Create)
 	})
 }

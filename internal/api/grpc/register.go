@@ -1,7 +1,7 @@
 package grpc
 
 import (
-	"github.com/valeragav/avito-pvz-service/internal/api/grpc/gen"
+	pvz_v1 "github.com/valeragav/avito-pvz-service/internal/api/grpc/gen/v1"
 	"github.com/valeragav/avito-pvz-service/internal/app"
 	grpc "google.golang.org/grpc"
 )
@@ -9,7 +9,7 @@ import (
 func CollectRegisters(app *app.App) []RegisterFunc {
 	registers := []RegisterFunc{
 		func(s *grpc.Server) {
-			gen.RegisterPVZServiceServer(s, NewPVZServer(app.PVZUseCase))
+			pvz_v1.RegisterPVZServiceServer(s, NewPVZServer(app.PVZUseCase))
 		},
 	}
 

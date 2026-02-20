@@ -52,11 +52,11 @@ type ProductsResponse struct {
 
 func ToBuildPvzListParams(pvzListParams PvzListParams) dto.PVZListParams {
 	return dto.PVZListParams{
-		Filter: dto.PVZFilter{
+		Filter: &dto.PVZFilter{
 			StartDate: pvzListParams.Filter.StartDate,
 			EndDate:   pvzListParams.Filter.EndDate,
 		},
-		Pagination: pvzListParams.Pagination,
+		Pagination: &pvzListParams.Pagination,
 	}
 }
 

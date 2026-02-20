@@ -9,38 +9,37 @@ import (
 
 	"github.com/valeragav/avito-pvz-service/internal/api/http/middleware"
 	"github.com/valeragav/avito-pvz-service/internal/domain"
-	"github.com/valeragav/avito-pvz-service/internal/security"
 )
 
 type PVZRoute struct {
+	authMiddleware     *middleware.AuthMiddleware
 	pvzHandlers        *pvz.PVZHandlers
 	receptionsHandlers *reception.ReceptionHandlers
 	productsHandlers   *product.ProductHandlers
-	jwtService         *security.JwtService
 }
 
 func NewPVZRoute(
+	authMiddleware *middleware.AuthMiddleware,
 	pvzHandlers *pvz.PVZHandlers,
 	receptionsHandlers *reception.ReceptionHandlers,
 	productsHandlers *product.ProductHandlers,
-	jwtService *security.JwtService,
 ) *PVZRoute {
 	return &PVZRoute{
+		authMiddleware,
 		pvzHandlers,
 		receptionsHandlers,
 		productsHandlers,
-		jwtService,
 	}
 }
 
 func (router PVZRoute) Init(r chi.Router) {
 	r.Route("/pvz", func(b chi.Router) {
-		b.Use(middleware.AuthMiddleware(router.jwtService))
+		b.Use(router.authMiddleware.Init())
 
-		b.With(middleware.RequireRoles(domain.EmployeeRole, domain.ModeratorRole)).Get("/", router.pvzHandlers.List)
-		b.With(middleware.RequireRoles(domain.ModeratorRole)).Post("/", router.pvzHandlers.Create)
+		b.With(router.authMiddleware.RequireRoles(domain.EmployeeRole, domain.ModeratorRole)).Get("/", router.pvzHandlers.List)
+		b.With(router.authMiddleware.RequireRoles(domain.ModeratorRole)).Post("/", router.pvzHandlers.Create)
 
-		b.With(middleware.RequireRoles(domain.EmployeeRole)).Post("/{pvzID}/close_last_reception", router.receptionsHandlers.CloseLastReception)
-		b.With(middleware.RequireRoles(domain.EmployeeRole)).Post("/{pvzID}/delete_last_product", router.productsHandlers.DeleteLastProduct)
+		b.With(router.authMiddleware.RequireRoles(domain.EmployeeRole)).Post("/{pvzID}/close_last_reception", router.receptionsHandlers.CloseLastReception)
+		b.With(router.authMiddleware.RequireRoles(domain.EmployeeRole)).Post("/{pvzID}/delete_last_product", router.productsHandlers.DeleteLastProduct)
 	})
 }

@@ -10,28 +10,41 @@ import (
 
 type PostgresConnectCfg struct {
 	User, Password, Host, Port, Dbname, Options string
+	MaxConns                                    int32
+	MinConns                                    int32
+	MaxConnLifetime                             time.Duration
+	MaxConnIdleTime                             time.Duration
 }
 
-func Connect(ctx context.Context, cnt PostgresConnectCfg) (*pgxpool.Pool, error) {
+func Connect(ctx context.Context, cfg PostgresConnectCfg) (*pgxpool.Pool, error) {
 	dsn := fmt.Sprintf(
 		"postgres://%s:%s@%s:%s/%s",
-		cnt.User, cnt.Password, cnt.Host, cnt.Port, cnt.Dbname,
+		cfg.User, cfg.Password, cfg.Host, cfg.Port, cfg.Dbname,
 	)
 
-	if cnt.Options != "" {
-		dsn += "?" + cnt.Options
+	if cfg.Options != "" {
+		dsn += "?" + cfg.Options
 	}
+
+	fmt.Println(dsn)
 
 	config, err := pgxpool.ParseConfig(dsn)
 	if err != nil {
-		panic(fmt.Errorf("unable to parse config: %w", err))
+		return nil, fmt.Errorf("unable to parse config: %w", err)
 	}
 
-	// TODO: вынести в конфиг
-	config.MaxConns = 300
-	config.MinConns = 100
-	config.MaxConnLifetime = 10 * time.Minute
-	config.MaxConnIdleTime = 5 * time.Minute
+	if cfg.MaxConns > 0 {
+		config.MaxConns = cfg.MaxConns
+	}
+	if cfg.MinConns >= 0 {
+		config.MinConns = cfg.MinConns
+	}
+	if cfg.MaxConnLifetime > 0 {
+		config.MaxConnLifetime = cfg.MaxConnLifetime
+	}
+	if cfg.MaxConnIdleTime > 0 {
+		config.MaxConnIdleTime = cfg.MaxConnIdleTime
+	}
 
 	pool, err := pgxpool.NewWithConfig(ctx, config)
 	if err != nil {

@@ -6,25 +6,24 @@ import (
 	"github.com/valeragav/avito-pvz-service/internal/api/http/handlers/product"
 	"github.com/valeragav/avito-pvz-service/internal/api/http/middleware"
 	"github.com/valeragav/avito-pvz-service/internal/domain"
-	"github.com/valeragav/avito-pvz-service/internal/security"
 )
 
 type ProductsRoute struct {
+	authMiddleware   *middleware.AuthMiddleware
 	productsHandlers *product.ProductHandlers
-	jwtService       *security.JwtService
 }
 
-func NewProductsRoute(productsHandlers *product.ProductHandlers, jwtService *security.JwtService) *ProductsRoute {
+func NewProductsRoute(authMiddleware *middleware.AuthMiddleware, productsHandlers *product.ProductHandlers) *ProductsRoute {
 	return &ProductsRoute{
+		authMiddleware,
 		productsHandlers,
-		jwtService,
 	}
 }
 
 func (router ProductsRoute) Init(r chi.Router) {
 	r.Route("/products", func(b chi.Router) {
-		b.Use(middleware.AuthMiddleware(router.jwtService))
+		b.Use(router.authMiddleware.Init())
 
-		b.With(middleware.RequireRoles(domain.EmployeeRole)).Post("/", router.productsHandlers.Create)
+		b.With(router.authMiddleware.RequireRoles(domain.EmployeeRole)).Post("/", router.productsHandlers.Create)
 	})
 }

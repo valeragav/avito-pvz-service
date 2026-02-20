@@ -74,15 +74,18 @@ func (r *PVZRepository) Get(ctx context.Context, filter domain.PVZ) (*domain.PVZ
 	return schema.NewDomainPVZ(result), nil
 }
 
-func (r *PVZRepository) ListPvzByAcceptanceDateAndCity(ctx context.Context, pagination listparams.Pagination, startDate, endDate *time.Time) ([]*domain.PVZ, error) {
+func (r *PVZRepository) ListPvzByAcceptanceDateAndCity(ctx context.Context, pagination *listparams.Pagination, startDate, endDate *time.Time) ([]*domain.PVZ, error) {
 	qb := r.sqb.
 		Select(schema.PVZWithCityName{}.Columns()...).
 		From("pvz").
 		Join("receptions ON receptions.pvz_id = pvz.id").
 		Join("cities ON cities.id = pvz.city_id").
-		OrderBy("pvz.registration_date DESC").
-		Limit(uint64(pagination.Limit)).
-		Offset(uint64(pagination.Offset()))
+		OrderBy("pvz.registration_date DESC")
+
+	if pagination != nil {
+		qb = qb.Limit(uint64(pagination.Limit)).
+			Offset(uint64(pagination.Offset()))
+	}
 
 	if startDate != nil && endDate != nil {
 		qb = qb.Where(
@@ -109,15 +112,21 @@ func (r *PVZRepository) ListPvzByAcceptanceDateAndCity(ctx context.Context, pagi
 	return schema.NewDomainPVZWithCityNameList(results), nil
 }
 
-func (r *PVZRepository) GetList(ctx context.Context) ([]*domain.PVZ, error) {
+func (r *PVZRepository) GetList(ctx context.Context, pagination *listparams.Pagination) ([]*domain.PVZ, error) {
 	qb := r.sqb.
-		Select(schema.PVZ{}.Columns()...).
-		From(schema.PVZ{}.TableName())
+		Select(schema.PVZWithCityName{}.Columns()...).
+		From(schema.PVZ{}.TableName()).
+		Join("cities ON cities.id = pvz.city_id")
 
-	results, err := CollectRows(ctx, r.db, qb, pgx.RowToStructByName[schema.PVZ])
+	if pagination != nil {
+		qb = qb.Limit(uint64(pagination.Limit)).
+			Offset(uint64(pagination.Offset()))
+	}
+
+	results, err := CollectRows(ctx, r.db, qb, pgx.RowToStructByName[schema.PVZWithCityName])
 	if err != nil {
 		return nil, err
 	}
 
-	return schema.NewDomainPVZList(results), nil
+	return schema.NewDomainPVZWithCityNameList(results), nil
 }

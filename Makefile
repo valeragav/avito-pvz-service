@@ -94,7 +94,7 @@ proto:
 
 
 PROTO_DIR = api/v1/proto
-OUT_DIR   = internal/api/grpc/gen
+OUT_DIR   = internal/api/grpc/gen/v1
 
 proto-1:
 	protoc -I $(PROTO_DIR) $(PROTO_DIR)/*.proto \

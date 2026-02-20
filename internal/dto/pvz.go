@@ -14,8 +14,8 @@ type PVZCreate struct {
 }
 
 type PVZListParams struct {
-	Filter     PVZFilter
-	Pagination listparams.Pagination
+	Filter     *PVZFilter
+	Pagination *listparams.Pagination
 }
 
 type PVZFilter struct {

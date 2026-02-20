@@ -29,6 +29,8 @@ func NewRouter(app *app.App) *chi.Mux {
 	router.Use(middlewareChi.Recoverer) // обязательно после NewLogger
 	router.Use(middleware.Metrics)
 
+	authMiddleware := middleware.NewAuthMiddleware(app.JwtService)
+
 	router.HandleFunc("/ping", handlers.PingHandler)
 
 	authHandlers := auth.New(app.Validator, app.AuthUseCase)
@@ -39,13 +41,13 @@ func NewRouter(app *app.App) *chi.Mux {
 	authRoute := NewAuthRoute(authHandlers)
 	authRoute.Init(router)
 
-	pvzRoute := NewPVZRoute(pvzHandlers, receptionsHandlers, productsHandlers, app.JwtService)
+	pvzRoute := NewPVZRoute(authMiddleware, pvzHandlers, receptionsHandlers, productsHandlers)
 	pvzRoute.Init(router)
 
-	productsRoute := NewProductsRoute(productsHandlers, app.JwtService)
+	productsRoute := NewProductsRoute(authMiddleware, productsHandlers)
 	productsRoute.Init(router)
 
-	receptionsRoute := NewReceptionsRoute(receptionsHandlers, app.JwtService)
+	receptionsRoute := NewReceptionsRoute(authMiddleware, receptionsHandlers)
 	receptionsRoute.Init(router)
 
 	return router
