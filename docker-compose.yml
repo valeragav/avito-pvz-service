@@ -99,17 +99,17 @@ services:
     networks:
       - avito-pvz-service_network
 
-  # k6-load-test:
-  #   image: grafana/k6:1.6.0
-  #   container_name: avito-pvz-service_k6-load-test
-  #   volumes:
-  #     - ./e2e/k6/scripts:/scripts
-  #   networks:
-  #     - app_network
-  #   depends_on:
-  #     - pvz-service
-  #   restart: on-failure
-  #   command: run /scripts/pvz_loadtest.js
+  k6-load-test:
+    image: grafana/k6:1.6.0
+    container_name: avito-pvz-service_k6-load-test
+    volumes:
+      - ./e2e/k6/scripts:/scripts
+    networks:
+      - app_network
+    depends_on:
+      - pvz-service
+    restart: on-failure
+    command: run /scripts/pvz_loadtest.js
 
 volumes:
   avito-pvz-service_pgdata:

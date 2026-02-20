@@ -13,7 +13,7 @@ type DummyLoginRequest struct {
 type RegisterRequest struct {
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required,min=6,max=255"`
-	Role     string `json:"role" validate:"required,oneofci=employee moderator"`
+	Role     string `json:"role" validate:"required"`
 }
 
 type RegisterResponse struct {
@@ -31,7 +31,7 @@ func ToRegisterIn(req RegisterRequest) dto.RegisterIn {
 	return dto.RegisterIn{
 		Email:    req.Email,
 		Password: req.Password,
-		Role:     domain.Role(req.Role),
+		Role:     req.Role,
 	}
 }
 

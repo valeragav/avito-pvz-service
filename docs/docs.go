@@ -383,7 +383,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Successfully deleted",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/response.Empty"
                         }
                     },
                     "400": {
@@ -770,6 +770,9 @@ const docTemplate = `{
                 }
             }
         },
+        "response.Empty": {
+            "type": "object"
+        },
         "response.Error": {
             "type": "object",
             "properties": {
@@ -799,7 +802,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/",
 	Schemes:          []string{},
 	Title:            "PVZ service",
-	Description:      "Server for working with pvz",
+	Description:      "Сервис для управления ПВЗ и приемкой товаров",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

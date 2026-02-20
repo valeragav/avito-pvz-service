@@ -41,7 +41,7 @@ func TestAuthUseCase_Register(t *testing.T) {
 	registerReq := dto.RegisterIn{
 		Email:    "newuser@email.ru",
 		Password: password,
-		Role:     domain.ModeratorRole,
+		Role:     "moderator",
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -141,7 +141,7 @@ func TestAuthUseCase_Register(t *testing.T) {
 			}
 
 			require.Equal(t, tt.req.Email, user.Email)
-			require.Equal(t, tt.req.Role, user.Role)
+			require.Equal(t, tt.req.Role, string(user.Role))
 			require.NotEmpty(t, user.PasswordHash)
 		})
 	}

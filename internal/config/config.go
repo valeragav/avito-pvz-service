@@ -89,50 +89,56 @@ func LoadConfig(configPath string) *Config {
 	return &Config{
 		Env:      MustGetDef("ENV", "test"),
 		LogLevel: MustGetDef("LOG_LEVEL", "info"),
-		HTTPServer: HTTPServer{
-			Address:           MustGet[string]("HTTP_SERVER_ADDRESS"),
-			ReadTimeout:       MustGet[time.Duration]("HTTP_SERVER_READ_TIMEOUT"),
-			ReadHeaderTimeout: MustGet[time.Duration]("HTTP_SERVER_READ_HEADER_TIMEOUT"),
-			WriteTimeout:      MustGet[time.Duration]("HTTP_SERVER_WRITE_TIMEOUT"),
-			IdleTimeout:       MustGet[time.Duration]("HTTP_SERVER_IDLE_TIMEOUT"),
-		},
-		MetricsServer: MetricsServer{
-			Address:      MustGet[string]("METRICS_SERVER_ADDRESS"),
-			ReadTimeout:  MustGet[time.Duration]("METRICS_SERVER_READ_TIMEOUT"),
-			WriteTimeout: MustGet[time.Duration]("METRICS_SERVER_WRITE_TIMEOUT"),
-			IdleTimeout:  MustGet[time.Duration]("METRICS_SERVER_IDLE_TIMEOUT"),
-		},
-		SwaggerServer: SwaggerServer{
-			Enabled:      MustGet[bool]("SWAGGER_SERVER_ENABLED"),
-			Address:      MustGet[string]("SWAGGER_SERVER_ADDRESS"),
-			ReadTimeout:  MustGet[time.Duration]("SWAGGER_SERVER_READ_TIMEOUT"),
-			WriteTimeout: MustGet[time.Duration]("SWAGGER_SERVER_WRITE_TIMEOUT"),
-			IdleTimeout:  MustGet[time.Duration]("SWAGGER_SERVER_IDLE_TIMEOUT"),
-		},
-		GRPC: GRPC{
-			Address:     MustGet[string]("GRPC_SERVER_ADDRESS"),
-			MaxConnIdle: MustGet[time.Duration]("GRPC_MAX_CONN_IDLE"),
-			MaxConnAge:  MustGet[time.Duration]("GRPC_MAX_CONN_AGE"),
-		},
-		Db: Db{
-			Option:   MustGet[string]("DB_OPTION"),
-			Driver:   MustGet[string]("DB_DRIVER"),
-			Host:     MustGet[string]("DB_HOST"),
-			Port:     MustGet[string]("DB_PORT"),
-			NameDb:   MustGet[string]("DB_NAME"),
-			User:     MustGet[string]("DB_USER"),
-			Password: MustGet[string]("DB_PASSWORD"),
 
-			MaxConns:        MustGet[int32]("DB_MAX_CONNS"),
-			MinConns:        MustGet[int32]("DB_MIN_CONNS"),
-			MaxConnLifetime: MustGet[time.Duration]("DB_MAX_CONN_LIFETIME"),
-			MaxConnIdleTime: MustGet[time.Duration]("DB_MAX_CONN_IDLE_TIME"),
+		HTTPServer: HTTPServer{
+			Address:           MustGetDef("HTTP_SERVER_ADDRESS", ":8080"),
+			ReadTimeout:       MustGetDef("HTTP_SERVER_READ_TIMEOUT", 5*time.Second),
+			ReadHeaderTimeout: MustGetDef("HTTP_SERVER_READ_HEADER_TIMEOUT", 3*time.Second),
+			WriteTimeout:      MustGetDef("HTTP_SERVER_WRITE_TIMEOUT", 5*time.Second),
+			IdleTimeout:       MustGetDef("HTTP_SERVER_IDLE_TIMEOUT", time.Minute),
 		},
+
+		MetricsServer: MetricsServer{
+			Address:      MustGetDef("METRICS_SERVER_ADDRESS", ":9091"),
+			ReadTimeout:  MustGetDef("METRICS_SERVER_READ_TIMEOUT", 5*time.Second),
+			WriteTimeout: MustGetDef("METRICS_SERVER_WRITE_TIMEOUT", 5*time.Second),
+			IdleTimeout:  MustGetDef("METRICS_SERVER_IDLE_TIMEOUT", time.Minute),
+		},
+
+		SwaggerServer: SwaggerServer{
+			Enabled:      MustGetDef("SWAGGER_SERVER_ENABLED", true),
+			Address:      MustGetDef("SWAGGER_SERVER_ADDRESS", ":8081"),
+			ReadTimeout:  MustGetDef("SWAGGER_SERVER_READ_TIMEOUT", 3*time.Second),
+			WriteTimeout: MustGetDef("SWAGGER_SERVER_WRITE_TIMEOUT", 5*time.Second),
+			IdleTimeout:  MustGetDef("SWAGGER_SERVER_IDLE_TIMEOUT", time.Minute),
+		},
+
+		GRPC: GRPC{
+			Address:     MustGetDef("GRPC_SERVER_ADDRESS", ":3000"),
+			MaxConnIdle: MustGetDef("GRPC_MAX_CONN_IDLE", 5*time.Minute),
+			MaxConnAge:  MustGetDef("GRPC_MAX_CONN_AGE", 10*time.Minute),
+		},
+
+		Db: Db{
+			Option:   MustGetDef("DB_OPTION", "sslmode=disable"),
+			Driver:   MustGetDef("DB_DRIVER", "postgres"),
+			Host:     MustGetDef("DB_HOST", "postgres"),
+			Port:     MustGetDef("DB_PORT", "5432"),
+			NameDb:   MustGetDef("DB_NAME", "pvz-service_db"),
+			User:     MustGetDef("DB_USER", "root"),
+			Password: MustGetDef("DB_PASSWORD", "root"),
+
+			MaxConns:        MustGetDef("DB_MAX_CONNS", int32(100)),
+			MinConns:        MustGetDef("DB_MIN_CONNS", int32(10)),
+			MaxConnLifetime: MustGetDef("DB_MAX_CONN_LIFETIME", 10*time.Minute),
+			MaxConnIdleTime: MustGetDef("DB_MAX_CONN_IDLE_TIME", 5*time.Minute),
+		},
+
 		Jwt: Jwt{
-			AccessLifeTime: MustGet[time.Duration]("JWT_ASSERT_LIFE_TIME"),
-			Iss:            MustGet[string]("JWT_ISSUER"),
-			RSAPublicFile:  MustGet[string]("JWT_RSA_PUBLIC_PEM_FILE"),
-			RSAPrivateFile: MustGet[string]("JWT_RSA_PRIVATE_PEM_FILE"),
+			AccessLifeTime: MustGetDef("JWT_ACCESS_LIFE_TIME", 2*time.Hour),
+			Iss:            MustGetDef("JWT_ISSUER", "avito-pvz-service"),
+			RSAPublicFile:  MustGetDef("JWT_RSA_PUBLIC_PEM_FILE", "secrets/public.pem"),
+			RSAPrivateFile: MustGetDef("JWT_RSA_PRIVATE_PEM_FILE", "secrets/private.pem"),
 		},
 	}
 }

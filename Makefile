@@ -28,77 +28,114 @@ start:
 test:
 	go test -v -fullpath=true -timeout 30s ./...
 
-## lint: Run code linter to check for errors and style issues, make sure to install golangci-lint
-.PHONY: lint
-lint:
-	golangci-lint run
-
-## swagger-init: Generate Swagger API documentation,  make sure to install swag CLI
-.PHONY: swagger-init
-swagger-init:
-	swag init -g internal/api/swagger.go -o docs
-
 ## gen: Run go generate on all packages (e.g., code generation)
 .PHONY: gen
 gen:
 	go generate ./...
 
-# Migration
+# Migration Docker
 DOCKER_NETWORK=avito-pvz-service_avito-pvz-service_network
-DATABASE_URL=postgres://$(DB_USER):$(DB_PASSWORD)@postgres:$(DB_INTERNAL_PORT)/$(DB_NAME)?$(DB_OPTION)
+DATABASE_URL="postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_INTERNAL_PORT)/$(DB_NAME)?$(DB_OPTION)"
 
 MIGRATE_RUN=docker run --rm \
 	$(if $(DOCKER_NETWORK),--network $(DOCKER_NETWORK),) \
 	-v $(PWD)/migrations:/migrations \
 	migrate/migrate:v4.19.1 \
 	-path=/migrations \
-	-database "$(DATABASE_URL)"
+	-database $(DATABASE_URL)
 
-## create-migration: Create an empty migration
-.PHONY: create-migration
-create-migration:
+## migration-docker-create: Create an empty migration
+.PHONY: migration-docker-create
+migration-docker-create:
 	@read -p "Enter migration name: " NAME; \
 	docker run --rm \
 		-v $(PWD)/migrations:/migrations \
 		migrate/migrate:v4.19.1 \
 		create -ext sql -dir /migrations -seq $$NAME
 
-## migrate-up: Migration up
-.PHONY: migrate-up
-migrate-up:
+## migrate-docker-up: Migration up
+.PHONY: migrate-docker-up
+migrate-docker-up:
 	$(MIGRATE_RUN) up
 
-## migrate-down: Migration down
-.PHONY: migrate-down
-migrate-down:
+## migrate-docker-down: Migration down
+.PHONY: migrate-docker-down
+migrate-docker-down:
 	@read -p "Number of migrations to rollback (default: 1): " NUM; \
 	NUM=$${NUM:-1}; \
 	$(MIGRATE_RUN) down $$NUM
 
-## migrate-version: Migration version
-.PHONY: migrate-version
-migrate-version:
+## migrate-docker-version: Migration version
+.PHONY: migrate-docker-version
+migrate-docker-version:
 	$(MIGRATE_RUN) version
 
+LOCAL_BIN:=$(CURDIR)/bin
 
+## bin-deps: Install all necessary binary dependencies
+.PHONY: bin-deps
+bin-deps:
+	$(info Installing binary dependencies...)
+	@mkdir -p $(LOCAL_BIN)
 
-PROTO=api/v1/proto/*.proto
-OUT=internal/api/grpc/gen
+	@tmp_dir=$$(mktemp -d); \
+	git clone --depth 1 --branch v2.10.1 https://github.com/golangci/golangci-lint.git $$tmp_dir; \
+	cd $$tmp_dir/cmd/golangci-lint; \
+	go build -o $(LOCAL_BIN)/golangci-lint; \
+	cd -; \
+	rm -rf $$tmp_dir
 
-proto:
-	protoc -I api/v1/proto \
-		$(PROTO) \
-		--go_out=$(OUT) --go_opt=paths=source_relative \
-		--go-grpc_out=$(OUT) --go-grpc_opt=paths=source_relative
+	GOBIN=$(LOCAL_BIN) go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+	GOBIN=$(LOCAL_BIN) go install github.com/swaggo/swag/cmd/swag@latest
+	GOBIN=$(LOCAL_BIN) go install go.uber.org/mock/mockgen@latest
+	GOBIN=$(LOCAL_BIN) go install github.com/envoyproxy/protoc-gen-validate@latest
+	GOBIN=$(LOCAL_BIN) go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+	GOBIN=$(LOCAL_BIN) go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
 
+## lint: Run code linter
+.PHONY: lint
+lint:
+	$(LOCAL_BIN)/golangci-lint run 
 
+## swagger-init: Generate Swagger API documentation
+.PHONY: swagger-init
+swagger-init:
+	$(LOCAL_BIN)/swag init -g internal/api/swagger.go -o docs
 
-PROTO_DIR = api/v1/proto
-OUT_DIR   = internal/api/grpc/gen/v1
+PROTO_DIR = ./api/v1/proto
+OUT_DIR   = ./internal/api/grpc/gen/v1
 
-proto-1:
+## all-generate-proto: Install dependencies and generate proto code
+.PHONY: all-generate-proto
+all-generate-proto: bin-deps generate-proto
+
+## generate-proto: Generate gRPC and Protobuf code with validation
+.PHONY: generate-proto
+generate-proto:
+	mkdir -p $(OUT_DIR)
 	protoc -I $(PROTO_DIR) $(PROTO_DIR)/*.proto \
-		--go_out=$(OUT_DIR) --go_opt=paths=source_relative \
-		--go-grpc_out=$(OUT_DIR) --go-grpc_opt=paths=source_relative \
-		--plugin=protoc-gen-validate=/home/halon/go/bin/protoc-gen-validate \
-		--validate_out="lang=go,paths=source_relative:$(OUT_DIR)"
+		--plugin=protoc-gen-go=$(LOCAL_BIN)/protoc-gen-go --go_out=$(OUT_DIR) --go_opt=paths=source_relative\
+		--plugin=protoc-gen-go-grpc=$(LOCAL_BIN)/protoc-gen-go-grpc --go-grpc_out=$(OUT_DIR) --go-grpc_opt=paths=source_relative \
+		--plugin=protoc-gen-validate=$(LOCAL_BIN)/protoc-gen-validate --validate_out="lang=go,paths=source_relative:$(OUT_DIR)"
+
+## migrate-create: Create a new migration with local migrate binary
+.PHONY: migrate-create
+migrate-create:
+	@test -n "$(NAME)" || (echo "Error: NAME variable is required"; exit 1)
+	$(LOCAL_BIN)/migrate create -ext sql -dir ${CURDIR}/migrations -seq $(NAME)
+
+## migrate-up: Apply migrations using local migrate binary
+.PHONY: migrate-up
+migrate-up:
+	$(LOCAL_BIN)/migrate -path=${CURDIR}/migrations -database=$(DATABASE_URL) up
+
+## migrate-down: Rollback migrations using local migrate binary
+.PHONY: migrate-down
+migrate-down:
+	@read -p "Number of migrations to rollback (default: 1): " NUM; NUM=$${NUM:-1}; \
+	$(LOCAL_BIN)/migrate -path=${CURDIR}/migrations -database=$(DATABASE_URL) down $(NUM)
+
+## migrate-version: Show current migration version
+.PHONY: migrate-version
+migrate-version:
+	$(LOCAL_BIN)/migrate -path=${CURDIR}/migrations -database=$(DATABASE_URL) version

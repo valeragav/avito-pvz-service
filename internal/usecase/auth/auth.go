@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/valeragav/avito-pvz-service/internal/domain"
 	"github.com/valeragav/avito-pvz-service/internal/dto"
@@ -52,6 +53,11 @@ func (s *AuthUseCase) GenerateToken(role domain.Role) (*domain.Token, error) {
 func (s *AuthUseCase) Register(ctx context.Context, registerReq dto.RegisterIn) (*domain.User, error) {
 	const op = "auth.Register"
 
+	role := domain.Role(strings.ToLower(registerReq.Role))
+	if !role.IsValid() {
+		return nil, domain.ErrInvalidRole
+	}
+
 	exists, err := s.userRepo.Get(ctx, domain.User{Email: registerReq.Email})
 	if err != nil && !errors.Is(err, infra.ErrNotFound) {
 		return nil, fmt.Errorf("%s: failed to check if user exists: %w", op, err)
@@ -60,17 +66,12 @@ func (s *AuthUseCase) Register(ctx context.Context, registerReq dto.RegisterIn) 
 		return nil, domain.ErrAlreadyExists
 	}
 
-	domainUser := domain.User{
-		Email: registerReq.Email,
-		Role:  registerReq.Role,
-	}
-
-	domainUser.PasswordHash, err = generateHashPass(registerReq.Password)
+	domainUser, err := domain.NewUser(registerReq.Email, registerReq.Password, role)
 	if err != nil {
-		return nil, fmt.Errorf("%s: generateHashPass %w", op, err)
+		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	createdUser, err := s.userRepo.Create(ctx, domainUser)
+	createdUser, err := s.userRepo.Create(ctx, *domainUser)
 	if err != nil {
 		return nil, fmt.Errorf("%s: to create user: %w", op, err)
 	}
@@ -101,12 +102,4 @@ func (s *AuthUseCase) Login(ctx context.Context, loginReq dto.LoginIn) (*domain.
 	domainToken := domain.Token(token)
 
 	return &domainToken, nil
-}
-
-func generateHashPass(reqPass string) (string, error) {
-	hashBytes, err := bcrypt.GenerateFromPassword([]byte(reqPass), bcrypt.MinCost)
-	if err != nil {
-		return "", fmt.Errorf("generate password hash: %w", err)
-	}
-	return string(hashBytes), nil
 }
