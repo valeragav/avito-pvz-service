@@ -13,7 +13,7 @@ import (
 )
 
 type builder interface {
-	ToSql() (string, []interface{}, error)
+	ToSql() (string, []any, error)
 }
 
 func Exec(ctx context.Context, db DBTX, builder builder) error {

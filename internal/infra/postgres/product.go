@@ -36,7 +36,7 @@ func (r ProductRepository) Create(ctx context.Context, product domain.Product) (
 		Insert(record.TableName()).
 		Columns(record.InsertColumns()...).
 		Values(record.Values()...).
-		Suffix(fmt.Sprintf("RETURNING %s", strings.Join(record.Columns(), ", ")))
+		Suffix("RETURNING " + strings.Join(record.Columns(), ", "))
 
 	productCreate, err := CollectOneRow(ctx, r.db, qb, pgx.RowToStructByName[schema.Product])
 	if err != nil {

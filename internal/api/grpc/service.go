@@ -20,7 +20,7 @@ type Server struct {
 	addr       string
 }
 
-func NewServer(ctx context.Context, name string, addr string, registerFuncs []RegisterFunc, opts ...grpc.ServerOption) (*Server, error) {
+func NewServer(ctx context.Context, name, addr string, registerFuncs []RegisterFunc, opts ...grpc.ServerOption) (*Server, error) {
 	const op = "grpc.NewServer"
 
 	lc := net.ListenConfig{}

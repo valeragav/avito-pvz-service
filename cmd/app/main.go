@@ -40,13 +40,13 @@ func main() {
 		return
 	}
 
-	app, err := app.New(cfg, lg, connPostgres)
+	appService, err := app.New(cfg, lg, connPostgres)
 	if err != nil {
 		logger.Error("database connection error", "err", err)
 		return
 	}
 
-	api.NewApi(ctx, c, cfg, app)
+	api.NewApi(ctx, c, cfg, appService)
 }
 
 func connectPostgres(cfg *config.Config, c *closer.Closer) (*pgxpool.Pool, error) {

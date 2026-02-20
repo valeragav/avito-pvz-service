@@ -16,7 +16,7 @@ import (
 	"github.com/valeragav/avito-pvz-service/pkg/logger"
 )
 
-func NewRouter(app *app.App) *chi.Mux {
+func NewRouter(appService *app.App) *chi.Mux {
 	router := chi.NewRouter()
 
 	router.Use(middlewareChi.RealIP)
@@ -29,14 +29,14 @@ func NewRouter(app *app.App) *chi.Mux {
 	router.Use(middlewareChi.Recoverer) // обязательно после NewLogger
 	router.Use(middleware.Metrics)
 
-	authMiddleware := middleware.NewAuthMiddleware(app.JwtService)
+	authMiddleware := middleware.NewAuthMiddleware(appService.JwtService)
 
 	router.HandleFunc("/ping", handlers.PingHandler)
 
-	authHandlers := auth.New(app.Validator, app.AuthUseCase)
-	pvzHandlers := pvz.New(app.Validator, app.PVZUseCase)
-	receptionsHandlers := reception.New(app.Validator, app.ReceptionUseCase)
-	productsHandlers := product.New(app.Validator, app.ProductUseCase)
+	authHandlers := auth.New(appService.Validator, appService.AuthUseCase)
+	pvzHandlers := pvz.New(appService.Validator, appService.PVZUseCase)
+	receptionsHandlers := reception.New(appService.Validator, appService.ReceptionUseCase)
+	productsHandlers := product.New(appService.Validator, appService.ProductUseCase)
 
 	authRoute := NewAuthRoute(authHandlers)
 	authRoute.Init(router)

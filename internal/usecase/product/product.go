@@ -12,7 +12,7 @@ import (
 	"github.com/valeragav/avito-pvz-service/internal/infra"
 )
 
-//go:generate mockgen -source=product.go -destination=./mocks/product_mocks.go -package=mocks
+//go:generate ${LOCAL_BIN}/mockgen -source=product.go -destination=./mocks/product_mocks.go -package=mocks
 type productRepo interface {
 	Create(ctx context.Context, product domain.Product) (*domain.Product, error)
 	DeleteProduct(ctx context.Context, productID uuid.UUID) error

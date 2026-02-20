@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"context"
-	"fmt"
 	"strings"
 	"time"
 
@@ -37,7 +36,7 @@ func (r PVZRepository) Create(ctx context.Context, pvz domain.PVZ) (*domain.PVZ,
 		Insert(record.TableName()).
 		Columns(record.InsertColumns()...).
 		Values(record.Values()...).
-		Suffix(fmt.Sprintf("RETURNING %s", strings.Join(record.Columns(), ", ")))
+		Suffix("RETURNING " + strings.Join(record.Columns(), ", "))
 
 	pvzCreate, err := CollectOneRow(ctx, r.db, qb, pgx.RowToStructByName[schema.PVZ])
 	if err != nil {

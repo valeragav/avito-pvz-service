@@ -82,7 +82,8 @@ func TestCloser(t *testing.T) {
 
 	t.Run("add after close panics", func(t *testing.T) {
 		c := New()
-		c.Close(ctx)
+		err := c.Close(ctx)
+		require.NoError(t, err)
 
 		require.PanicsWithValue(t, "closer: add after close", func() {
 			c.Add(func(ctx context.Context) error { return nil })

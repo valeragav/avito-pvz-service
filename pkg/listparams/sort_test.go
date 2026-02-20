@@ -8,6 +8,8 @@ import (
 )
 
 func TestParseSort(t *testing.T) {
+	t.Parallel()
+
 	testcases := []struct {
 		name       string
 		query      url.Values
@@ -84,7 +86,6 @@ func TestParseSort(t *testing.T) {
 	}
 
 	for _, tt := range testcases {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 

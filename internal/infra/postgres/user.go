@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	sq "github.com/Masterminds/squirrel"
@@ -35,7 +34,7 @@ func (r UserRepository) Create(ctx context.Context, user domain.User) (*domain.U
 		Insert(record.TableName()).
 		Columns(record.InsertColumns()...).
 		Values(record.Values()...).
-		Suffix(fmt.Sprintf("RETURNING %s", strings.Join(record.Columns(), ", ")))
+		Suffix("RETURNING " + strings.Join(record.Columns(), ", "))
 
 	userCreate, err := CollectOneRow(ctx, r.db, qb, pgx.RowToStructByName[schema.User])
 	if err != nil {

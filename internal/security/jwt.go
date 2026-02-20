@@ -59,13 +59,13 @@ func New(
 }
 
 func (j JwtService) SignJwt(userClaims domain.UserClaims) (string, error) {
-	claims := claims{
+	userClaimsStruct := claims{
 		Role: string(userClaims.Role),
 	}
 
-	claims.RegisteredClaims = j.registeredClaims()
+	userClaimsStruct.RegisteredClaims = j.registeredClaims()
 
-	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, userClaimsStruct)
 
 	signedToken, err := token.SignedString(j.privateKey)
 	if err != nil {

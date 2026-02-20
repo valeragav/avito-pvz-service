@@ -17,7 +17,7 @@ import (
 	"github.com/valeragav/avito-pvz-service/pkg/logger"
 )
 
-//go:generate mockgen -source=handler.go -destination=./mocks/service_mock.go -package=mocks
+//go:generate ${LOCAL_BIN}/mockgen -source=handler.go -destination=./mocks/service_mock.go -package=mocks
 type productService interface {
 	Create(ctx context.Context, createIn dto.ProductCreate) (*domain.Product, error)
 	DeleteLastProduct(ctx context.Context, pvzID uuid.UUID) (*domain.Product, error)

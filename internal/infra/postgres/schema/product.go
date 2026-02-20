@@ -45,7 +45,7 @@ func NewDomainProductWithTypeName(d ProductWithTypeName) *domain.Product {
 		ReceptionID: d.ReceptionID,
 		ProductType: &domain.ProductType{
 			ID:   d.ProductType.ID,
-			Name: d.ProductType.Name,
+			Name: d.Name,
 		},
 	}
 }

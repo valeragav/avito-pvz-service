@@ -24,7 +24,6 @@ type App struct {
 }
 
 func New(cfg *config.Config, lg *logger.Logger, db *pgxpool.Pool) (*App, error) {
-
 	// repos
 	userRepo := postgres.NewUserRepository(db)
 	pvzRepo := postgres.NewPVZRepository(db)

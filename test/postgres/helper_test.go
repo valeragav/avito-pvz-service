@@ -2,7 +2,7 @@ package postgres_test
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"testing"
 
 	sq "github.com/Masterminds/squirrel"
@@ -32,26 +32,21 @@ func TestCollectRowsAndOneRow(t *testing.T) {
 
 		sqb := sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 
-		// Builder для CollectRows
 		builder := sqb.Select("id", "name").From("cities").Where(sq.Eq{"id": createCity.ID})
 
-		// ---------------- CollectRows ----------------
 		results, err := postgres.CollectRows(ctx, tx, builder, pgx.RowToStructByName[city])
 		require.NoError(t, err)
 		require.Len(t, results, 1)
 		assert.Equal(t, createCity.ID, results[0].ID)
 		assert.Equal(t, createCity.Name, results[0].Name)
 
-		// Builder для CollectOneRow
 		builderOne := sqb.Select("id", "name").From("cities").Where(sq.Eq{"id": createCity.ID})
 
-		// ---------------- CollectOneRow ----------------
 		result, err := postgres.CollectOneRow(ctx, tx, builderOne, pgx.RowToStructByName[city])
 		require.NoError(t, err)
 		assert.Equal(t, createCity.ID, result.ID)
 		assert.Equal(t, createCity.Name, result.Name)
 
-		// ---------------- NotFound ----------------
 		_, err = postgres.CollectOneRow(ctx, tx, sqb.Select("id").From("cities").Where(sq.Eq{"id": uuid.New()}), pgx.RowToStructByName[city])
 		assert.ErrorIs(t, err, infra.ErrNotFound)
 	})
@@ -59,8 +54,9 @@ func TestCollectRowsAndOneRow(t *testing.T) {
 
 type badBuilder struct{}
 
-func (b badBuilder) ToSql() (string, []any, error) {
-	return "", nil, fmt.Errorf("builder error")
+func (b badBuilder) ToSql() (_ string, _ []any, err error) {
+	err = errors.New("builder error")
+	return
 }
 
 func TestCollectRows_BuildError(t *testing.T) {
@@ -79,9 +75,8 @@ func TestCollectOneRow_DuplicateError(t *testing.T) {
 		_, err := tx.Exec(ctx, `INSERT INTO cities (id, name) VALUES ($1, $2)`, id, "City1")
 		require.NoError(t, err)
 
-		// пытаемся вставить ту же запись напрямую, чтобы вызвать ошибку уникальности
 		_, err = tx.Exec(ctx, `INSERT INTO cities (id, name) VALUES ($1, $2)`, id, "City1")
-		require.Error(t, err)                             // проверяем, что есть ошибка
-		assert.True(t, postgres.IsDuplicateKeyError(err)) // и что это действительно дубликат
+		require.Error(t, err)
+		assert.True(t, postgres.IsDuplicateKeyError(err))
 	})
 }

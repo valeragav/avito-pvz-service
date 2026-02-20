@@ -62,7 +62,6 @@ func TestCityRepository_Get(t *testing.T) {
 		}
 
 		for _, tt := range tests {
-			tt := tt
 			t.Run(tt.name, func(t *testing.T) {
 				got, err := cityRepo.Get(ctx, tt.filter)
 				if tt.wantErr {
@@ -105,7 +104,6 @@ func TestCityRepository_CreateBatch(t *testing.T) {
 		}
 
 		for _, tt := range tests {
-			tt := tt
 			t.Run(tt.name, func(t *testing.T) {
 				err := cityRepo.CreateBatch(ctx, tt.cities)
 				if tt.wantErr {

@@ -83,7 +83,7 @@ func LoadConfig(configPath string) *Config {
 	}
 
 	if err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
+		log.Printf("Error loading .env file: %v", err)
 	}
 
 	return &Config{

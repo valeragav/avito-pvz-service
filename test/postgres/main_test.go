@@ -2,6 +2,7 @@ package postgres_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -57,7 +58,6 @@ type TestApp struct {
 }
 
 func NewTestApp() (*TestApp, error) {
-
 	db, err := connectTestDB()
 	if err != nil {
 		return nil, err
@@ -80,7 +80,6 @@ func NewTestApp() (*TestApp, error) {
 }
 
 func connectTestDB() (*pgxpool.Pool, error) {
-	// postgres: //root:root@localhost:5432/pvz-service_db?sslmode=disable
 	cfg := loadTestConfig()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -152,7 +151,7 @@ func (a TestApp) Migrate() error {
 		return err
 	}
 
-	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
+	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
 		return err
 	}
 
@@ -160,10 +159,10 @@ func (a TestApp) Migrate() error {
 
 	var combinedErr error
 	if srcErr != nil {
-		combinedErr = fmt.Errorf("%w; migrate source close error: %v", combinedErr, srcErr)
+		combinedErr = fmt.Errorf("%w; migrate source close error: %w", combinedErr, srcErr)
 	}
 	if dbErr != nil {
-		combinedErr = fmt.Errorf("%w; migrate database close error: %v", combinedErr, dbErr)
+		combinedErr = fmt.Errorf("%w; migrate database close error: %w", combinedErr, dbErr)
 	}
 
 	return combinedErr
@@ -187,7 +186,7 @@ WHERE table_schema='public' AND table_type='BASE TABLE';
 			return err
 		}
 		// TODO: так делать не надо
-		if "schema_migrations" == t {
+		if t == "schema_migrations" {
 			continue
 		}
 		tables = append(tables, t)

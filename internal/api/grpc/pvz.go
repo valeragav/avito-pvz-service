@@ -16,9 +16,9 @@ type PVZServer struct {
 	pvzUseCase *pvz.PVZUseCase
 }
 
-func NewPVZServer(PVZUseCase *pvz.PVZUseCase) *PVZServer {
+func NewPVZServer(pVZUseCase *pvz.PVZUseCase) *PVZServer {
 	return &PVZServer{
-		pvzUseCase: PVZUseCase,
+		pvzUseCase: pVZUseCase,
 	}
 }
 
@@ -30,9 +30,7 @@ func (s *PVZServer) GetPVZList(ctx context.Context, _ *pvz_v1.GetPVZListRequest)
 
 	pvzList := pvzListToResponse(pvzs)
 
-	pvz := &pvz_v1.GetPVZListResponse{Pvzs: pvzList}
-
-	return pvz, nil
+	return &pvz_v1.GetPVZListResponse{Pvzs: pvzList}, nil
 }
 
 func pvzListToResponse(pvzs []*domain.PVZ) []*pvz_v1.PVZ {

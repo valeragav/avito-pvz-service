@@ -2,7 +2,7 @@ package pvz
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"testing"
 	"time"
 
@@ -36,6 +36,8 @@ func newPvZMocks(t *testing.T) *pvzMocks {
 }
 
 func TestPVZUseCase_Create(t *testing.T) {
+	t.Parallel()
+
 	testutils.InitTestLogger()
 	ctx := context.Background()
 
@@ -90,10 +92,10 @@ func TestPVZUseCase_Create(t *testing.T) {
 			mockFn: func(f fields, m *pvzMocks) {
 				m.MockCityRepo.EXPECT().
 					Get(ctx, domain.City{Name: f.req.CityName}).
-					Return(nil, fmt.Errorf("db error")).
+					Return(nil, errors.New("db error")).
 					Times(1)
 			},
-			wantErr: fmt.Errorf("pvz.Create: failed to get city: db error"),
+			wantErr: errors.New("pvz.Create: failed to get city: db error"),
 		},
 		{
 			name: "failed to create pvz",
@@ -115,10 +117,10 @@ func TestPVZUseCase_Create(t *testing.T) {
 
 				m.MockPvzRepo.EXPECT().
 					Create(ctx, gomock.Any()).
-					Return(nil, fmt.Errorf("create error")).
+					Return(nil, errors.New("create error")).
 					Times(1)
 			},
-			wantErr: fmt.Errorf("pvz.Create: failed to create pvz: create error"),
+			wantErr: errors.New("pvz.Create: failed to create pvz: create error"),
 		},
 
 		{
@@ -167,14 +169,14 @@ func TestPVZUseCase_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			mocks := newPvZMocks(t)
-			tt.mockFn(tt, mocks)
+			pvzMocks := newPvZMocks(t)
+			tt.mockFn(tt, pvzMocks)
 
 			useCase := New(
-				mocks.MockPvzRepo,
-				mocks.MockCityRepo,
-				mocks.MockReceptionRepo,
-				mocks.MockProductRepo,
+				pvzMocks.MockPvzRepo,
+				pvzMocks.MockCityRepo,
+				pvzMocks.MockReceptionRepo,
+				pvzMocks.MockProductRepo,
 			)
 
 			pvzRes, err := useCase.Create(ctx, tt.req)
@@ -196,6 +198,8 @@ func TestPVZUseCase_Create(t *testing.T) {
 }
 
 func TestPVZUseCase_List(t *testing.T) {
+	t.Parallel()
+
 	testutils.InitTestLogger()
 	ctx := context.Background()
 
@@ -226,10 +230,10 @@ func TestPVZUseCase_List(t *testing.T) {
 			mockFn: func(m *pvzMocks) {
 				m.MockPvzRepo.EXPECT().
 					ListPvzByAcceptanceDateAndCity(ctx, params.Pagination, &startDate, &endDate).
-					Return(nil, fmt.Errorf("db error")).
+					Return(nil, errors.New("db error")).
 					Times(1)
 			},
-			wantErr: fmt.Errorf("pvz.List: failed to get list pvz: db error"),
+			wantErr: errors.New("pvz.List: failed to get list pvz: db error"),
 		},
 		{
 			name: "empty pvz list",
@@ -241,7 +245,7 @@ func TestPVZUseCase_List(t *testing.T) {
 			},
 			checkFn: func(t *testing.T, result []*domain.PVZ) {
 				require.NotNil(t, result)
-				require.Len(t, result, 0)
+				require.Empty(t, result)
 			},
 		},
 		{
@@ -258,10 +262,10 @@ func TestPVZUseCase_List(t *testing.T) {
 
 				m.MockReceptionRepo.EXPECT().
 					ListByIDsWithStatus(ctx, []uuid.UUID{pvzID}).
-					Return(nil, fmt.Errorf("reception error")).
+					Return(nil, errors.New("reception error")).
 					Times(1)
 			},
-			wantErr: fmt.Errorf("pvz.List: failed to get list receptions: reception error"),
+			wantErr: errors.New("pvz.List: failed to get list receptions: reception error"),
 		},
 		{
 			name: "product repo error",
@@ -285,10 +289,10 @@ func TestPVZUseCase_List(t *testing.T) {
 
 				m.MockProductRepo.EXPECT().
 					ListByReceptionIDsWithTypeName(ctx, []uuid.UUID{receptionID}).
-					Return(nil, fmt.Errorf("product error")).
+					Return(nil, errors.New("product error")).
 					Times(1)
 			},
-			wantErr: fmt.Errorf("pvz.List: failed to get list products: product error"),
+			wantErr: errors.New("pvz.List: failed to get list products: product error"),
 		},
 		{
 			name: "full success with mapping",
@@ -348,14 +352,14 @@ func TestPVZUseCase_List(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			mocks := newPvZMocks(t)
-			tt.mockFn(mocks)
+			pvzMocks := newPvZMocks(t)
+			tt.mockFn(pvzMocks)
 
 			useCase := New(
-				mocks.MockPvzRepo,
-				mocks.MockCityRepo,
-				mocks.MockReceptionRepo,
-				mocks.MockProductRepo,
+				pvzMocks.MockPvzRepo,
+				pvzMocks.MockCityRepo,
+				pvzMocks.MockReceptionRepo,
+				pvzMocks.MockProductRepo,
 			)
 
 			result, err := useCase.List(ctx, params)

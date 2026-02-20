@@ -3,7 +3,6 @@ package product
 import (
 	"context"
 	"errors"
-	"fmt"
 	"testing"
 
 	"github.com/google/uuid"
@@ -35,6 +34,8 @@ func newProductMocks(t *testing.T) *productMocks {
 }
 
 func TestProductUseCase_Create(t *testing.T) {
+	t.Parallel()
+
 	testutils.InitTestLogger()
 	ctx := context.Background()
 
@@ -99,10 +100,10 @@ func TestProductUseCase_Create(t *testing.T) {
 			mockFn: func(f fields, m *productMocks) {
 				m.MockReceptionRepo.EXPECT().
 					FindByStatus(ctx, domain.ReceptionStatusInProgress, domain.Reception{PvzID: f.req.PvzID}).
-					Return(nil, fmt.Errorf("db error")).
+					Return(nil, errors.New("db error")).
 					Times(1)
 			},
-			wantErr: fmt.Errorf("products.Create: failed to find in progress reception: db error"),
+			wantErr: errors.New("products.Create: failed to find in progress reception: db error"),
 		},
 		{
 			name: "product type not found",
@@ -119,10 +120,10 @@ func TestProductUseCase_Create(t *testing.T) {
 
 				m.MockProductTypeRepo.EXPECT().
 					Get(ctx, domain.ProductType{Name: f.req.TypeName}).
-					Return(nil, fmt.Errorf("not found")).
+					Return(nil, errors.New("not found")).
 					Times(1)
 			},
-			wantErr: fmt.Errorf("products.Create: failed to find product type 'Electronics': not found"),
+			wantErr: errors.New("products.Create: failed to find product type 'Electronics': not found"),
 		},
 		{
 			name: "repo create error",
@@ -146,20 +147,26 @@ func TestProductUseCase_Create(t *testing.T) {
 
 				m.MockProductRepo.EXPECT().
 					Create(ctx, gomock.Any()).
-					Return(nil, fmt.Errorf("db error")).
+					Return(nil, errors.New("db error")).
 					Times(1)
 			},
-			wantErr: fmt.Errorf("products.Create: failed to create product: db error"),
+			wantErr: errors.New("products.Create: failed to create product: db error"),
 		},
 	}
 
 	for _, tt := range testcases {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			mocks := newProductMocks(t)
-			tt.mockFn(tt, mocks)
 
-			useCase := New(mocks.MockProductRepo, mocks.MockReceptionRepo, mocks.MockProductTypeRepo, mocks.MockPvzRepo)
+			productMocks := newProductMocks(t)
+			tt.mockFn(tt, productMocks)
+
+			useCase := New(
+				productMocks.MockProductRepo,
+				productMocks.MockReceptionRepo,
+				productMocks.MockProductTypeRepo,
+				productMocks.MockPvzRepo,
+			)
 
 			product, err := useCase.Create(ctx, tt.req)
 
@@ -181,6 +188,8 @@ func TestProductUseCase_Create(t *testing.T) {
 }
 
 func TestProductUseCase_DeleteLastProduct(t *testing.T) {
+	t.Parallel()
+
 	testutils.InitTestLogger()
 	ctx := context.Background()
 
@@ -267,10 +276,10 @@ func TestProductUseCase_DeleteLastProduct(t *testing.T) {
 
 				m.MockProductRepo.EXPECT().
 					GetLastProductInReception(ctx, lastReception.ID).
-					Return(nil, fmt.Errorf("not found")).
+					Return(nil, errors.New("not found")).
 					Times(1)
 			},
-			wantErr: fmt.Errorf("products.DeleteLastProduct: failed to get last product: not found"),
+			wantErr: errors.New("products.DeleteLastProduct: failed to get last product: not found"),
 		},
 		{
 			name:  "delete product error",
@@ -296,20 +305,26 @@ func TestProductUseCase_DeleteLastProduct(t *testing.T) {
 
 				m.MockProductRepo.EXPECT().
 					DeleteProduct(ctx, lastProduct.ID).
-					Return(fmt.Errorf("delete error")).
+					Return(errors.New("delete error")).
 					Times(1)
 			},
-			wantErr: fmt.Errorf("products.DeleteLastProduct: failed to delete product: delete error"),
+			wantErr: errors.New("products.DeleteLastProduct: failed to delete product: delete error"),
 		},
 	}
 
 	for _, tt := range testcases {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
-			mocks := newProductMocks(t)
-			tt.mockFn(tt, mocks)
 
-			useCase := New(mocks.MockProductRepo, mocks.MockReceptionRepo, mocks.MockProductTypeRepo, mocks.MockPvzRepo)
+			productMocks := newProductMocks(t)
+			tt.mockFn(tt, productMocks)
+
+			useCase := New(
+				productMocks.MockProductRepo,
+				productMocks.MockReceptionRepo,
+				productMocks.MockProductTypeRepo,
+				productMocks.MockPvzRepo,
+			)
 
 			product, err := useCase.DeleteLastProduct(ctx, tt.pvzID)
 

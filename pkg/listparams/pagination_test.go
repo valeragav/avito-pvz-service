@@ -8,6 +8,8 @@ import (
 )
 
 func TestParsePagination(t *testing.T) {
+	t.Parallel()
+
 	defaults := Pagination{Page: 1, Limit: 20}
 
 	testcases := []struct {
@@ -115,7 +117,6 @@ func TestParsePagination(t *testing.T) {
 	}
 
 	for _, tt := range testcases {
-		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 

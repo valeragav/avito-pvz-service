@@ -2,7 +2,7 @@ package seeder
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -42,7 +42,7 @@ func TestSeeder_Run(t *testing.T) {
 		{
 			name: "one seed fails",
 			seeds: []Seed{
-				&mockSeed{name: "seed1", err: fmt.Errorf("fail1")},
+				&mockSeed{name: "seed1", err: errors.New("fail1")},
 				&mockSeed{name: "seed2", err: nil},
 			},
 			wantErr: true,
@@ -51,8 +51,8 @@ func TestSeeder_Run(t *testing.T) {
 		{
 			name: "multiple seeds fail",
 			seeds: []Seed{
-				&mockSeed{name: "seed1", err: fmt.Errorf("fail1")},
-				&mockSeed{name: "seed2", err: fmt.Errorf("fail2")},
+				&mockSeed{name: "seed1", err: errors.New("fail1")},
+				&mockSeed{name: "seed2", err: errors.New("fail2")},
 			},
 			wantErr: true,
 			errMsg:  "failed to run seed \"seed1\": fail1; failed to run seed \"seed2\": fail2",

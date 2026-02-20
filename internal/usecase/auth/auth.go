@@ -12,7 +12,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-//go:generate mockgen -source=auth.go -destination=./mocks/auth_mocks.go -package=mocks
+//go:generate ${LOCAL_BIN}/mockgen -source=auth.go -destination=./mocks/auth_mocks.go -package=mocks
 type jwtService interface {
 	SignJwt(userClaims domain.UserClaims) (string, error)
 	ValidateJwt(incomingToken string) (*domain.UserClaims, error)

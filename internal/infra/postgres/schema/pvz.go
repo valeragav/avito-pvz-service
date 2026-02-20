@@ -45,11 +45,11 @@ func NewDomainPVZList(d []PVZ) []*domain.PVZ {
 func NewDomainPVZWithCityName(d PVZWithCityName) *domain.PVZ {
 	return &domain.PVZ{
 		ID:               d.PVZ.ID,
-		RegistrationDate: d.PVZ.RegistrationDate,
-		CityID:           d.PVZ.CityID,
+		RegistrationDate: d.RegistrationDate,
+		CityID:           d.CityID,
 		City: &domain.City{
 			ID:   d.City.ID,
-			Name: d.City.Name,
+			Name: d.Name,
 		},
 	}
 }

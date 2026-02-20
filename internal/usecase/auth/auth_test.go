@@ -3,7 +3,6 @@ package auth
 import (
 	"context"
 	"errors"
-	"fmt"
 	"testing"
 
 	"github.com/google/uuid"
@@ -32,6 +31,7 @@ func newAuthMocks(t *testing.T) *authMocks {
 }
 
 func TestAuthUseCase_Register(t *testing.T) {
+	t.Parallel()
 	testutils.InitTestLogger()
 
 	ctx := context.Background()
@@ -80,10 +80,10 @@ func TestAuthUseCase_Register(t *testing.T) {
 			req:  registerReq,
 			mockFn: func(fields fields, m *authMocks) {
 				m.MockUserRepo.EXPECT().Get(ctx, domain.User{Email: fields.req.Email}).
-					Return(nil, fmt.Errorf("db error")).
+					Return(nil, errors.New("db error")).
 					Times(1)
 			},
-			wantErr: fmt.Errorf("auth.Register: failed to check if user exists: db error"),
+			wantErr: errors.New("auth.Register: failed to check if user exists: db error"),
 		},
 		{
 			name: "user already exists",
@@ -108,10 +108,10 @@ func TestAuthUseCase_Register(t *testing.T) {
 
 				m.MockUserRepo.EXPECT().
 					Create(ctx, gomock.Any()).
-					Return(nil, fmt.Errorf("db error")).
+					Return(nil, errors.New("db error")).
 					Times(1)
 			},
-			wantErr: fmt.Errorf("auth.Register: to create user: db error"),
+			wantErr: errors.New("auth.Register: to create user: db error"),
 		},
 	}
 
@@ -119,10 +119,10 @@ func TestAuthUseCase_Register(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			mocks := newAuthMocks(t)
-			tt.mockFn(tt, mocks)
+			authMocks := newAuthMocks(t)
+			tt.mockFn(tt, authMocks)
 
-			authUseCase := New(mocks.MockJwtService, mocks.MockUserRepo)
+			authUseCase := New(authMocks.MockJwtService, authMocks.MockUserRepo)
 
 			user, err := authUseCase.Register(ctx, tt.req)
 
@@ -148,6 +148,8 @@ func TestAuthUseCase_Register(t *testing.T) {
 }
 
 func TestAuthUseCase_GenerateToken(t *testing.T) {
+	t.Parallel()
+
 	testutils.InitTestLogger()
 
 	type fields struct {
@@ -178,10 +180,10 @@ func TestAuthUseCase_GenerateToken(t *testing.T) {
 			mockFn: func(f fields, m *authMocks) {
 				m.MockJwtService.EXPECT().
 					SignJwt(domain.UserClaims{Role: domain.ModeratorRole}).
-					Return("", fmt.Errorf("jwt error")).
+					Return("", errors.New("jwt error")).
 					Times(1)
 			},
-			wantErr: fmt.Errorf("auth.GenerateToken: failed to generate token: jwt error"),
+			wantErr: errors.New("auth.GenerateToken: failed to generate token: jwt error"),
 		},
 	}
 
@@ -189,10 +191,10 @@ func TestAuthUseCase_GenerateToken(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			mocks := newAuthMocks(t)
-			tt.mockFn(tt, mocks)
+			authMocks := newAuthMocks(t)
+			tt.mockFn(tt, authMocks)
 
-			authUseCase := New(mocks.MockJwtService, mocks.MockUserRepo)
+			authUseCase := New(authMocks.MockJwtService, authMocks.MockUserRepo)
 			token, err := authUseCase.GenerateToken(tt.role)
 
 			if tt.wantErr != nil {
@@ -209,6 +211,8 @@ func TestAuthUseCase_GenerateToken(t *testing.T) {
 }
 
 func TestAuthUseCase_Login(t *testing.T) {
+	t.Parallel()
+
 	testutils.InitTestLogger()
 
 	ctx := context.Background()
@@ -263,10 +267,10 @@ func TestAuthUseCase_Login(t *testing.T) {
 			hashedPassword: uuid.New().String(),
 			mockFn: func(fields fields, m *authMocks) {
 				m.MockUserRepo.EXPECT().Get(ctx, domain.User{Email: fields.req.Email}).
-					Return(nil, fmt.Errorf("db error")).
+					Return(nil, errors.New("db error")).
 					Times(1)
 			},
-			wantErr: fmt.Errorf("auth.Login: failed to get user: db error"),
+			wantErr: errors.New("auth.Login: failed to get user: db error"),
 		},
 		{
 			name:  "invalid password",
@@ -300,22 +304,21 @@ func TestAuthUseCase_Login(t *testing.T) {
 
 				m.MockJwtService.EXPECT().
 					SignJwt(domain.UserClaims{Role: domain.ModeratorRole}).
-					Return("", fmt.Errorf("jwt error")).
+					Return("", errors.New("jwt error")).
 					Times(1)
 			},
-			wantErr: fmt.Errorf("auth.Login: failed to generate token: jwt error"),
+			wantErr: errors.New("auth.Login: failed to generate token: jwt error"),
 		},
 	}
 
 	for _, tt := range testcases {
-		_ = tt
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			mocks := newAuthMocks(t)
-			tt.mockFn(tt, mocks)
+			authMocks := newAuthMocks(t)
+			tt.mockFn(tt, authMocks)
 
-			authUseCase := New(mocks.MockJwtService, mocks.MockUserRepo)
+			authUseCase := New(authMocks.MockJwtService, authMocks.MockUserRepo)
 
 			token, err := authUseCase.Login(ctx, tt.req)
 

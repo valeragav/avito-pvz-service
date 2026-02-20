@@ -29,7 +29,6 @@ func (s *Seeder) Add(seed Seed) {
 func (s *Seeder) Run(ctx context.Context) error {
 	var combinedErr error
 	for _, seed := range s.seeds {
-
 		// Пришлось отказаться от асинхронных запросов так одновременно выполняете seed.Run,
 		// а внутри они все используют один и тот же tx (infra.DBTX), что и приводит к conn busy.
 		if err := seed.Run(ctx); err != nil {

@@ -4,6 +4,7 @@ ifneq (,$(wildcard .env))
 	export
 endif
 
+LOCAL_BIN:=$(CURDIR)/bin
 PROJECT_NAME=avito-pvz-service
 
 ## help: Show this help message with available commands
@@ -31,7 +32,7 @@ test:
 ## gen: Run go generate on all packages (e.g., code generation)
 .PHONY: gen
 gen:
-	go generate ./...
+	LOCAL_BIN=$(LOCAL_BIN) go generate ./...
 
 # Migration Docker
 DOCKER_NETWORK=avito-pvz-service_avito-pvz-service_network
@@ -69,8 +70,6 @@ migrate-docker-down:
 .PHONY: migrate-docker-version
 migrate-docker-version:
 	$(MIGRATE_RUN) version
-
-LOCAL_BIN:=$(CURDIR)/bin
 
 ## bin-deps: Install all necessary binary dependencies
 .PHONY: bin-deps

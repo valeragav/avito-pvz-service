@@ -56,7 +56,6 @@ func TestReceptionsHandlers_Create(t *testing.T) {
 							Name: "closed",
 						},
 					}, nil)
-
 			},
 			expectedCode: http.StatusCreated,
 			expected: &CreateResponse{

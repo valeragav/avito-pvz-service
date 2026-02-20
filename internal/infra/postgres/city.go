@@ -35,7 +35,7 @@ func (r CityRepository) Create(ctx context.Context, city domain.City) (*domain.C
 		Insert(record.TableName()).
 		Columns(record.InsertColumns()...).
 		Values(record.Values()...).
-		Suffix(fmt.Sprintf("RETURNING %s", strings.Join(record.Columns(), ", ")))
+		Suffix("RETURNING " + strings.Join(record.Columns(), ", "))
 
 	result, err := CollectOneRow(ctx, r.db, qb, pgx.RowToStructByName[schema.City])
 	if err != nil {

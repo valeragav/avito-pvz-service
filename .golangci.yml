@@ -18,7 +18,6 @@ linters:
     - goconst
     - gocritic
     - gocyclo
-    - godoclint
     - gosec
     - govet
     - ineffassign
@@ -49,6 +48,7 @@ linters:
     - whitespace
     - promlinter
     - protogetter
+    # - godoclint
     # - mnd
     # - wrapcheck 
 
@@ -102,6 +102,9 @@ linters:
           - dupl
           path: internal/seed/
         - linters:
+          - dupl
+          path: internal/infra/postgres/
+        - linters:
           - errcheck
           text: "Error return value of .*.Close.*is not checked"
         - linters:
@@ -111,3 +114,6 @@ linters:
         - linters:
           - gosec
           text: "G304: Potential file inclusion via variable"
+        - linters:
+          - gosec
+          text: "G117: Exported struct field "

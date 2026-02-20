@@ -48,12 +48,12 @@ func NewDomainReceptionList(d []Reception) []*domain.Reception {
 func NewDomainReceptionWithStatus(d ReceptionWithStatus) *domain.Reception {
 	return &domain.Reception{
 		ID:       d.Reception.ID,
-		PvzID:    d.Reception.PvzID,
-		DateTime: d.Reception.DateTime,
-		StatusID: d.Reception.StatusID,
+		PvzID:    d.PvzID,
+		DateTime: d.DateTime,
+		StatusID: d.StatusID,
 		ReceptionStatus: &domain.ReceptionStatus{
 			ID:   d.ReceptionStatus.ID,
-			Name: domain.ReceptionStatusCode(d.ReceptionStatus.Name),
+			Name: domain.ReceptionStatusCode(d.Name),
 		},
 	}
 }

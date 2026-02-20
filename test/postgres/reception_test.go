@@ -99,7 +99,7 @@ func TestReceptionRepository_GetList(t *testing.T) {
 		}
 
 		for i := range receptions {
-			_, err := receptionRepo.Create(ctx, receptions[i])
+			_, err = receptionRepo.Create(ctx, receptions[i])
 			require.NoError(t, err)
 		}
 
@@ -183,7 +183,6 @@ func TestReceptionRepository_Get(t *testing.T) {
 
 func TestReceptionRepository_ListByIDsWithStatus(t *testing.T) {
 	WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
-
 		cityRepo := postgres.NewCityRepository(tx)
 		pvzRepo := postgres.NewPVZRepository(tx)
 		statusRepo := postgres.NewReceptionStatusRepository(tx)
@@ -205,11 +204,11 @@ func TestReceptionRepository_ListByIDsWithStatus(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		var pvzIDs []uuid.UUID
+		pvzIDs := make([]uuid.UUID, 0, 2)
 		pvzIDs = append(pvzIDs, pvz1.ID, pvz2.ID)
 
-		for i := 0; i < 2; i++ {
-			_, err := receptionRepo.Create(ctx, domain.Reception{
+		for i := range 2 {
+			_, err = receptionRepo.Create(ctx, domain.Reception{
 				ID:       uuid.New(),
 				PvzID:    pvz1.ID,
 				DateTime: time.Now().Add(time.Duration(i) * time.Minute),
@@ -238,18 +237,17 @@ func TestReceptionRepository_ListByIDsWithStatus(t *testing.T) {
 
 		empty, err := receptionRepo.ListByIDsWithStatus(ctx, []uuid.UUID{})
 		require.NoError(t, err)
-		assert.Len(t, empty, 0)
+		assert.Empty(t, empty)
 
 		nonexistentID := uuid.New()
 		empty, err = receptionRepo.ListByIDsWithStatus(ctx, []uuid.UUID{nonexistentID})
 		require.NoError(t, err)
-		assert.Len(t, empty, 0)
+		assert.Empty(t, empty)
 	})
 }
 
 func TestReceptionRepository_FindByStatus(t *testing.T) {
 	WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
-
 		cityRepo := postgres.NewCityRepository(tx)
 		pvzRepo := postgres.NewPVZRepository(tx)
 		statusRepo := postgres.NewReceptionStatusRepository(tx)

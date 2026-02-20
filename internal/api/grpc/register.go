@@ -6,10 +6,10 @@ import (
 	grpc "google.golang.org/grpc"
 )
 
-func CollectRegisters(app *app.App) []RegisterFunc {
+func CollectRegisters(appService *app.App) []RegisterFunc {
 	registers := []RegisterFunc{
 		func(s *grpc.Server) {
-			pvz_v1.RegisterPVZServiceServer(s, NewPVZServer(app.PVZUseCase))
+			pvz_v1.RegisterPVZServiceServer(s, NewPVZServer(appService.PVZUseCase))
 		},
 	}
 

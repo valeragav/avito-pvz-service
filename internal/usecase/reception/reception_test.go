@@ -2,7 +2,7 @@ package reception
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"testing"
 
 	"github.com/google/uuid"
@@ -32,6 +32,8 @@ func newReceptionMocks(t *testing.T) *receptionMocks {
 }
 
 func TestReceptionUseCase_Create(t *testing.T) {
+	t.Parallel()
+
 	testutils.InitTestLogger()
 	ctx := context.Background()
 
@@ -103,10 +105,10 @@ func TestReceptionUseCase_Create(t *testing.T) {
 					FindByStatus(ctx, domain.ReceptionStatusInProgress, domain.Reception{
 						PvzID: f.req.PvzID,
 					}).
-					Return(nil, fmt.Errorf("db error")).
+					Return(nil, errors.New("db error")).
 					Times(1)
 			},
-			wantErr: fmt.Errorf("receptions.Create: failed to check last reception status: db error"),
+			wantErr: errors.New("receptions.Create: failed to check last reception status: db error"),
 		},
 		{
 			name: "failed to get status",
@@ -125,10 +127,10 @@ func TestReceptionUseCase_Create(t *testing.T) {
 					Get(ctx, domain.ReceptionStatus{
 						Name: domain.ReceptionStatusInProgress,
 					}).
-					Return(nil, fmt.Errorf("status error")).
+					Return(nil, errors.New("status error")).
 					Times(1)
 			},
-			wantErr: fmt.Errorf("receptions.Create: failed to get status: status error"),
+			wantErr: errors.New("receptions.Create: failed to get status: status error"),
 		},
 		{
 			name: "failed to create reception",
@@ -157,10 +159,10 @@ func TestReceptionUseCase_Create(t *testing.T) {
 
 				m.MockReceptionRepo.EXPECT().
 					Create(ctx, gomock.Any()).
-					Return(nil, fmt.Errorf("create error")).
+					Return(nil, errors.New("create error")).
 					Times(1)
 			},
-			wantErr: fmt.Errorf("receptions.Create: failed to create reception: create error"),
+			wantErr: errors.New("receptions.Create: failed to create reception: create error"),
 		},
 	}
 
@@ -168,13 +170,13 @@ func TestReceptionUseCase_Create(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			mocks := newReceptionMocks(t)
-			tt.mockFn(tt, mocks)
+			receptionMocks := newReceptionMocks(t)
+			tt.mockFn(tt, receptionMocks)
 
 			useCase := New(
-				mocks.MockReceptionRepo,
-				mocks.MockReceptionStatusRepo,
-				mocks.MockPvzRepo,
+				receptionMocks.MockReceptionRepo,
+				receptionMocks.MockReceptionStatusRepo,
+				receptionMocks.MockPvzRepo,
 			)
 
 			res, err := useCase.Create(ctx, tt.req)
@@ -195,6 +197,8 @@ func TestReceptionUseCase_Create(t *testing.T) {
 }
 
 func TestReceptionUseCase_CloseLastReception(t *testing.T) {
+	t.Parallel()
+
 	testutils.InitTestLogger()
 	ctx := context.Background()
 
@@ -268,10 +272,10 @@ func TestReceptionUseCase_CloseLastReception(t *testing.T) {
 			mockFn: func(f fields, m *receptionMocks) {
 				m.MockPvzRepo.EXPECT().
 					Get(ctx, domain.PVZ{ID: f.pvzID}).
-					Return(nil, fmt.Errorf("db error")).
+					Return(nil, errors.New("db error")).
 					Times(1)
 			},
-			wantErr: fmt.Errorf("receptions.CloseLastReception: failed to find pvz: db error"),
+			wantErr: errors.New("receptions.CloseLastReception: failed to find pvz: db error"),
 		},
 		{
 			name:  "no reception in progress",
@@ -304,10 +308,10 @@ func TestReceptionUseCase_CloseLastReception(t *testing.T) {
 					FindByStatus(ctx, domain.ReceptionStatusInProgress, domain.Reception{
 						PvzID: f.pvzID,
 					}).
-					Return(nil, fmt.Errorf("reception error")).
+					Return(nil, errors.New("reception error")).
 					Times(1)
 			},
-			wantErr: fmt.Errorf("receptions.CloseLastReception: failed to find pvz: reception error"),
+			wantErr: errors.New("receptions.CloseLastReception: failed to find pvz: reception error"),
 		},
 		{
 			name:  "failed to get close status",
@@ -331,10 +335,10 @@ func TestReceptionUseCase_CloseLastReception(t *testing.T) {
 					Get(ctx, domain.ReceptionStatus{
 						Name: domain.ReceptionStatusClose,
 					}).
-					Return(nil, fmt.Errorf("status error")).
+					Return(nil, errors.New("status error")).
 					Times(1)
 			},
-			wantErr: fmt.Errorf("receptions.CloseLastReception: failed to get status: status error"),
+			wantErr: errors.New("receptions.CloseLastReception: failed to get status: status error"),
 		},
 		{
 			name:  "failed to update reception",
@@ -366,10 +370,10 @@ func TestReceptionUseCase_CloseLastReception(t *testing.T) {
 					Update(ctx, receptionID, domain.Reception{
 						StatusID: statusID,
 					}).
-					Return(nil, fmt.Errorf("update error")).
+					Return(nil, errors.New("update error")).
 					Times(1)
 			},
-			wantErr: fmt.Errorf("failed to close reception: update error"),
+			wantErr: errors.New("failed to close reception: update error"),
 		},
 	}
 
@@ -377,13 +381,13 @@ func TestReceptionUseCase_CloseLastReception(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			mocks := newReceptionMocks(t)
-			tt.mockFn(tt, mocks)
+			receptionMocks := newReceptionMocks(t)
+			tt.mockFn(tt, receptionMocks)
 
 			useCase := New(
-				mocks.MockReceptionRepo,
-				mocks.MockReceptionStatusRepo,
-				mocks.MockPvzRepo,
+				receptionMocks.MockReceptionRepo,
+				receptionMocks.MockReceptionStatusRepo,
+				receptionMocks.MockPvzRepo,
 			)
 
 			res, err := useCase.CloseLastReception(ctx, tt.pvzID)

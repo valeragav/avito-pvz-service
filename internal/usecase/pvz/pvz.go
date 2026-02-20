@@ -13,7 +13,7 @@ import (
 	"github.com/valeragav/avito-pvz-service/pkg/listparams"
 )
 
-//go:generate mockgen -source=pvz.go -destination=./mocks/pvz_mocks.go -package=mocks
+//go:generate ${LOCAL_BIN}/mockgen -source=pvz.go -destination=./mocks/pvz_mocks.go -package=mocks
 type pvzRepo interface {
 	Create(ctx context.Context, pvz domain.PVZ) (*domain.PVZ, error)
 	ListPvzByAcceptanceDateAndCity(ctx context.Context, pagination *listparams.Pagination, startDate *time.Time, endDate *time.Time) ([]*domain.PVZ, error)

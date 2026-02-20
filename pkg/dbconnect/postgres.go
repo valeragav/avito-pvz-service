@@ -26,8 +26,6 @@ func Connect(ctx context.Context, cfg PostgresConnectCfg) (*pgxpool.Pool, error)
 		dsn += "?" + cfg.Options
 	}
 
-	fmt.Println(dsn)
-
 	config, err := pgxpool.ParseConfig(dsn)
 	if err != nil {
 		return nil, fmt.Errorf("unable to parse config: %w", err)

@@ -17,7 +17,7 @@ import (
 	"github.com/valeragav/avito-pvz-service/pkg/logger"
 )
 
-//go:generate mockgen -source=handler.go -destination=./mocks/service_mock.go -package=mocks
+//go:generate ${LOCAL_BIN}/mockgen -source=handler.go -destination=./mocks/service_mock.go -package=mocks
 type receptionService interface {
 	CloseLastReception(ctx context.Context, pvzID uuid.UUID) (*domain.Reception, error)
 	Create(ctx context.Context, createIn dto.ReceptionCreate) (*domain.Reception, error)

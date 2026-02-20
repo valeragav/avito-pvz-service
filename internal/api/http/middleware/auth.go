@@ -3,6 +3,7 @@ package middleware
 import (
 	"context"
 	"net/http"
+	"slices"
 	"strings"
 
 	"github.com/valeragav/avito-pvz-service/internal/api/http/handlers/response"
@@ -72,11 +73,9 @@ func (a AuthMiddleware) RequireRoles(roles ...domain.Role) func(next http.Handle
 				return
 			}
 
-			for _, role := range roles {
-				if userRole == role {
-					next.ServeHTTP(w, r)
-					return
-				}
+			if slices.Contains(roles, userRole) {
+				next.ServeHTTP(w, r)
+				return
 			}
 
 			response.WriteError(w, ctx, http.StatusForbidden, "permission denied", nil)

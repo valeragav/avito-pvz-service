@@ -1,6 +1,6 @@
 import http from 'k6/http';
-import { check, group, fail, sleep } from 'k6';
-import { randomString, randomItem } from 'https://jslib.k6.io/k6-utils/1.4.0/index.js';
+import { check, fail, sleep } from 'k6';
+import { randomString} from 'https://jslib.k6.io/k6-utils/1.4.0/index.js';
 
 // Нагрузка задаётся через open model (constant-arrival-rate),
 // чтобы гарантировать фиксированный поток 1000 RPS независимо от времени ответа.
@@ -19,6 +19,8 @@ import { randomString, randomItem } from 'https://jslib.k6.io/k6-utils/1.4.0/ind
 // чтобы избежать dropped_iterations.
 //
 // duration 2m — достаточная выборка для проверки SLI 99.99%.
+
+const BASE_URL = 'http://app:8080';
 
 export const options = {
     scenarios: {
@@ -54,20 +56,10 @@ export const options = {
             maxVUs: 150,
             exec: 'receptionE2EScenario',
         },
-
-
-        // test
-        // rate: 1,
-        // timeUnit: '1s',
-        // duration: '1s',
-        // preAllocatedVUs: 1,
-        // maxVUs: 1,
     },
     http_req_failed: ['rate<0.0001'],
     http_req_duration: ['p(99)<100'],
 };
-
-const BASE_URL = 'http://localhost:8080';
 
 function getAuthHeaders(token) {
     return {
@@ -99,8 +91,6 @@ export function setup() {
 
 
 export function authScenario() {
-    const res = http.get('http://localhost:8080/ping');
-
     const email = `load_test_${randomString(8)}@test.com`;
     const password = randomString(6);
 
@@ -157,7 +147,6 @@ export function pvzScenario(data) {
     sleep(1);
 }
 
-
 export function receptionE2EScenario(data) {
     const moderatorHeaders = getAuthHeaders(data.moderatorToken);
     const employeeHeaders = getAuthHeaders(data.employeeToken);
@@ -186,7 +175,6 @@ export function receptionE2EScenario(data) {
 
     sleep(1);
 }
-
 
 function postJSON(url, body, headers, expectedStatus) {
     const res = http.post(url, body ? JSON.stringify(body) : null, { headers });

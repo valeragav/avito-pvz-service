@@ -12,7 +12,7 @@ import (
 	"github.com/valeragav/avito-pvz-service/internal/infra"
 )
 
-//go:generate mockgen -source=reception.go -destination=./mocks/reception_mocks.go -package=mocks
+//go:generate ${LOCAL_BIN}/mockgen -source=reception.go -destination=./mocks/reception_mocks.go -package=mocks
 type receptionRepo interface {
 	FindByStatus(ctx context.Context, statusName domain.ReceptionStatusCode, filter domain.Reception) (*domain.Reception, error)
 	Create(ctx context.Context, reception domain.Reception) (*domain.Reception, error)

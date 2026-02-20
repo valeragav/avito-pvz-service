@@ -14,7 +14,7 @@ import (
 	"github.com/valeragav/avito-pvz-service/pkg/logger"
 )
 
-//go:generate mockgen -source=handler.go -destination=./mocks/service_mock.go -package=mocks
+//go:generate ${LOCAL_BIN}/mockgen -source=handler.go -destination=./mocks/service_mock.go -package=mocks
 type authService interface {
 	GenerateToken(role domain.Role) (*domain.Token, error)
 	Login(ctx context.Context, loginReq dto.LoginIn) (*domain.Token, error)

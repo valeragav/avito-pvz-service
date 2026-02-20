@@ -33,7 +33,6 @@ func TestProductTypeRepository_Get(t *testing.T) {
 		}
 
 		for _, tt := range tests {
-			tt := tt
 			t.Run(tt.name, func(t *testing.T) {
 				got, err := repo.Get(ctx, tt.filter)
 				if tt.wantErr {
@@ -76,7 +75,6 @@ func TestProductTypeRepository_CreateBatch(t *testing.T) {
 		}
 
 		for _, tt := range tests {
-			tt := tt
 			t.Run(tt.name, func(t *testing.T) {
 				err := repo.CreateBatch(ctx, tt.productTypes)
 				if tt.wantErr {

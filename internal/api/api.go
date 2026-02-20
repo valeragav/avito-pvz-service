@@ -14,7 +14,7 @@ import (
 	"github.com/valeragav/avito-pvz-service/pkg/logger"
 )
 
-func NewApi(ctx context.Context, c *closer.Closer, cfg *config.Config, app *app.App) {
+func NewApi(ctx context.Context, c *closer.Closer, cfg *config.Config, appService *app.App) {
 	errCh := make(chan error, 4)
 
 	runServer := func(name string, start func(context.Context) error, enabled bool) {
@@ -30,7 +30,7 @@ func NewApi(ctx context.Context, c *closer.Closer, cfg *config.Config, app *app.
 
 	gRPCService := "gRPC"
 	runServer(gRPCService, func(ctx context.Context) error {
-		registers := serviceGrpc.CollectRegisters(app)
+		registers := serviceGrpc.CollectRegisters(appService)
 		grpcServer, err := newGrpcServer(cfg, gRPCService, c, registers)
 		if err != nil {
 			return fmt.Errorf("failed to create gRPC server: %w", err)
@@ -40,7 +40,7 @@ func NewApi(ctx context.Context, c *closer.Closer, cfg *config.Config, app *app.
 
 	httpNameService := "HTTP"
 	runServer(httpNameService, func(ctx context.Context) error {
-		router := serviceHttp.NewRouter(app)
+		router := serviceHttp.NewRouter(appService)
 		httpService := newHTTPServer(cfg, httpNameService, c, router)
 		return httpService.StartServer(ctx)
 	}, true)
@@ -85,6 +85,7 @@ func newHTTPServer(cfg *config.Config, name string, c *closer.Closer, router htt
 	return service
 }
 
+//nolint:dupl // duplicate logic with newSwaggerServer; differs only in server config
 func newMetricsServer(cfg *config.Config, name string, c *closer.Closer, router http.Handler) *serviceHttp.Server {
 	service := serviceHttp.NewServer(name, &http.Server{
 		Handler:      router,
@@ -102,6 +103,7 @@ func newMetricsServer(cfg *config.Config, name string, c *closer.Closer, router 
 	return service
 }
 
+//nolint:dupl // duplicate logic with newMetricsServer; differs only in server config
 func newSwaggerServer(cfg *config.Config, name string, c *closer.Closer, router http.Handler) *serviceHttp.Server {
 	service := serviceHttp.NewServer(name, &http.Server{
 		Handler:      router,

@@ -14,7 +14,10 @@ services:
       TZ: Europe/Moscow
     # entrypoint: ["tail", "-f", "/dev/null"]
     ports:
-      - ${HTTP_SERVER_PORT}:${HTTP_SERVER_PORT}
+      - ${HTTP_SERVER_DOCKER_PORT}:${HTTP_SERVER_DOCKER_PORT}
+      - ${METRICS_SERVER_DOCKER_PORT}:${METRICS_SERVER_DOCKER_PORT}
+      - ${SWAGGER_SERVER_DOCKER_PORT}:${SWAGGER_SERVER_DOCKER_PORT}
+      - ${GRPC_SERVER_DOCKER_PORT}:${GRPC_SERVER_DOCKER_PORT}
     networks:
       - avito-pvz-service_network
     depends_on:
@@ -103,13 +106,13 @@ services:
     image: grafana/k6:1.6.0
     container_name: avito-pvz-service_k6-load-test
     volumes:
-      - ./e2e/k6/scripts:/scripts
+      - ./test/load_test:/scripts
     networks:
-      - app_network
+      - avito-pvz-service_network
     depends_on:
-      - pvz-service
-    restart: on-failure
-    command: run /scripts/pvz_loadtest.js
+      - app
+    restart: "no"
+    command: run /scripts/load_test.js
 
 volumes:
   avito-pvz-service_pgdata:

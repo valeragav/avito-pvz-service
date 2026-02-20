@@ -28,7 +28,6 @@ func ToCreateIn(req CreateRequest) dto.ProductCreate {
 }
 
 func ToCreateResponse(out domain.Product) CreateResponse {
-
 	var typeName string
 	if out.ProductType != nil {
 		typeName = out.ProductType.Name

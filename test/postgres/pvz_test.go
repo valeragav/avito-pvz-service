@@ -97,7 +97,8 @@ func TestPVZRepository_GetList(t *testing.T) {
 		}
 
 		for i := range pvzList {
-			created, err := pvzRepo.Create(ctx, pvzList[i])
+			var created *domain.PVZ
+			created, err = pvzRepo.Create(ctx, pvzList[i])
 			require.NoError(t, err)
 			pvzList[i].ID = created.ID
 		}
@@ -113,7 +114,7 @@ func TestPVZRepository_GetList(t *testing.T) {
 
 		for _, pvz := range pvzList {
 			_, exists := gotIDs[pvz.ID]
-			assert.True(t, exists, "PVZ с ID %s должен быть в списке", pvz.ID)
+			require.True(t, exists, "PVZ с ID %s должен быть в списке", pvz.ID)
 		}
 
 		// откатываем транзакцию, чтобы удалить все записи
@@ -122,7 +123,7 @@ func TestPVZRepository_GetList(t *testing.T) {
 			emptyRepo := postgres.NewPVZRepository(tx)
 			list, err := emptyRepo.GetList(ctx, nil)
 			require.NoError(t, err)
-			assert.Len(t, list, 0)
+			require.Empty(t, list)
 		})
 	})
 }
@@ -202,7 +203,7 @@ func TestPVZRepository_ListPvzByAcceptanceDateAndCity(t *testing.T) {
 		end = now
 		emptyResult, err := pvzRepo.ListPvzByAcceptanceDateAndCity(ctx, pagination, &start, &end)
 		require.NoError(t, err)
-		assert.Len(t, emptyResult, 0)
+		assert.Empty(t, emptyResult)
 	})
 }
 
@@ -225,8 +226,9 @@ func TestPVZRepository_ListPvzByAcceptanceDateAndCity_Pagination(t *testing.T) {
 
 		now := time.Now()
 		pvzList := make([]*domain.PVZ, 5)
-		for i := 0; i < 5; i++ {
-			pvz, err := pvzRepo.Create(ctx, domain.PVZ{
+		for i := range 5 {
+			var pvz *domain.PVZ
+			pvz, err = pvzRepo.Create(ctx, domain.PVZ{
 				ID:               uuid.New(),
 				RegistrationDate: now.Add(time.Duration(-i) * time.Hour),
 				CityID:           city.ID,

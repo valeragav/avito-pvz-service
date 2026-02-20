@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	sq "github.com/Masterminds/squirrel"
@@ -35,7 +34,7 @@ func (r ReceptionRepository) Create(ctx context.Context, reception domain.Recept
 		Insert(record.TableName()).
 		Columns(record.InsertColumns()...).
 		Values(record.Values()...).
-		Suffix(fmt.Sprintf("RETURNING %s", strings.Join(record.Columns(), ", ")))
+		Suffix("RETURNING " + strings.Join(record.Columns(), ", "))
 
 	productCreate, err := CollectOneRow(ctx, r.db, qb, pgx.RowToStructByName[schema.Reception])
 	if err != nil {
@@ -121,7 +120,7 @@ func (r *ReceptionRepository) Update(ctx context.Context, receptionID uuid.UUID,
 	qb := r.sqb.
 		Update(schema.Reception{}.TableName()).
 		Where(sq.Eq{schema.ReceptionCols.ID: receptionID}).
-		Suffix(fmt.Sprintf("RETURNING %s", strings.Join(schema.Reception{}.Columns(), ", ")))
+		Suffix("RETURNING " + strings.Join(schema.Reception{}.Columns(), ", "))
 
 	var clauses = make(map[string]any)
 
