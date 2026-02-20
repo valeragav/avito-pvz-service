@@ -9,8 +9,8 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/valeragav/avito-pvz-service/internal/api"
+	"github.com/valeragav/avito-pvz-service/internal/app"
 	"github.com/valeragav/avito-pvz-service/internal/config"
-	"github.com/valeragav/avito-pvz-service/internal/container"
 	"github.com/valeragav/avito-pvz-service/internal/metrics"
 	"github.com/valeragav/avito-pvz-service/pkg/closer"
 	"github.com/valeragav/avito-pvz-service/pkg/dbconnect"
@@ -40,14 +40,13 @@ func main() {
 		return
 	}
 
-	ctn := container.New(cfg, lg, connPostgres)
-	err = ctn.Init()
+	app, err := app.New(cfg, lg, connPostgres)
 	if err != nil {
-		logger.Error("container error", "err", err)
+		logger.Error("database connection error", "err", err)
 		return
 	}
 
-	api.NewApi(ctx, c, cfg, ctn)
+	api.NewApi(ctx, c, cfg, app)
 }
 
 func connectPostgres(cfg *config.Config, c *closer.Closer) (*pgxpool.Pool, error) {

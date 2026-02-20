@@ -1,4 +1,4 @@
-package repo
+package postgres
 
 import (
 	"context"
@@ -10,17 +10,16 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/valeragav/avito-pvz-service/internal/domain"
-	"github.com/valeragav/avito-pvz-service/internal/infra"
-	"github.com/valeragav/avito-pvz-service/internal/infra/repo/schema"
+	"github.com/valeragav/avito-pvz-service/internal/infra/postgres/schema"
 	"github.com/valeragav/avito-pvz-service/pkg/listparams"
 )
 
 type PVZRepository struct {
-	db  infra.DBTX
+	db  DBTX
 	sqb sq.StatementBuilderType
 }
 
-func NewPVZRepository(db infra.DBTX) *PVZRepository {
+func NewPVZRepository(db DBTX) *PVZRepository {
 	return &PVZRepository{
 		db:  db,
 		sqb: sq.StatementBuilder.PlaceholderFormat(sq.Dollar),

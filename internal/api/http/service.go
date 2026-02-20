@@ -9,12 +9,14 @@ import (
 )
 
 type Server struct {
+	name   string
 	server *nethttp.Server
 }
 
-func NewServer(server *nethttp.Server) *Server {
+func NewServer(name string, server *nethttp.Server) *Server {
 	return &Server{
-		server: server,
+		name,
+		server,
 	}
 }
 
@@ -29,7 +31,7 @@ func (s *Server) StartServer(ctx context.Context) error {
 		}
 	}()
 
-	logger.Info("listening http", "addr", s.server.Addr)
+	logger.Info("listening", "nameServer", s.name, "addr", s.server.Addr)
 
 	select {
 	case <-ctx.Done():

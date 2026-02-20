@@ -104,7 +104,7 @@ func (s *AuthUseCase) Login(ctx context.Context, loginReq dto.LoginIn) (*domain.
 }
 
 func generateHashPass(reqPass string) (string, error) {
-	hashBytes, err := bcrypt.GenerateFromPassword([]byte(reqPass), bcrypt.DefaultCost)
+	hashBytes, err := bcrypt.GenerateFromPassword([]byte(reqPass), bcrypt.MinCost)
 	if err != nil {
 		return "", fmt.Errorf("generate password hash: %w", err)
 	}

@@ -2,7 +2,7 @@ package api
 
 // @title PVZ service
 // @version 1.0
-// @description Server for working with pvz
+// @description Сервис для управления ПВЗ и приемкой товаров
 
 // @host  localhost:8080
 // @BasePath /

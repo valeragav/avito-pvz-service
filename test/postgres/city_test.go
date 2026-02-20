@@ -1,4 +1,4 @@
-package repo_test
+package postgres_test
 
 import (
 	"context"
@@ -8,13 +8,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/valeragav/avito-pvz-service/internal/domain"
-	"github.com/valeragav/avito-pvz-service/internal/infra"
-	"github.com/valeragav/avito-pvz-service/internal/infra/repo"
+	"github.com/valeragav/avito-pvz-service/internal/infra/postgres"
 )
 
 func TestCityRepository_Create(t *testing.T) {
-	WithTx(t, func(ctx context.Context, tx infra.DBTX) {
-		cityRepo := repo.NewCityRepository(tx)
+	WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
+		cityRepo := postgres.NewCityRepository(tx)
 
 		city1 := domain.City{
 			ID:   uuid.New(),
@@ -41,8 +40,8 @@ func TestCityRepository_Create(t *testing.T) {
 }
 
 func TestCityRepository_Get(t *testing.T) {
-	WithTx(t, func(ctx context.Context, tx infra.DBTX) {
-		repo := repo.NewCityRepository(tx)
+	WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
+		cityRepo := postgres.NewCityRepository(tx)
 
 		// создаём город напрямую
 		id := uuid.New()
@@ -65,7 +64,7 @@ func TestCityRepository_Get(t *testing.T) {
 		for _, tt := range tests {
 			tt := tt
 			t.Run(tt.name, func(t *testing.T) {
-				got, err := repo.Get(ctx, tt.filter)
+				got, err := cityRepo.Get(ctx, tt.filter)
 				if tt.wantErr {
 					require.Error(t, err)
 					require.Nil(t, got)
@@ -81,8 +80,8 @@ func TestCityRepository_Get(t *testing.T) {
 }
 
 func TestCityRepository_CreateBatch(t *testing.T) {
-	WithTx(t, func(ctx context.Context, tx infra.DBTX) {
-		repo := repo.NewCityRepository(tx)
+	WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
+		cityRepo := postgres.NewCityRepository(tx)
 
 		tests := []struct {
 			name    string
@@ -108,7 +107,7 @@ func TestCityRepository_CreateBatch(t *testing.T) {
 		for _, tt := range tests {
 			tt := tt
 			t.Run(tt.name, func(t *testing.T) {
-				err := repo.CreateBatch(ctx, tt.cities)
+				err := cityRepo.CreateBatch(ctx, tt.cities)
 				if tt.wantErr {
 					require.Error(t, err)
 					return
@@ -117,7 +116,7 @@ func TestCityRepository_CreateBatch(t *testing.T) {
 
 				// Проверяем, что города вставились (только для непустого среза)
 				for _, city := range tt.cities {
-					got, err := repo.Get(ctx, domain.City{Name: city.Name})
+					got, err := cityRepo.Get(ctx, domain.City{Name: city.Name})
 					require.NoError(t, err)
 					require.NotNil(t, got)
 					assert.Equal(t, city.Name, got.Name)

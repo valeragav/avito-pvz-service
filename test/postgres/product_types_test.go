@@ -1,4 +1,4 @@
-package repo_test
+package postgres_test
 
 import (
 	"context"
@@ -8,13 +8,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/valeragav/avito-pvz-service/internal/domain"
-	"github.com/valeragav/avito-pvz-service/internal/infra"
-	"github.com/valeragav/avito-pvz-service/internal/infra/repo"
+	"github.com/valeragav/avito-pvz-service/internal/infra/postgres"
 )
 
 func TestProductTypeRepository_Get(t *testing.T) {
-	WithTx(t, func(ctx context.Context, tx infra.DBTX) {
-		repo := repo.NewProductTypeRepository(tx)
+	WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
+		repo := postgres.NewProductTypeRepository(tx)
 
 		id := uuid.New()
 		name := "Test"
@@ -52,8 +51,8 @@ func TestProductTypeRepository_Get(t *testing.T) {
 }
 
 func TestProductTypeRepository_CreateBatch(t *testing.T) {
-	WithTx(t, func(ctx context.Context, tx infra.DBTX) {
-		repo := repo.NewProductTypeRepository(tx)
+	WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
+		repo := postgres.NewProductTypeRepository(tx)
 
 		tests := []struct {
 			name         string

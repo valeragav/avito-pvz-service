@@ -5,14 +5,14 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/valeragav/avito-pvz-service/internal/domain"
-	"github.com/valeragav/avito-pvz-service/internal/infra/repo"
+	"github.com/valeragav/avito-pvz-service/pkg/seeder"
 )
 
 type CitySeed struct {
-	repo *repo.CityRepository
+	repo seeder.SeedRepository[domain.City]
 }
 
-func NewCitySeed(repo *repo.CityRepository) *CitySeed {
+func NewCitySeed(repo seeder.SeedRepository[domain.City]) *CitySeed {
 	return &CitySeed{repo: repo}
 }
 

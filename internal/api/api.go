@@ -6,38 +6,58 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/valeragav/avito-pvz-service/internal/config"
-	"github.com/valeragav/avito-pvz-service/internal/container"
-	"github.com/valeragav/avito-pvz-service/pkg/closer"
-	"github.com/valeragav/avito-pvz-service/pkg/logger"
-
 	serviceGrpc "github.com/valeragav/avito-pvz-service/internal/api/grpc"
 	serviceHttp "github.com/valeragav/avito-pvz-service/internal/api/http"
+	"github.com/valeragav/avito-pvz-service/internal/app"
+	"github.com/valeragav/avito-pvz-service/internal/config"
+	"github.com/valeragav/avito-pvz-service/pkg/closer"
+	"github.com/valeragav/avito-pvz-service/pkg/logger"
 )
 
-func NewApi(ctx context.Context, c *closer.Closer, cfg *config.Config, ctn *container.DIContainer) {
-	router := serviceHttp.NewRouter(ctn)
+func NewApi(ctx context.Context, c *closer.Closer, cfg *config.Config, app *app.App) {
+	errCh := make(chan error, 4)
 
-	httpService := newHTTPServer(cfg, c, router)
-
-	grpcServer, err := newGrpcServer(cfg, c, []serviceGrpc.RegisterFunc{})
-	if err != nil {
-		logger.Error("serviceGrpc startup error", "err", err)
-		return
+	runServer := func(name string, start func(context.Context) error, enabled bool) {
+		if !enabled {
+			return
+		}
+		go func() {
+			if err := start(ctx); err != nil {
+				errCh <- fmt.Errorf("%s server error: %w", name, err)
+			}
+		}()
 	}
 
-	errCh := make(chan error, 2)
-	go func() {
-		if err := httpService.StartServer(ctx); err != nil {
-			errCh <- fmt.Errorf("HTTP server error: %w", err)
+	gRPCService := "gRPC"
+	runServer(gRPCService, func(ctx context.Context) error {
+		registers := serviceGrpc.CollectRegisters(app)
+		grpcServer, err := newGrpcServer(cfg, gRPCService, c, registers)
+		if err != nil {
+			return fmt.Errorf("failed to create gRPC server: %w", err)
 		}
-	}()
+		return grpcServer.StartServer(ctx)
+	}, true)
 
-	go func() {
-		if err := grpcServer.StartServer(ctx); err != nil {
-			errCh <- fmt.Errorf("gRPC server error: %w", err)
-		}
-	}()
+	httpNameService := "HTTP"
+	runServer(httpNameService, func(ctx context.Context) error {
+		router := serviceHttp.NewRouter(app)
+		httpService := newHTTPServer(cfg, httpNameService, c, router)
+		return httpService.StartServer(ctx)
+	}, true)
+
+	metricsNameService := "Metrics"
+	runServer(metricsNameService, func(ctx context.Context) error {
+		metricsRoute := serviceHttp.NewMetricsRoute()
+		metricsService := newMetricsServer(cfg, metricsNameService, c, metricsRoute)
+		return metricsService.StartServer(ctx)
+	}, true)
+
+	swaggerNameService := "Swagger"
+	runServer(swaggerNameService, func(ctx context.Context) error {
+		swaggerRoute := serviceHttp.NewSwaggerRoute()
+		swaggerService := newSwaggerServer(cfg, swaggerNameService, c, swaggerRoute)
+		return swaggerService.StartServer(ctx)
+	}, cfg.SwaggerServer.Enabled)
 
 	select {
 	case <-ctx.Done():
@@ -47,13 +67,14 @@ func NewApi(ctx context.Context, c *closer.Closer, cfg *config.Config, ctn *cont
 	}
 }
 
-func newHTTPServer(cfg *config.Config, c *closer.Closer, router http.Handler) *serviceHttp.Server {
-	service := serviceHttp.NewServer(&http.Server{
-		Addr:         cfg.HTTPServer.Address,
-		Handler:      router,
-		ReadTimeout:  cfg.HTTPServer.ReadTimeout,
-		WriteTimeout: cfg.HTTPServer.WriteTimeout,
-		IdleTimeout:  cfg.HTTPServer.IdleTimeout,
+func newHTTPServer(cfg *config.Config, name string, c *closer.Closer, router http.Handler) *serviceHttp.Server {
+	service := serviceHttp.NewServer(name, &http.Server{
+		Handler:           router,
+		Addr:              cfg.HTTPServer.Address,
+		ReadTimeout:       cfg.HTTPServer.ReadTimeout,
+		ReadHeaderTimeout: cfg.HTTPServer.ReadHeaderTimeout,
+		WriteTimeout:      cfg.HTTPServer.WriteTimeout,
+		IdleTimeout:       cfg.HTTPServer.IdleTimeout,
 	})
 
 	c.Add(func(ctx context.Context) error {
@@ -64,11 +85,45 @@ func newHTTPServer(cfg *config.Config, c *closer.Closer, router http.Handler) *s
 	return service
 }
 
-func newGrpcServer(cfg *config.Config, c *closer.Closer, registerFuncs []serviceGrpc.RegisterFunc) (*serviceGrpc.Server, error) {
+func newMetricsServer(cfg *config.Config, name string, c *closer.Closer, router http.Handler) *serviceHttp.Server {
+	service := serviceHttp.NewServer(name, &http.Server{
+		Handler:      router,
+		Addr:         cfg.MetricsServer.Address,
+		ReadTimeout:  cfg.MetricsServer.ReadTimeout,
+		WriteTimeout: cfg.MetricsServer.WriteTimeout,
+		IdleTimeout:  cfg.MetricsServer.IdleTimeout,
+	})
+
+	c.Add(func(ctx context.Context) error {
+		logger.Info("shutting down server metrics")
+		return service.Shutdown(ctx)
+	})
+
+	return service
+}
+
+func newSwaggerServer(cfg *config.Config, name string, c *closer.Closer, router http.Handler) *serviceHttp.Server {
+	service := serviceHttp.NewServer(name, &http.Server{
+		Handler:      router,
+		Addr:         cfg.SwaggerServer.Address,
+		ReadTimeout:  cfg.SwaggerServer.ReadTimeout,
+		WriteTimeout: cfg.SwaggerServer.WriteTimeout,
+		IdleTimeout:  cfg.SwaggerServer.IdleTimeout,
+	})
+
+	c.Add(func(ctx context.Context) error {
+		logger.Info("shutting down server swagger")
+		return service.Shutdown(ctx)
+	})
+
+	return service
+}
+
+func newGrpcServer(cfg *config.Config, name string, c *closer.Closer, registerFuncs []serviceGrpc.RegisterFunc) (*serviceGrpc.Server, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	service, err := serviceGrpc.NewServer(ctx, cfg.GRPC.Address, registerFuncs)
+	service, err := serviceGrpc.NewServer(ctx, name, cfg.GRPC.Address, registerFuncs)
 	if err != nil {
 		return nil, err
 	}

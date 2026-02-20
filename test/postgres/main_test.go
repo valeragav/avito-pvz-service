@@ -1,4 +1,4 @@
-package repo_test
+package postgres_test
 
 import (
 	"context"
@@ -9,14 +9,13 @@ import (
 	"time"
 
 	"github.com/golang-migrate/migrate/v4"
-	"github.com/golang-migrate/migrate/v4/database/postgres"
+	postgresDB "github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/stretchr/testify/require"
 	"github.com/valeragav/avito-pvz-service/internal/config"
-	"github.com/valeragav/avito-pvz-service/internal/infra"
-	"github.com/valeragav/avito-pvz-service/internal/infra/repo"
+	"github.com/valeragav/avito-pvz-service/internal/infra/postgres"
 	"github.com/valeragav/avito-pvz-service/internal/seed"
 	"github.com/valeragav/avito-pvz-service/migrations"
 	"github.com/valeragav/avito-pvz-service/pkg/dbconnect"
@@ -110,7 +109,7 @@ const (
 	SeedProductTypes
 )
 
-func (a TestApp) Seed(ctx context.Context, db infra.DBTX, targets ...SeedTarget) error {
+func (a TestApp) Seed(ctx context.Context, db postgres.DBTX, targets ...SeedTarget) error {
 	if len(targets) == 0 {
 		// по умолчанию сидим всё
 		targets = []SeedTarget{SeedCities, SeedReceptionStatuses, SeedProductTypes}
@@ -121,13 +120,13 @@ func (a TestApp) Seed(ctx context.Context, db infra.DBTX, targets ...SeedTarget)
 	for _, t := range targets {
 		switch t {
 		case SeedCities:
-			citiesRepo := repo.NewCityRepository(db)
+			citiesRepo := postgres.NewCityRepository(db)
 			sd.Add(seed.NewCitySeed(citiesRepo))
 		case SeedReceptionStatuses:
-			statusesRepo := repo.NewReceptionStatusRepository(db)
+			statusesRepo := postgres.NewReceptionStatusRepository(db)
 			sd.Add(seed.NewReceptionStatusSeed(statusesRepo))
 		case SeedProductTypes:
-			productTypesRepo := repo.NewProductTypeRepository(db)
+			productTypesRepo := postgres.NewProductTypeRepository(db)
 			sd.Add(seed.NewProductTypeSeed(productTypesRepo))
 		}
 	}
@@ -138,7 +137,7 @@ func (a TestApp) Seed(ctx context.Context, db infra.DBTX, targets ...SeedTarget)
 func (a TestApp) Migrate() error {
 	sqlDB := stdlib.OpenDBFromPool(a.DB)
 
-	driver, err := postgres.WithInstance(sqlDB, &postgres.Config{})
+	driver, err := postgresDB.WithInstance(sqlDB, &postgresDB.Config{})
 	if err != nil {
 		return err
 	}
@@ -216,7 +215,7 @@ func loadTestConfig() *config.Config {
 	}
 }
 
-func WithTx(t *testing.T, fn func(ctx context.Context, tx infra.DBTX)) {
+func WithTx(t *testing.T, fn func(ctx context.Context, tx postgres.DBTX)) {
 	t.Helper()
 
 	ctx := context.Background()

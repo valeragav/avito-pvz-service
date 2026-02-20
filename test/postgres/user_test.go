@@ -1,4 +1,4 @@
-package repo_test
+package postgres_test
 
 import (
 	"context"
@@ -9,12 +9,12 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/valeragav/avito-pvz-service/internal/domain"
 	"github.com/valeragav/avito-pvz-service/internal/infra"
-	"github.com/valeragav/avito-pvz-service/internal/infra/repo"
+	"github.com/valeragav/avito-pvz-service/internal/infra/postgres"
 )
 
 func TestUserRepository_Create(t *testing.T) {
-	WithTx(t, func(ctx context.Context, tx infra.DBTX) {
-		userRepo := repo.NewUserRepository(tx)
+	WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
+		userRepo := postgres.NewUserRepository(tx)
 
 		user1 := domain.User{
 			ID:           uuid.New(),
@@ -49,8 +49,8 @@ func TestUserRepository_Create(t *testing.T) {
 }
 
 func TestUserRepository_Get(t *testing.T) {
-	WithTx(t, func(ctx context.Context, tx infra.DBTX) {
-		userRepo := repo.NewUserRepository(tx)
+	WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
+		userRepo := postgres.NewUserRepository(tx)
 
 		users := []domain.User{
 			{

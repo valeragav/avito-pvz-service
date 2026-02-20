@@ -7,18 +7,20 @@ import (
 
 	"github.com/valeragav/avito-pvz-service/pkg/logger"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 // функция, которая регистрирует сервис на gRPC сервере
 type RegisterFunc func(*grpc.Server)
 
 type Server struct {
+	name       string
 	grpcServer *grpc.Server
 	listener   net.Listener
 	addr       string
 }
 
-func NewServer(ctx context.Context, addr string, registerFuncs []RegisterFunc, opts ...grpc.ServerOption) (*Server, error) {
+func NewServer(ctx context.Context, name string, addr string, registerFuncs []RegisterFunc, opts ...grpc.ServerOption) (*Server, error) {
 	const op = "grpc.NewServer"
 
 	lc := net.ListenConfig{}
@@ -33,7 +35,10 @@ func NewServer(ctx context.Context, addr string, registerFuncs []RegisterFunc, o
 		register(s)
 	}
 
+	reflection.Register(s)
+
 	return &Server{
+		name:       name,
 		grpcServer: s,
 		listener:   lis,
 		addr:       addr,
@@ -51,7 +56,7 @@ func (s *Server) StartServer(ctx context.Context) error {
 		}
 	}()
 
-	logger.Info("listening grpc", "addr", s.listener.Addr().String())
+	logger.Info("listening", "nameServer", s.name, "addr", s.listener.Addr().String())
 
 	select {
 	case <-ctx.Done():

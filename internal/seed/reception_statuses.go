@@ -5,14 +5,14 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/valeragav/avito-pvz-service/internal/domain"
-	"github.com/valeragav/avito-pvz-service/internal/infra/repo"
+	"github.com/valeragav/avito-pvz-service/pkg/seeder"
 )
 
 type ReceptionStatusSeed struct {
-	repo *repo.ReceptionStatusRepository
+	repo seeder.SeedRepository[domain.ReceptionStatus]
 }
 
-func NewReceptionStatusSeed(repo *repo.ReceptionStatusRepository) *ReceptionStatusSeed {
+func NewReceptionStatusSeed(repo seeder.SeedRepository[domain.ReceptionStatus]) *ReceptionStatusSeed {
 	return &ReceptionStatusSeed{repo: repo}
 }
 

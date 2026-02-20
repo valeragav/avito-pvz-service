@@ -1,4 +1,4 @@
-package repo
+package postgres
 
 import (
 	"context"
@@ -10,15 +10,15 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/valeragav/avito-pvz-service/internal/domain"
 	"github.com/valeragav/avito-pvz-service/internal/infra"
-	"github.com/valeragav/avito-pvz-service/internal/infra/repo/schema"
+	"github.com/valeragav/avito-pvz-service/internal/infra/postgres/schema"
 )
 
 type ProductRepository struct {
-	db  infra.DBTX
+	db  DBTX
 	sqb sq.StatementBuilderType
 }
 
-func NewProductRepository(db infra.DBTX) *ProductRepository {
+func NewProductRepository(db DBTX) *ProductRepository {
 	return &ProductRepository{
 		db:  db,
 		sqb: sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
@@ -101,12 +101,12 @@ func (r *ProductRepository) DeleteProduct(ctx context.Context, productID uuid.UU
 
 	sql, args, err := qb.ToSql()
 	if err != nil {
-		return fmt.Errorf("%w: %w", infra.ErrBuildQuery, err)
+		return fmt.Errorf("%w: %w", ErrBuildQuery, err)
 	}
 
 	tag, err := r.db.Exec(ctx, sql, args...)
 	if err != nil {
-		return fmt.Errorf("%w: %w", infra.ErrExecuteQuery, err)
+		return fmt.Errorf("%w: %w", ErrExecuteQuery, err)
 	}
 
 	if tag.RowsAffected() == 0 {

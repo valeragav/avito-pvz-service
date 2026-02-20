@@ -1,4 +1,4 @@
-package repo_test
+package postgres_test
 
 import (
 	"context"
@@ -12,11 +12,11 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/valeragav/avito-pvz-service/internal/domain"
 	"github.com/valeragav/avito-pvz-service/internal/infra"
-	"github.com/valeragav/avito-pvz-service/internal/infra/repo"
+	"github.com/valeragav/avito-pvz-service/internal/infra/postgres"
 )
 
 func TestCollectRowsAndOneRow(t *testing.T) {
-	WithTx(t, func(ctx context.Context, tx infra.DBTX) {
+	WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
 		type city struct {
 			ID   uuid.UUID `db:"id"`
 			Name string    `db:"name"`
@@ -36,7 +36,7 @@ func TestCollectRowsAndOneRow(t *testing.T) {
 		builder := sqb.Select("id", "name").From("cities").Where(sq.Eq{"id": createCity.ID})
 
 		// ---------------- CollectRows ----------------
-		results, err := repo.CollectRows(ctx, tx, builder, pgx.RowToStructByName[city])
+		results, err := postgres.CollectRows(ctx, tx, builder, pgx.RowToStructByName[city])
 		require.NoError(t, err)
 		require.Len(t, results, 1)
 		assert.Equal(t, createCity.ID, results[0].ID)
@@ -46,13 +46,13 @@ func TestCollectRowsAndOneRow(t *testing.T) {
 		builderOne := sqb.Select("id", "name").From("cities").Where(sq.Eq{"id": createCity.ID})
 
 		// ---------------- CollectOneRow ----------------
-		result, err := repo.CollectOneRow(ctx, tx, builderOne, pgx.RowToStructByName[city])
+		result, err := postgres.CollectOneRow(ctx, tx, builderOne, pgx.RowToStructByName[city])
 		require.NoError(t, err)
 		assert.Equal(t, createCity.ID, result.ID)
 		assert.Equal(t, createCity.Name, result.Name)
 
 		// ---------------- NotFound ----------------
-		_, err = repo.CollectOneRow(ctx, tx, sqb.Select("id").From("cities").Where(sq.Eq{"id": uuid.New()}), pgx.RowToStructByName[city])
+		_, err = postgres.CollectOneRow(ctx, tx, sqb.Select("id").From("cities").Where(sq.Eq{"id": uuid.New()}), pgx.RowToStructByName[city])
 		assert.ErrorIs(t, err, infra.ErrNotFound)
 	})
 }
@@ -64,24 +64,24 @@ func (b badBuilder) ToSql() (string, []any, error) {
 }
 
 func TestCollectRows_BuildError(t *testing.T) {
-	WithTx(t, func(ctx context.Context, tx infra.DBTX) {
+	WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
 		mapper := func(row pgx.CollectableRow) (domain.City, error) {
 			return domain.City{}, nil
 		}
-		_, err := repo.CollectRows(ctx, tx, badBuilder{}, mapper)
-		assert.ErrorIs(t, err, infra.ErrBuildQuery)
+		_, err := postgres.CollectRows(ctx, tx, badBuilder{}, mapper)
+		assert.ErrorIs(t, err, postgres.ErrBuildQuery)
 	})
 }
 
 func TestCollectOneRow_DuplicateError(t *testing.T) {
-	WithTx(t, func(ctx context.Context, tx infra.DBTX) {
+	WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
 		id := uuid.New()
 		_, err := tx.Exec(ctx, `INSERT INTO cities (id, name) VALUES ($1, $2)`, id, "City1")
 		require.NoError(t, err)
 
 		// пытаемся вставить ту же запись напрямую, чтобы вызвать ошибку уникальности
 		_, err = tx.Exec(ctx, `INSERT INTO cities (id, name) VALUES ($1, $2)`, id, "City1")
-		require.Error(t, err)                         // проверяем, что есть ошибка
-		assert.True(t, repo.IsDuplicateKeyError(err)) // и что это действительно дубликат
+		require.Error(t, err)                             // проверяем, что есть ошибка
+		assert.True(t, postgres.IsDuplicateKeyError(err)) // и что это действительно дубликат
 	})
 }

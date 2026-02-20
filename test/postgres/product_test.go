@@ -1,4 +1,4 @@
-package repo_test
+package postgres_test
 
 import (
 	"context"
@@ -10,30 +10,30 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/valeragav/avito-pvz-service/internal/domain"
 	"github.com/valeragav/avito-pvz-service/internal/infra"
-	"github.com/valeragav/avito-pvz-service/internal/infra/repo"
+	"github.com/valeragav/avito-pvz-service/internal/infra/postgres"
 )
 
 type productFixture struct {
 	ctx context.Context
-	tx  infra.DBTX
+	tx  postgres.DBTX
 
-	productRepo *repo.ProductRepository
+	productRepo *postgres.ProductRepository
 
 	productType *domain.ProductType
 	reception   *domain.Reception
 }
 
-func newProductFixture(t *testing.T, ctx context.Context, tx infra.DBTX) *productFixture {
+func newProductFixture(t *testing.T, ctx context.Context, tx postgres.DBTX) *productFixture {
 	t.Helper()
 
 	require.NoError(t, testApp.Seed(ctx, tx, SeedReceptionStatuses, SeedProductTypes))
 
 	stableNow := time.Now().UTC().Truncate(time.Millisecond)
-	productTypeRepo := repo.NewProductTypeRepository(tx)
-	receptionStatusRepo := repo.NewReceptionStatusRepository(tx)
-	cityRepo := repo.NewCityRepository(tx)
-	pvzRepo := repo.NewPVZRepository(tx)
-	receptionRepo := repo.NewReceptionRepository(tx)
+	productTypeRepo := postgres.NewProductTypeRepository(tx)
+	receptionStatusRepo := postgres.NewReceptionStatusRepository(tx)
+	cityRepo := postgres.NewCityRepository(tx)
+	pvzRepo := postgres.NewPVZRepository(tx)
+	receptionRepo := postgres.NewReceptionRepository(tx)
 
 	productType, err := productTypeRepo.Get(ctx, domain.ProductType{
 		Name: "электроника",
@@ -69,7 +69,7 @@ func newProductFixture(t *testing.T, ctx context.Context, tx infra.DBTX) *produc
 	return &productFixture{
 		ctx:         ctx,
 		tx:          tx,
-		productRepo: repo.NewProductRepository(tx),
+		productRepo: postgres.NewProductRepository(tx),
 		productType: productType,
 		reception:   reception,
 	}
@@ -85,7 +85,7 @@ func newProduct(typeID, receptionID uuid.UUID, at time.Time) domain.Product {
 }
 
 func TestProductRepository_CreateAndGet(t *testing.T) {
-	WithTx(t, func(ctx context.Context, tx infra.DBTX) {
+	WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
 		now := time.Now().UTC().Truncate(time.Millisecond)
 		f := newProductFixture(t, ctx, tx)
 		product := newProduct(f.productType.ID, f.reception.ID, now)
@@ -109,7 +109,7 @@ func TestProductRepository_CreateAndGet(t *testing.T) {
 }
 
 func TestProductRepository_GetLastProductInReception(t *testing.T) {
-	WithTx(t, func(ctx context.Context, tx infra.DBTX) {
+	WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
 		f := newProductFixture(t, ctx, tx)
 		stableNow := time.Now().UTC().Truncate(time.Millisecond)
 
@@ -145,11 +145,11 @@ func TestProductRepository_GetLastProductInReception(t *testing.T) {
 }
 
 func TestProductRepository_ListByReceptionIDsWithTypeName(t *testing.T) {
-	WithTx(t, func(ctx context.Context, tx infra.DBTX) {
+	WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
 		f := newProductFixture(t, ctx, tx)
 
 		stableNow := time.Now().UTC().Truncate(time.Millisecond)
-		receptionRepo := repo.NewReceptionRepository(tx)
+		receptionRepo := postgres.NewReceptionRepository(tx)
 
 		secondReception, err := receptionRepo.Create(ctx, domain.Reception{
 			ID:       uuid.New(),
@@ -211,7 +211,7 @@ func TestProductRepository_ListByReceptionIDsWithTypeName(t *testing.T) {
 }
 
 func TestProductRepository_DeleteProduct(t *testing.T) {
-	WithTx(t, func(ctx context.Context, tx infra.DBTX) {
+	WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
 		stableNow := time.Now().UTC().Truncate(time.Millisecond)
 		f := newProductFixture(t, ctx, tx)
 

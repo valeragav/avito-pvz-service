@@ -79,3 +79,26 @@ migrate-down:
 .PHONY: migrate-version
 migrate-version:
 	$(MIGRATE_RUN) version
+
+
+
+PROTO=api/v1/proto/*.proto
+OUT=internal/api/grpc/gen
+
+proto:
+	protoc -I api/v1/proto \
+		$(PROTO) \
+		--go_out=$(OUT) --go_opt=paths=source_relative \
+		--go-grpc_out=$(OUT) --go-grpc_opt=paths=source_relative
+
+
+
+PROTO_DIR = api/v1/proto
+OUT_DIR   = internal/api/grpc/gen
+
+proto-1:
+	protoc -I $(PROTO_DIR) $(PROTO_DIR)/*.proto \
+		--go_out=$(OUT_DIR) --go_opt=paths=source_relative \
+		--go-grpc_out=$(OUT_DIR) --go-grpc_opt=paths=source_relative \
+		--plugin=protoc-gen-validate=/home/halon/go/bin/protoc-gen-validate \
+		--validate_out="lang=go,paths=source_relative:$(OUT_DIR)"

@@ -7,7 +7,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/valeragav/avito-pvz-service/internal/config"
-	"github.com/valeragav/avito-pvz-service/internal/infra/repo"
+	"github.com/valeragav/avito-pvz-service/internal/infra/postgres"
 
 	"github.com/valeragav/avito-pvz-service/internal/seed"
 	"github.com/valeragav/avito-pvz-service/pkg/dbconnect"
@@ -30,9 +30,9 @@ func main() {
 		return
 	}
 
-	citiesRepo := repo.NewCityRepository(connPostgres)
-	statusesRepo := repo.NewReceptionStatusRepository(connPostgres)
-	productTypesRepo := repo.NewProductTypeRepository(connPostgres)
+	citiesRepo := postgres.NewCityRepository(connPostgres)
+	statusesRepo := postgres.NewReceptionStatusRepository(connPostgres)
+	productTypesRepo := postgres.NewProductTypeRepository(connPostgres)
 
 	sd := seeder.New()
 	sd.Add(seed.NewCitySeed(citiesRepo))

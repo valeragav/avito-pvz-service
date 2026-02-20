@@ -5,14 +5,14 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/valeragav/avito-pvz-service/internal/domain"
-	"github.com/valeragav/avito-pvz-service/internal/infra/repo"
+	"github.com/valeragav/avito-pvz-service/pkg/seeder"
 )
 
 type ProductTypeSeed struct {
-	repo *repo.ProductTypeRepository
+	repo seeder.SeedRepository[domain.ProductType]
 }
 
-func NewProductTypeSeed(repo *repo.ProductTypeRepository) *ProductTypeSeed {
+func NewProductTypeSeed(repo seeder.SeedRepository[domain.ProductType]) *ProductTypeSeed {
 	return &ProductTypeSeed{repo: repo}
 }
 

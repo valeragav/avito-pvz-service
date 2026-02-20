@@ -5,6 +5,10 @@ import (
 	"fmt"
 )
 
+type SeedRepository[T any] interface {
+	CreateBatch(ctx context.Context, cities []T) error
+}
+
 type Seed interface {
 	Name() string
 	Run(ctx context.Context) error

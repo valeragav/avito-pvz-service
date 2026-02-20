@@ -11,12 +11,14 @@ import (
 )
 
 type Config struct {
-	Env        string     `yaml:"env" `
-	LogLevel   string     `yaml:"log_level"`
-	HTTPServer HTTPServer `yaml:"http_server"`
-	Db         Db         `yaml:"db"`
-	Jwt        Jwt        `yaml:"jwt"`
-	GRPC       GRPC       `yaml:"GRPC"`
+	Env           string        `yaml:"env" `
+	LogLevel      string        `yaml:"log_level"`
+	HTTPServer    HTTPServer    `yaml:"http_server"`
+	Db            Db            `yaml:"db"`
+	Jwt           Jwt           `yaml:"jwt"`
+	GRPC          GRPC          `yaml:"grpc"`
+	MetricsServer MetricsServer `yaml:"metric_server"`
+	SwaggerServer SwaggerServer `yaml:"swagger_server"`
 }
 
 type GRPC struct {
@@ -26,12 +28,27 @@ type GRPC struct {
 }
 
 type HTTPServer struct {
+	Address           string        `yaml:"address"`
+	ReadTimeout       time.Duration `yaml:"read_timeout"`
+	ReadHeaderTimeout time.Duration `yaml:"read_header_timeout"`
+	WriteTimeout      time.Duration `yaml:"write_timeout"`
+	IdleTimeout       time.Duration `yaml:"idle_timeout"`
+	BearerToken       string        `yaml:"bearer_token"`
+}
+
+type MetricsServer struct {
 	Address      string        `yaml:"address"`
 	ReadTimeout  time.Duration `yaml:"read_timeout"`
 	WriteTimeout time.Duration `yaml:"write_timeout"`
 	IdleTimeout  time.Duration `yaml:"idle_timeout"`
-	BearerToken  string        `yaml:"bearer_token"`
-	DbPort       string        `yaml:"db_port"`
+}
+
+type SwaggerServer struct {
+	Enabled      bool          `yaml:"enabled"`
+	Address      string        `yaml:"address"`
+	ReadTimeout  time.Duration `yaml:"read_timeout"`
+	WriteTimeout time.Duration `yaml:"write_timeout"`
+	IdleTimeout  time.Duration `yaml:"idle_timeout"`
 }
 
 type Db struct {
@@ -68,10 +85,24 @@ func LoadConfig(configPath string) *Config {
 		Env:      MustGetDef("ENV", "test"),
 		LogLevel: MustGetDef("LOG_LEVEL", "info"),
 		HTTPServer: HTTPServer{
-			Address:      MustGet[string]("HTTP_SERVER_ADDRESS"),
-			ReadTimeout:  MustGet[time.Duration]("HTTP_READ_TIMEOUT"),
-			WriteTimeout: MustGet[time.Duration]("HTTP_WRITE_TIMEOUT"),
-			IdleTimeout:  MustGet[time.Duration]("HTTP_IDLE_TIMEOUT"),
+			Address:           MustGet[string]("HTTP_SERVER_ADDRESS"),
+			ReadTimeout:       MustGet[time.Duration]("HTTP_SERVER_READ_TIMEOUT"),
+			ReadHeaderTimeout: MustGet[time.Duration]("HTTP_SERVER_READ_HEADER_TIMEOUT"),
+			WriteTimeout:      MustGet[time.Duration]("HTTP_SERVER_WRITE_TIMEOUT"),
+			IdleTimeout:       MustGet[time.Duration]("HTTP_SERVER_IDLE_TIMEOUT"),
+		},
+		MetricsServer: MetricsServer{
+			Address:      MustGet[string]("METRICS_SERVER_ADDRESS"),
+			ReadTimeout:  MustGet[time.Duration]("METRICS_SERVER_READ_TIMEOUT"),
+			WriteTimeout: MustGet[time.Duration]("METRICS_SERVER_WRITE_TIMEOUT"),
+			IdleTimeout:  MustGet[time.Duration]("METRICS_SERVER_IDLE_TIMEOUT"),
+		},
+		SwaggerServer: SwaggerServer{
+			Enabled:      MustGet[bool]("SWAGGER_SERVER_ENABLED"),
+			Address:      MustGet[string]("SWAGGER_SERVER_ADDRESS"),
+			ReadTimeout:  MustGet[time.Duration]("SWAGGER_SERVER_READ_TIMEOUT"),
+			WriteTimeout: MustGet[time.Duration]("SWAGGER_SERVER_WRITE_TIMEOUT"),
+			IdleTimeout:  MustGet[time.Duration]("SWAGGER_SERVER_IDLE_TIMEOUT"),
 		},
 		GRPC: GRPC{
 			Address:     MustGet[string]("GRPC_SERVER_ADDRESS"),
