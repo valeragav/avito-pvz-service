@@ -53,8 +53,23 @@ jobs:
           LOCAL_BIN: ${{ github.workspace }}/bin
   
   test:
-      name: Test
-      runs-on: ubuntu-latest
+    name: Test
+    needs: build
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: root
+          POSTGRES_PASSWORD: password
+          POSTGRES_DB: pvz-service_db
+        ports:
+          - 5439:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
       steps:
         - name: Checkout
           uses: actions/checkout@v4
@@ -67,6 +82,12 @@ jobs:
 
         - name: Run tests
           run: make test
+          env:
+            DB_HOST: localhost
+            DB_PORT: 5439
+            DB_USER: root
+            DB_PASSWORD: password
+            DB_NAME: pvz-service_db
 
         - name: Upload coverage artifact
           if: always() && hashFiles('coverage.out') != ''
