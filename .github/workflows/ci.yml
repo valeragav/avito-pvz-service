@@ -66,11 +66,11 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_USER: ${{env.DB_USER}}
-          POSTGRES_PASSWORD: ${{env.DB_PASSWORD}}
-          POSTGRES_DB: ${{env.DB_NAME}}
+          POSTGRES_USER: root
+          POSTGRES_PASSWORD: root
+          POSTGRES_DB: pvz-service_db
         ports:
-          - ${{env.DB_PORT}}:5432
+          - 5439:5432
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
