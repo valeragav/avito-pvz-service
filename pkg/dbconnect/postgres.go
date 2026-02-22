@@ -51,7 +51,7 @@ func Connect(ctx context.Context, cfg PostgresConnectCfg) (*pgxpool.Pool, error)
 
 	if err := pool.Ping(ctx); err != nil {
 		pool.Close()
-		return nil, fmt.Errorf("failed to ping database: %w, url: %s", err, config.ConnString())
+		return nil, fmt.Errorf("failed to ping database: %w, config: %s, dsn: %s", err, config.ConnString(), dsn)
 	}
 
 	return pool, nil
