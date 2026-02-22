@@ -5,18 +5,22 @@ import (
 	"encoding/json"
 	"io"
 	"log/slog"
+	"sync"
 
 	"github.com/valeragav/avito-pvz-service/pkg/logger"
 )
 
-func InitTestLogger() {
-	opts := slog.HandlerOptions{
-		Level: slog.LevelError,
-	}
+var initLoggerOnce sync.Once
 
-	handler := slog.NewTextHandler(io.Discard, &opts)
-	logTest := logger.NewLogger(slog.New(handler))
-	logger.MustSetGlobal(logTest)
+func InitTestLogger() {
+	initLoggerOnce.Do(func() {
+		opts := slog.HandlerOptions{
+			Level: slog.LevelError,
+		}
+		handler := slog.NewTextHandler(io.Discard, &opts)
+		logTest := logger.NewLogger(slog.New(handler))
+		logger.MustSetGlobal(logTest)
+	})
 }
 
 func MakeRequestBody(body any) (*bytes.Reader, error) {

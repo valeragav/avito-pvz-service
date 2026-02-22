@@ -7,3 +7,4 @@
 postgres_data
 secrets
 bin/
+coverage.out

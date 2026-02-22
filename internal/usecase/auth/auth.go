@@ -12,7 +12,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-//go:generate ${LOCAL_BIN}/mockgen -source=auth.go -destination=./mocks/auth_mocks.go -package=mocks
+//go:generate ${LOCAL_BIN}/mockgen -source=auth.go -destination=./mocks/auth_mock.go -package=mocks
 type jwtService interface {
 	SignJwt(userClaims domain.UserClaims) (string, error)
 	ValidateJwt(incomingToken string) (*domain.UserClaims, error)
@@ -54,6 +54,8 @@ func (s *AuthUseCase) Register(ctx context.Context, registerReq dto.RegisterIn) 
 	const op = "auth.Register"
 
 	role := domain.Role(strings.ToLower(registerReq.Role))
+
+	// По хорошему нужно сделать проверку роли через запрос в талицу, что роль существует
 	if !role.IsValid() {
 		return nil, domain.ErrInvalidRole
 	}

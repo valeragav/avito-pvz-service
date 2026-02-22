@@ -48,6 +48,7 @@ linters:
     - whitespace
     - promlinter
     - protogetter
+    - importas
     # - godoclint
     # - mnd
     # - wrapcheck 
@@ -81,6 +82,10 @@ linters:
       line-length: 140
     misspell:
       locale: US
+    importas:
+      alias:
+        - pkg: 'github.com/Masterminds/squirrel'
+          alias: sq
     revive:
       rules:
         - name: early-return

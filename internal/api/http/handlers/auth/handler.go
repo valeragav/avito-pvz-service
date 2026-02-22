@@ -168,6 +168,10 @@ func mapErrorToHTTP(err error) (msg string, statusCode int) {
 		msg = err.Error()
 		statusCode = http.StatusBadRequest
 
+	case errors.Is(err, domain.ErrInvalidRole):
+		msg = err.Error()
+		statusCode = http.StatusBadRequest
+
 	default:
 		statusCode = http.StatusInternalServerError
 		msg = "internal server error"

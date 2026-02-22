@@ -216,8 +216,15 @@ func TestAuthHandlers_Register(t *testing.T) {
 				"role":     "test",
 			},
 			expectedCode: http.StatusBadRequest,
+			authServiceMock: func(authService *mocks.MockauthService) {
+				authService.
+					EXPECT().
+					Register(gomock.Any(), gomock.Any()).
+					Return(nil, domain.ErrInvalidRole)
+			},
 			expectedError: &response.Error{
-				Message: "field 'Role' failed on the 'oneofci' validation",
+				Message: domain.ErrInvalidRole.Error(),
+				Details: domain.ErrInvalidRole.Error(),
 			},
 		},
 		{
