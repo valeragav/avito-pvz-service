@@ -22,7 +22,7 @@
 ## Быстрый старт
 
 ```bash
-docker compose up
+docker compose --env-file .env.test up
 
 make fast-start
 ```

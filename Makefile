@@ -38,8 +38,7 @@ fast-start:
 ## start: Build and run the application binary
 .PHONY: start
 start:
-	go build -o build/package/$(PROJECT_NAME) cmd/app/main.go
-	build/package/$(PROJECT_NAME)
+	docker compose up -d
 
 ## test: Run all unit tests with verbose output
 .PHONY: test

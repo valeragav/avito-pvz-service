@@ -14,10 +14,10 @@ services:
       TZ: Europe/Moscow
     # entrypoint: ["tail", "-f", "/dev/null"]
     ports:
-      - ${HTTP_SERVER_DOCKER_PORT}:${HTTP_SERVER_DOCKER_PORT}
-      - ${METRICS_SERVER_DOCKER_PORT}:${METRICS_SERVER_DOCKER_PORT}
-      - ${SWAGGER_SERVER_DOCKER_PORT}:${SWAGGER_SERVER_DOCKER_PORT}
-      - ${GRPC_SERVER_DOCKER_PORT}:${GRPC_SERVER_DOCKER_PORT}
+      - ${HTTP_SERVER_DOCKER_PORT:-8080}:${HTTP_SERVER_DOCKER_PORT:-8080}
+      - ${METRICS_SERVER_DOCKER_PORT:-9091}:${METRICS_SERVER_DOCKER_PORT:-9091}
+      - ${SWAGGER_SERVER_DOCKER_PORT:-8081}:${SWAGGER_SERVER_DOCKER_PORT:-8081}
+      - ${GRPC_SERVER_DOCKER_PORT:-3000}:${GRPC_SERVER_DOCKER_PORT:-3000}
     networks:
       - avito-pvz-service_network
     depends_on:
@@ -28,31 +28,33 @@ services:
     privileged: false
     container_name: avito-pvz-service_postgresql
     environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:-pvz-service_db}
+      POSTGRES_USER: ${DB_USER:-root}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-root}
       TZ: Europe/Moscow
     volumes:
       - .:/docker-entrypoint-initdb.d
       - avito-pvz-service_pgdata:/var/lib/postgresql/data
     ports:
-      - ${DB_PORT}:5432
+      - ${DB_PORT:-5432}:5432
     networks:
       - avito-pvz-service_network
 
   postgres_test:
     image: postgres:16.1-alpine3.18
     container_name: avito-pvz-service_postgresql_test
+    depends_on:
+      - postgres
     environment:
-      POSTGRES_DB: ${DB_NAME}
-      POSTGRES_USER: ${DB_USER}
-      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:-pvz-service_db}
+      POSTGRES_USER: ${DB_USER:-root}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-root}
       TZ: Europe/Moscow
     volumes:
       - .:/docker-entrypoint-initdb.d
       - avito-pvz-service_pgdata_test:/var/lib/postgresql/data
     ports:
-      - ${TEST_DB_PORT}:5432
+      - ${TEST_DB_PORT:-5439}:5432
     networks:
       - avito-pvz-service_network
 
@@ -65,7 +67,7 @@ services:
       - ./migrations:/migrations
     command: >
       -source file:///migrations
-      -database postgres://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}?sslmode=disable
+      -database postgres://${DB_USER:-root}:${DB_PASSWORD:-root}@postgres:5432/${DB_NAME:-pvz-service_db}?sslmode=disable
       -verbose up
     networks:
       - avito-pvz-service_network

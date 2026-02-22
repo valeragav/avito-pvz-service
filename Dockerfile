@@ -7,7 +7,9 @@ RUN go mod download
 
 COPY . .
 
-RUN apk add --no-cache bash protobuf protobuf-dev git make vim
+RUN apk add --no-cache bash protobuf protobuf-dev git make openssl
+
+RUN ./script/generate_secrets.sh
 
 RUN go build -o avito-pvz-service ./cmd/app
 
