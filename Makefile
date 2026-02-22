@@ -47,8 +47,9 @@ test:
 	go test -race -fullpath=true \
 		-coverprofile=coverage.out \
 		-covermode=atomic \
+		-coverpkg=./... \
 		./...
-	grep -vE '\.pb\.|_mock\.go|_gen\.go|/schema/' coverage.out > coverage.filtered.out
+	grep -vE '\.pb\.|_mock\.go|_gen\.go|/schema/|/logger/' coverage.out > coverage.filtered.out
 	mv coverage.filtered.out coverage.out
 
 ## coverage: Show coverage report

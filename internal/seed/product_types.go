@@ -1,33 +1,9 @@
 package seed
 
 import (
-	"context"
-
 	"github.com/google/uuid"
 	"github.com/valeragav/avito-pvz-service/internal/domain"
-	"github.com/valeragav/avito-pvz-service/pkg/seeder"
 )
-
-type ProductTypeSeed struct {
-	repo seeder.SeedRepository[domain.ProductType]
-}
-
-func NewProductTypeSeed(repo seeder.SeedRepository[domain.ProductType]) *ProductTypeSeed {
-	return &ProductTypeSeed{repo: repo}
-}
-
-func (s *ProductTypeSeed) Name() string {
-	return "Create ProductTypes"
-}
-
-func (s *ProductTypeSeed) Run(ctx context.Context) error {
-	select {
-	case <-ctx.Done():
-		return ctx.Err()
-	default:
-		return s.repo.CreateBatch(ctx, ProductTypesEnt())
-	}
-}
 
 func ProductTypesEnt() []domain.ProductType {
 	return []domain.ProductType{

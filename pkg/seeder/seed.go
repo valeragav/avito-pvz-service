@@ -5,6 +5,27 @@ import (
 	"fmt"
 )
 
+type GenericSeed[T any] struct {
+	name string
+	repo SeedRepository[T]
+	data func() []T
+}
+
+func NewGenericSeed[T any](name string, repo SeedRepository[T], data func() []T) *GenericSeed[T] {
+	return &GenericSeed[T]{name: name, repo: repo, data: data}
+}
+
+func (s *GenericSeed[T]) Name() string { return s.name }
+
+func (s *GenericSeed[T]) Run(ctx context.Context) error {
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	default:
+		return s.repo.CreateBatch(ctx, s.data())
+	}
+}
+
 type SeedRepository[T any] interface {
 	CreateBatch(ctx context.Context, cities []T) error
 }

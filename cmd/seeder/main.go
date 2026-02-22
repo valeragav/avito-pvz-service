@@ -30,14 +30,14 @@ func main() {
 		return
 	}
 
-	citiesRepo := postgres.NewCityRepository(connPostgres)
-	statusesRepo := postgres.NewReceptionStatusRepository(connPostgres)
-	productTypesRepo := postgres.NewProductTypeRepository(connPostgres)
+	cityRepo := postgres.NewCityRepository(connPostgres)
+	statusRepo := postgres.NewReceptionStatusRepository(connPostgres)
+	productTypeRepo := postgres.NewProductTypeRepository(connPostgres)
 
 	sd := seeder.New()
-	sd.Add(seed.NewCitySeed(citiesRepo))
-	sd.Add(seed.NewReceptionStatusSeed(statusesRepo))
-	sd.Add(seed.NewProductTypeSeed(productTypesRepo))
+	sd.Add(seeder.NewGenericSeed("Create ProductTypes", productTypeRepo, seed.ProductTypesEnt))
+	sd.Add(seeder.NewGenericSeed("Create Cities", cityRepo, seed.CitiesEnt))
+	sd.Add(seeder.NewGenericSeed("Create ReceptionStatuses", statusRepo, seed.StatusesEnt))
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

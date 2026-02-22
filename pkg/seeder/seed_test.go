@@ -96,3 +96,91 @@ func TestSeeder_Run(t *testing.T) {
 		})
 	}
 }
+
+func TestGenericSeed_Name(t *testing.T) {
+	t.Parallel()
+
+	repo := &mockRepo[testEntity]{
+		createBatchFn: func(ctx context.Context, items []testEntity) error { return nil },
+	}
+
+	seed := NewGenericSeed("Test Seed", repo, testData)
+	require.Equal(t, "Test Seed", seed.Name())
+}
+
+func TestGenericSeed_Run(t *testing.T) {
+	t.Parallel()
+
+	testcases := []struct {
+		name    string
+		mockFn  func(ctx context.Context, items []testEntity) error
+		ctx     func() context.Context
+		wantErr bool
+	}{
+		{
+			name: "ok",
+			mockFn: func(ctx context.Context, items []testEntity) error {
+				return nil
+			},
+			ctx:     context.Background,
+			wantErr: false,
+		},
+		{
+			name: "repo error",
+			mockFn: func(ctx context.Context, items []testEntity) error {
+				return errors.New("db error")
+			},
+			ctx:     context.Background,
+			wantErr: true,
+		},
+		{
+			name: "context cancelled",
+			mockFn: func(ctx context.Context, items []testEntity) error {
+				return nil
+			},
+			ctx: func() context.Context {
+				ctx, cancel := context.WithCancel(context.Background())
+				cancel()
+				return ctx
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range testcases {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			repo := &mockRepo[testEntity]{createBatchFn: tt.mockFn}
+			seed := NewGenericSeed("Test Seed", repo, testData)
+
+			err := seed.Run(tt.ctx())
+
+			if tt.wantErr {
+				require.Error(t, err)
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
+}
+
+type mockRepo[T any] struct {
+	createBatchFn func(ctx context.Context, items []T) error
+}
+
+func (m *mockRepo[T]) CreateBatch(ctx context.Context, items []T) error {
+	return m.createBatchFn(ctx, items)
+}
+
+type testEntity struct {
+	ID   int
+	Name string
+}
+
+func testData() []testEntity {
+	return []testEntity{
+		{ID: 1, Name: "first"},
+		{ID: 2, Name: "second"},
+	}
+}

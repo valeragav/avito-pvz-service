@@ -119,14 +119,14 @@ func (a TestApp) Seed(ctx context.Context, db postgres.DBTX, targets ...SeedTarg
 	for _, t := range targets {
 		switch t {
 		case SeedCities:
-			citiesRepo := postgres.NewCityRepository(db)
-			sd.Add(seed.NewCitySeed(citiesRepo))
+			cityRepo := postgres.NewCityRepository(db)
+			sd.Add(seeder.NewGenericSeed("Create Cities", cityRepo, seed.CitiesEnt))
 		case SeedReceptionStatuses:
-			statusesRepo := postgres.NewReceptionStatusRepository(db)
-			sd.Add(seed.NewReceptionStatusSeed(statusesRepo))
+			statusRepo := postgres.NewReceptionStatusRepository(db)
+			sd.Add(seeder.NewGenericSeed("Create ReceptionStatuses", statusRepo, seed.StatusesEnt))
 		case SeedProductTypes:
-			productTypesRepo := postgres.NewProductTypeRepository(db)
-			sd.Add(seed.NewProductTypeSeed(productTypesRepo))
+			productTypeRepo := postgres.NewProductTypeRepository(db)
+			sd.Add(seeder.NewGenericSeed("Create ProductTypes", productTypeRepo, seed.ProductTypesEnt))
 		}
 	}
 
