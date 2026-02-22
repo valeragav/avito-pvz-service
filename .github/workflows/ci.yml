@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 env:
   COVERAGE_THRESHOLD: 70
@@ -25,7 +25,7 @@ jobs:
 
       - name: Build
         run: go build ./...
-  
+
   lint:
     name: Lint
     runs-on: ubuntu-latest
@@ -51,7 +51,7 @@ jobs:
         run: make lint
         env:
           LOCAL_BIN: ${{ github.workspace }}/bin
-  
+
   test:
     name: Test
     needs: build
@@ -70,33 +70,33 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-      steps:
-        - name: Checkout
-          uses: actions/checkout@v4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-        - name: Setup Go
-          uses: actions/setup-go@v5
-          with:
-            go-version-file: go.mod
-            cache: true
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
 
-        - name: Run tests
-          run: make test
-          env:
-            DB_HOST: localhost
-            DB_PORT: 5439
-            DB_USER: root
-            DB_PASSWORD: password
-            DB_NAME: pvz-service_db
+      - name: Run tests
+        run: make test
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5439
+          DB_USER: root
+          DB_PASSWORD: password
+          DB_NAME: pvz-service_db
 
-        - name: Upload coverage artifact
-          if: always() && hashFiles('coverage.out') != ''
-          uses: actions/upload-artifact@v4
-          continue-on-error: true
-          with:
-            name: coverage-report
-            path: coverage.out
-            retention-days: 7
+      - name: Upload coverage artifact
+        if: always() && hashFiles('coverage.out') != ''
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: coverage-report
+          path: coverage.out
+          retention-days: 7
 
   coverage:
     name: Coverage
