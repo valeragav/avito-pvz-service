@@ -8,6 +8,11 @@ on:
 
 env:
   COVERAGE_THRESHOLD: 70
+  DB_USER: root
+  DB_PASSWORD: password
+  DB_NAME: pvz-service_db
+  DB_PORT: 5439
+  DB_HOST: localhost
 
 jobs:
   build:
@@ -61,11 +66,11 @@ jobs:
       postgres:
         image: postgres:16
         env:
-          POSTGRES_USER: root
-          POSTGRES_PASSWORD: root
-          POSTGRES_DB: pvz-service_db
+          POSTGRES_USER: ${{env.DB_USER}}
+          POSTGRES_PASSWORD: ${{env.DB_PASSWORD}}
+          POSTGRES_DB: ${{env.DB_NAME}}
         ports:
-          - 5439:5432
+          - ${{env.DB_PORT}}:5432
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -83,12 +88,6 @@ jobs:
 
       - name: Run tests
         run: make test
-        env:
-          DB_HOST: localhost
-          DB_PORT: 5439
-          DB_USER: root
-          DB_PASSWORD: root
-          DB_NAME: pvz-service_db
 
       - name: Upload coverage artifact
         if: always() && hashFiles('coverage.out') != ''
