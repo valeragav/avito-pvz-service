@@ -7,14 +7,20 @@ RUN go mod download
 
 COPY . .
 
-RUN apk add --no-cache bash protobuf protobuf-dev git make openssl
-
-RUN ./script/generate_secrets.sh
+RUN apk add --no-cache bash protobuf protobuf-dev git make
 
 RUN go build -o avito-pvz-service ./cmd/app
 
-ENV PATH="/go/bin:$PATH"
+FROM alpine:3.18 AS runtime
 
-EXPOSE 8080
+WORKDIR /app
+
+COPY --from=build /app/avito-pvz-service .
+
+RUN apk add --no-cache curl tzdata ca-certificates
+
+ENV TZ=Europe/Moscow
+
+EXPOSE 8080 8081 9091 3000
 
 CMD ["./avito-pvz-service"]

@@ -38,6 +38,7 @@ fast-start:
 ## start: Build and run the application binary
 .PHONY: start
 start:
+	./script/generate_secrets.sh
 	docker compose up -d
 
 ## test: Run all unit tests with verbose output

@@ -6,10 +6,14 @@ services:
       dockerfile: Dockerfile
     container_name: avito-pvz-service_app
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/ping"]
+      test: ["CMD", "curl", "-f", "http://localhost:${HTTP_SERVER_DOCKER_PORT:-8080}/ping"]
       interval: 30s
       timeout: 10s
       retries: 5
+    env_file:
+      - .env
+    volumes:
+      - ./secrets:/app/secrets
     environment:
       TZ: Europe/Moscow
     # entrypoint: ["tail", "-f", "/dev/null"]
@@ -21,7 +25,10 @@ services:
     networks:
       - avito-pvz-service_network
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully  
 
   postgres:
     image: postgres:16.1-alpine3.18
@@ -35,6 +42,12 @@ services:
     volumes:
       - .:/docker-entrypoint-initdb.d
       - avito-pvz-service_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-root} -d ${DB_NAME:-pvz-service_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
     ports:
       - ${DB_PORT:-5432}:5432
     networks:
@@ -62,7 +75,8 @@ services:
     image: migrate/migrate:v4.19.1
     container_name: avito-pvz-service_migrate
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     volumes:
       - ./migrations:/migrations
     command: >
