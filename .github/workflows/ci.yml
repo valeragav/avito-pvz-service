@@ -87,7 +87,7 @@ jobs:
           DB_HOST: localhost
           DB_PORT: 5439
           DB_USER: root
-          DB_PASSWORD: password
+          DB_PASSWORD: root
           DB_NAME: pvz-service_db
 
       - name: Upload coverage artifact
