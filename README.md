@@ -38,3 +38,57 @@ make lint        # запуск линтера
 make swagger-init # генерация swagger документации
 make bin-deps    # установка зависимостей
 ```
+
+
+## Таблицы
+
+```mermaid
+erDiagram
+    users {
+        id UUID PK
+        email VARCHAR(255)
+        password_hash TEXT
+        role VARCHAR(20)
+    }
+
+    cities {
+        id UUID PK
+        name VARCHAR(255)
+    }
+
+    pvz {
+        id UUID PK
+        registration_date TIMESTAMPTZ
+        city_id UUID FK
+    }
+
+    product_types {
+        id UUID PK
+        name VARCHAR(255)
+    }
+
+    reception_statuses {
+        id UUID PK
+        name VARCHAR(255)
+    }
+
+    receptions {
+        id UUID PK
+        date_time TIMESTAMPTZ
+        pvz_id UUID FK
+        status_id UUID FK
+    }
+
+    products {
+        id UUID PK
+        date_time TIMESTAMPTZ
+        type_id UUID FK
+        reception_id UUID FK
+    }
+
+    pvz ||--o{ receptions : "pvz_id"
+    cities ||--o{ pvz : "city_id"
+    reception_statuses ||--o{ receptions : "status_id"
+    receptions ||--o{ products : "reception_id"
+    product_types ||--o{ products : "type_id"
+```

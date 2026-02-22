@@ -43,39 +43,20 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-          cache: false
+          cache: true
+
+      - name: Cache tools
+        uses: actions/cache@v4
+        with:
+          path: bin
+          key: tools-${{ runner.os }}-${{ hashFiles('tools/tools.go') }}
+          restore-keys: |
+            tools-${{ runner.os }}-
 
       - name: Run lint
-        uses: golangci/golangci-lint-action@v8
-        with:
-          version: v2.10.1
-
-  # lint:
-  #   name: Lint
-  #   needs: test
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v4
-
-  #     - name: Setup Go
-  #       uses: actions/setup-go@v5
-  #       with:
-  #         go-version-file: go.mod
-  #         cache: true
-
-  #     - name: Cache tools
-  #       uses: actions/cache@v4
-  #       with:
-  #         path: bin
-  #         key: tools-${{ runner.os }}-${{ hashFiles('tools/tools.go') }}
-  #         restore-keys: |
-  #           tools-${{ runner.os }}-
-
-  #     - name: Run lint
-  #       run: make lint
-  #       env:
-  #         LOCAL_BIN: ${{ github.workspace }}/bin
+        run: make lint
+        env:
+          LOCAL_BIN: ${{ github.workspace }}/bin
 
   test:
     name: Test
