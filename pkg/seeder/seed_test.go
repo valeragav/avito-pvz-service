@@ -134,7 +134,7 @@ func TestGenericSeed_Run(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "context cancelled",
+			name: "context canceled",
 			mockFn: func(ctx context.Context, items []testEntity) error {
 				return nil
 			},
