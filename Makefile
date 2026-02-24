@@ -4,6 +4,7 @@ ifneq (,$(wildcard .env))
 	export
 endif
 
+.DEFAULT_GOAL := help
 LOCAL_BIN := $(CURDIR)/bin
 PROJECT_NAME = avito-pvz-service
 
@@ -177,5 +178,4 @@ clean-bin:
 .PHONY: clean-all
 clean-all: clean clean-bin
 
-.DEFAULT_GOAL := help
 
