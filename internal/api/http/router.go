@@ -1,8 +1,8 @@
 package http
 
 import (
-	"github.com/go-chi/chi"
-	middlewareChi "github.com/go-chi/chi/middleware"
+	"github.com/go-chi/chi/v5"
+	middlewareChi "github.com/go-chi/chi/v5/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	httpSwagger "github.com/swaggo/http-swagger"
 	_ "github.com/valeragav/avito-pvz-service/api/v1/swagger"
@@ -13,17 +13,19 @@ import (
 	"github.com/valeragav/avito-pvz-service/internal/api/http/handlers/reception"
 	"github.com/valeragav/avito-pvz-service/internal/api/http/middleware"
 	"github.com/valeragav/avito-pvz-service/internal/app"
+	"github.com/valeragav/avito-pvz-service/internal/config"
 	"github.com/valeragav/avito-pvz-service/pkg/logger"
 )
 
-func NewRouter(appService *app.App) *chi.Mux {
+func NewRouter(appService *app.App, cfg *config.Config) *chi.Mux {
 	router := chi.NewRouter()
 
 	router.Use(middlewareChi.RealIP)
 
 	router.Use(middleware.RequestID)
 
-	// TODO: в config передавать cors options
+	router.Use(middleware.Concurrency(cfg.HTTPServer.MaxConcurrentRequests))
+
 	router.Use(middleware.Cors(nil))
 	router.Use(middleware.NewLogger(logger.GetLogger()))
 	router.Use(middlewareChi.Recoverer) // обязательно после NewLogger

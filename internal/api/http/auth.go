@@ -1,7 +1,7 @@
 package http
 
 import (
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	"github.com/valeragav/avito-pvz-service/internal/api/http/handlers/auth"
 )
 

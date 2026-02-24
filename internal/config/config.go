@@ -28,12 +28,13 @@ type GRPC struct {
 }
 
 type HTTPServer struct {
-	Address           string        `yaml:"address"`
-	ReadTimeout       time.Duration `yaml:"read_timeout"`
-	ReadHeaderTimeout time.Duration `yaml:"read_header_timeout"`
-	WriteTimeout      time.Duration `yaml:"write_timeout"`
-	IdleTimeout       time.Duration `yaml:"idle_timeout"`
-	BearerToken       string        `yaml:"bearer_token"`
+	Address               string        `yaml:"address"`
+	ReadTimeout           time.Duration `yaml:"read_timeout"`
+	ReadHeaderTimeout     time.Duration `yaml:"read_header_timeout"`
+	WriteTimeout          time.Duration `yaml:"write_timeout"`
+	IdleTimeout           time.Duration `yaml:"idle_timeout"`
+	BearerToken           string        `yaml:"bearer_token"`
+	MaxConcurrentRequests int           `yaml:"max_concurrent_requests"`
 }
 
 type MetricsServer struct {
@@ -91,11 +92,12 @@ func LoadConfig(configPath string) *Config {
 		LogLevel: MustGetDef("LOG_LEVEL", "info"),
 
 		HTTPServer: HTTPServer{
-			Address:           MustGetDef("HTTP_SERVER_ADDRESS", ":8080"),
-			ReadTimeout:       MustGetDef("HTTP_SERVER_READ_TIMEOUT", 5*time.Second),
-			ReadHeaderTimeout: MustGetDef("HTTP_SERVER_READ_HEADER_TIMEOUT", 3*time.Second),
-			WriteTimeout:      MustGetDef("HTTP_SERVER_WRITE_TIMEOUT", 5*time.Second),
-			IdleTimeout:       MustGetDef("HTTP_SERVER_IDLE_TIMEOUT", time.Minute),
+			Address:               MustGetDef("HTTP_SERVER_ADDRESS", ":8080"),
+			ReadTimeout:           MustGetDef("HTTP_SERVER_READ_TIMEOUT", 5*time.Second),
+			ReadHeaderTimeout:     MustGetDef("HTTP_SERVER_READ_HEADER_TIMEOUT", 3*time.Second),
+			WriteTimeout:          MustGetDef("HTTP_SERVER_WRITE_TIMEOUT", 5*time.Second),
+			IdleTimeout:           MustGetDef("HTTP_SERVER_IDLE_TIMEOUT", time.Minute),
+			MaxConcurrentRequests: MustGetDef("HTTP_MAX_CONCURRENT_REQUESTS", 500),
 		},
 
 		MetricsServer: MetricsServer{

@@ -43,9 +43,6 @@ func CollectRows[T any](ctx context.Context, db DBTX, builder builder, rowMapper
 
 	results, err := pgx.CollectRows(rows, rowMapper)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, infra.ErrNotFound
-		}
 		if IsDuplicateKeyError(err) {
 			return nil, infra.ErrDuplicate
 		}

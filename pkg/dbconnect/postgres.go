@@ -34,7 +34,7 @@ func Connect(ctx context.Context, cfg PostgresConnectCfg) (*pgxpool.Pool, error)
 	if cfg.MaxConns > 0 {
 		config.MaxConns = cfg.MaxConns
 	}
-	if cfg.MinConns >= 0 {
+	if cfg.MinConns > 0 {
 		config.MinConns = cfg.MinConns
 	}
 	if cfg.MaxConnLifetime > 0 {

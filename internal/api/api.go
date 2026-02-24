@@ -40,7 +40,7 @@ func NewApi(ctx context.Context, c *closer.Closer, cfg *config.Config, appServic
 
 	httpNameService := "HTTP"
 	runServer(httpNameService, func(ctx context.Context) error {
-		router := serviceHttp.NewRouter(appService)
+		router := serviceHttp.NewRouter(appService, cfg)
 		httpService := newHTTPServer(cfg, httpNameService, c, router)
 		return httpService.StartServer(ctx)
 	}, true)
