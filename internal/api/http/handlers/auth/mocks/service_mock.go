@@ -14,7 +14,7 @@ import (
 	reflect "reflect"
 
 	domain "github.com/valeragav/avito-pvz-service/internal/domain"
-	dto "github.com/valeragav/avito-pvz-service/internal/dto"
+	dto "github.com/valeragav/avito-pvz-service/internal/usecase/dto"
 	gomock "go.uber.org/mock/gomock"
 )
 

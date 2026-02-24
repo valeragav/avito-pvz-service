@@ -11,17 +11,21 @@ import (
 	"github.com/valeragav/avito-pvz-service/internal/domain"
 )
 
+var (
+	ErrInvalidToken     = errors.New("invalid token")
+	ErrUnknownPublisher = errors.New("unknown token publisher")
+)
+
 type claims struct {
-	Role string
+	Role string `json:"role"`
 	jwt.RegisteredClaims
 }
 
 type JwtService struct {
-	Iss            string
-	AccessLifeTime time.Duration
-
-	privateKey *rsa.PrivateKey
-	publicKey  *rsa.PublicKey
+	iss            string
+	accessLifeTime time.Duration
+	privateKey     *rsa.PrivateKey
+	publicKey      *rsa.PublicKey
 }
 
 func New(
@@ -30,29 +34,26 @@ func New(
 ) (*JwtService, error) {
 	const op = "security.jwt.New"
 
-	privPEM, err := os.ReadFile(privatePemFile)
-	if err != nil {
-		return nil, fmt.Errorf("%s: failed to read private key file: %w", op, err)
+	if iss == "" {
+		return nil, fmt.Errorf("%s: issuer must not be empty", op)
+	}
+	if accessLifetime <= 0 {
+		return nil, fmt.Errorf("%s: access lifetime must be positive", op)
 	}
 
-	privateKey, err := jwt.ParseRSAPrivateKeyFromPEM(privPEM)
+	privateKey, err := parsePrivateKey(privatePemFile)
 	if err != nil {
-		return nil, fmt.Errorf("%s: failed to parse private key: %w", op, err)
+		return nil, err
 	}
 
-	pubPEM, err := os.ReadFile(publicPemFile)
+	publicKey, err := parsePublicKey(publicPemFile)
 	if err != nil {
-		return nil, fmt.Errorf("%s: failed to read public key file: %w", op, err)
-	}
-
-	publicKey, err := jwt.ParseRSAPublicKeyFromPEM(pubPEM)
-	if err != nil {
-		return nil, fmt.Errorf("%s: failed to parse public key: %w", op, err)
+		return nil, err
 	}
 
 	return &JwtService{
-		Iss:            iss,
-		AccessLifeTime: accessLifetime,
+		iss:            iss,
+		accessLifeTime: accessLifetime,
 		privateKey:     privateKey,
 		publicKey:      publicKey,
 	}, nil
@@ -77,9 +78,9 @@ func (j JwtService) SignJwt(userClaims domain.UserClaims) (string, error) {
 
 func (j JwtService) registeredClaims() jwt.RegisteredClaims {
 	return jwt.RegisteredClaims{
-		ExpiresAt: jwt.NewNumericDate(time.Now().Add(j.AccessLifeTime)),
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(j.accessLifeTime)),
 		IssuedAt:  jwt.NewNumericDate(time.Now()),
-		Issuer:    j.Iss,
+		Issuer:    j.iss,
 	}
 }
 
@@ -95,18 +96,46 @@ func (j JwtService) ValidateJwt(incomingToken string) (*domain.UserClaims, error
 	token, err := jwt.ParseWithClaims(incomingToken, claims, keyFunc)
 
 	if err != nil || token == nil {
-		return nil, errors.New("invalid token")
+		return nil, fmt.Errorf("%w: %w", ErrInvalidToken, err)
 	}
 
-	if !token.Valid {
-		return nil, errors.New("invalid token")
-	}
-
-	if claims.Issuer != j.Iss {
-		return nil, errors.New("unknown token publisher")
+	if claims.Issuer != j.iss {
+		return nil, ErrUnknownPublisher
 	}
 
 	return &domain.UserClaims{
 		Role: domain.Role(claims.Role),
 	}, nil
+}
+
+func parsePrivateKey(path string) (*rsa.PrivateKey, error) {
+	const op = "security.jwt.parsePrivateKey"
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	key, err := jwt.ParseRSAPrivateKeyFromPEM(data)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return key, nil
+}
+
+func parsePublicKey(path string) (*rsa.PublicKey, error) {
+	const op = "security.jwt.parsePublicKey"
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	key, err := jwt.ParseRSAPublicKeyFromPEM(data)
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return key, nil
 }

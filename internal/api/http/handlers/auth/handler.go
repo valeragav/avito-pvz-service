@@ -9,9 +9,9 @@ import (
 
 	"github.com/valeragav/avito-pvz-service/internal/api/http/handlers/response"
 	"github.com/valeragav/avito-pvz-service/internal/domain"
-	"github.com/valeragav/avito-pvz-service/internal/dto"
-	"github.com/valeragav/avito-pvz-service/internal/validation"
+	"github.com/valeragav/avito-pvz-service/internal/usecase/dto"
 	"github.com/valeragav/avito-pvz-service/pkg/logger"
+	"github.com/valeragav/avito-pvz-service/pkg/validation"
 )
 
 //go:generate ${LOCAL_BIN}/mockgen -source=handler.go -destination=./mocks/service_mock.go -package=mocks

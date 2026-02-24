@@ -5,18 +5,23 @@ import (
 
 	pvz_v1 "github.com/valeragav/avito-pvz-service/internal/api/grpc/gen/v1"
 	"github.com/valeragav/avito-pvz-service/internal/domain"
-	"github.com/valeragav/avito-pvz-service/internal/usecase/pvz"
+
+	"github.com/valeragav/avito-pvz-service/internal/usecase/dto"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
-type PVZServer struct {
-	pvz_v1.UnimplementedPVZServiceServer
-	pvzUseCase *pvz.PVZUseCase
+type pvzLister interface {
+	ListOverview(ctx context.Context, pvzListParams *dto.PVZListParams) ([]*domain.PVZ, error)
 }
 
-func NewPVZServer(pVZUseCase *pvz.PVZUseCase) *PVZServer {
+type PVZServer struct {
+	pvz_v1.UnimplementedPVZServiceServer
+	pvzUseCase pvzLister
+}
+
+func NewPVZServer(pVZUseCase pvzLister) *PVZServer {
 	return &PVZServer{
 		pvzUseCase: pVZUseCase,
 	}

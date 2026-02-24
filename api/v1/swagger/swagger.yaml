@@ -1,404 +1,519 @@
-openapi: 3.0.0
+basePath: /
+definitions:
+  auth.DummyLoginRequest:
+    properties:
+      role:
+        type: string
+    required:
+    - role
+    type: object
+  auth.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        minLength: 6
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  auth.RegisterRequest:
+    properties:
+      email:
+        type: string
+      password:
+        maxLength: 255
+        minLength: 6
+        type: string
+      role:
+        type: string
+    required:
+    - email
+    - password
+    - role
+    type: object
+  auth.RegisterResponse:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      role:
+        type: string
+    type: object
+  product.CreateRequest:
+    properties:
+      pvzId:
+        type: string
+      type:
+        maxLength: 255
+        type: string
+    required:
+    - pvzId
+    - type
+    type: object
+  product.CreateResponse:
+    properties:
+      dateTime:
+        type: string
+      id:
+        type: string
+      receptionId:
+        type: string
+      type:
+        type: string
+    type: object
+  pvz.CreateRequest:
+    properties:
+      city:
+        maxLength: 255
+        type: string
+      id:
+        type: string
+      registrationDate:
+        type: string
+    required:
+    - city
+    - id
+    - registrationDate
+    type: object
+  pvz.CreateResponse:
+    properties:
+      city:
+        type: string
+      id:
+        type: string
+      registrationDate:
+        type: string
+    type: object
+  pvz.PVZListResponse:
+    properties:
+      pvz:
+        $ref: '#/definitions/pvz.PvzResponse'
+      receptions:
+        items:
+          $ref: '#/definitions/pvz.ReceptionsWithProduct'
+        type: array
+    type: object
+  pvz.ProductsResponse:
+    properties:
+      dateTime:
+        type: string
+      id:
+        type: string
+      receptionId:
+        type: string
+      type:
+        type: string
+    type: object
+  pvz.PvzResponse:
+    properties:
+      city:
+        type: string
+      id:
+        type: string
+      registrationDate:
+        type: string
+    type: object
+  pvz.ReceptionsResponse:
+    properties:
+      dateTime:
+        type: string
+      id:
+        type: string
+      pvzId:
+        type: string
+      status:
+        type: string
+    type: object
+  pvz.ReceptionsWithProduct:
+    properties:
+      products:
+        items:
+          $ref: '#/definitions/pvz.ProductsResponse'
+        type: array
+      reception:
+        $ref: '#/definitions/pvz.ReceptionsResponse'
+    type: object
+  reception.CloseLastReceptionResponse:
+    properties:
+      dateTime:
+        type: string
+      id:
+        type: string
+      pvzID:
+        type: string
+      status:
+        type: string
+    type: object
+  reception.CreateRequest:
+    properties:
+      pvzID:
+        type: string
+    required:
+    - pvzID
+    type: object
+  reception.CreateResponse:
+    properties:
+      dateTime:
+        type: string
+      id:
+        type: string
+      pvzID:
+        type: string
+      status:
+        type: string
+    type: object
+  response.Empty:
+    type: object
+  response.Error:
+    properties:
+      details:
+        type: string
+      message:
+        type: string
+    type: object
+host: localhost:8080
 info:
-  title: backend service
+  contact: {}
   description: Сервис для управления ПВЗ и приемкой товаров
-  version: 1.0.0
-
-components:
-  schemas:
-    Token:
-      type: string
-
-    User:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        email:
-          type: string
-          format: email
-        role:
-          type: string
-          enum: [employee, moderator]
-      required: [email, role]
-
-    PVZ:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        registrationDate:
-          type: string
-          format: date-time
-        city:
-          type: string
-          enum: [Москва, Санкт-Петербург, Казань]
-      required: [city]
-
-    Reception:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        dateTime:
-          type: string
-          format: date-time
-        pvzId:
-          type: string
-          format: uuid
-        status:
-          type: string
-          enum: [in_progress, close]
-      required: [dateTime, pvzId, status]
-
-    Product:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        dateTime:
-          type: string
-          format: date-time
-        type:
-          type: string
-          enum: [электроника, одежда, обувь]
-        receptionId:
-          type: string
-          format: uuid
-      required: [type, receptionId]
-
-    Error:
-      type: object
-      properties:
-        message:
-          type: string
-      required: [message]
-
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-
+  title: PVZ service
+  version: "1.0"
 paths:
   /dummyLogin:
     post:
-      summary: Получение тестового токена
-      requestBody:
+      consumes:
+      - application/json
+      description: Authenticates a user and returns a JWT token for role.
+      operationId: DummyLogin
+      parameters:
+      - description: User credentials (email and password)
+        in: body
+        name: input
         required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                role:
-                  type: string
-                  enum: [employee, moderator]
-              required: [role]
+        schema:
+          $ref: '#/definitions/auth.DummyLoginRequest'
+      produces:
+      - application/json
       responses:
-        '200':
-          description: Успешная авторизация
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Token'
-        '400':
-          description: Неверный запрос
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /register:
-    post:
-      summary: Регистрация пользователя
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                email:
-                  type: string
-                  format: email
-                password:
-                  type: string
-                role:
-                  type: string
-                  enum: [employee, moderator]
-              required: [email, password, role]
-      responses:
-        '201':
-          description: Пользователь создан
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-        '400':
-          description: Неверный запрос
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
+        "200":
+          description: JWT token issued successfully
+          schema:
+            type: string
+        "400":
+          description: Invalid request or validation failed
+          schema:
+            $ref: '#/definitions/response.Error'
+        "401":
+          description: Generate token failed
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Dummy login
+      tags:
+      - Auth
   /login:
     post:
-      summary: Авторизация пользователя
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                email:
-                  type: string
-                  format: email
-                password:
-                  type: string
-              required: [email, password]
-      responses:
-        '200':
-          description: Успешная авторизация
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Token'
-        '401':
-          description: Неверные учетные данные
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /pvz:
-    post:
-      summary: Создание ПВЗ (только для модераторов)
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/PVZ'
-      responses:
-        '201':
-          description: ПВЗ создан
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PVZ'
-        '400':
-          description: Неверный запрос
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: Доступ запрещен
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-    get:
-      summary: Получение списка ПВЗ с фильтрацией по дате приемки и пагинацией
-      security:
-        - bearerAuth: []
+      consumes:
+      - application/json
+      description: Authenticate user and returns a JWT Bearer token.
+      operationId: Login
       parameters:
-        - name: startDate
-          in: query
-          description: Начальная дата диапазона
-          required: false
-          schema:
-            type: string
-            format: date-time
-        - name: endDate
-          in: query
-          description: Конечная дата диапазона
-          required: false
-          schema:
-            type: string
-            format: date-time
-        - name: page
-          in: query
-          description: Номер страницы
-          required: false
-          schema:
-            type: integer
-            minimum: 1
-            default: 1
-        - name: limit
-          in: query
-          description: Количество элементов на странице
-          required: false
-          schema:
-            type: integer
-            minimum: 1
-            maximum: 30
-            default: 10
-      responses:
-        '200':
-          description: Список ПВЗ
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    pvz:
-                      $ref: '#/components/schemas/PVZ'
-                    receptions:
-                      type: array
-                      items:
-                        type: object
-                        properties:
-                          reception:
-                            $ref: '#/components/schemas/Reception'
-                          products:
-                            type: array
-                            items:
-                              $ref: '#/components/schemas/Product'
-
-  /pvz/{pvzId}/close_last_reception:
-    post:
-      summary: Закрытие последней открытой приемки товаров в рамках ПВЗ
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: pvzId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Приемка закрыта
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Reception'
-        '400':
-          description: Неверный запрос или приемка уже закрыта
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: Доступ запрещен
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-
-  /pvz/{pvzId}/delete_last_product:
-    post:
-      summary: Удаление последнего добавленного товара из текущей приемки (LIFO, только для сотрудников ПВЗ)
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: pvzId
-          in: path
-          required: true
-          schema:
-            type: string
-            format: uuid
-      responses:
-        '200':
-          description: Товар удален
-        '400':
-          description: Неверный запрос, нет активной приемки или нет товаров для удаления
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: Доступ запрещен
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /receptions:
-    post:
-      summary: Создание новой приемки товаров (только для сотрудников ПВЗ)
-      security:
-        - bearerAuth: []
-      requestBody:
+      - description: User credentials (email and password)
+        in: body
+        name: input
         required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                pvzId:
-                  type: string
-                  format: uuid
-              required: [pvzId]
+        schema:
+          $ref: '#/definitions/auth.LoginRequest'
+      produces:
+      - application/json
       responses:
-        '201':
-          description: Приемка создана
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Reception'
-        '400':
-          description: Неверный запрос или есть незакрытая приемка
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: Доступ запрещен
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
+        "200":
+          description: JWT access token
+          schema:
+            type: string
+        "400":
+          description: Invalid request or validation failed
+          schema:
+            $ref: '#/definitions/response.Error'
+        "401":
+          description: Invalid email or password
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: User login
+      tags:
+      - Auth
   /products:
     post:
-      summary: Добавление товара в текущую приемку (только для сотрудников ПВЗ)
-      security:
-        - bearerAuth: []
-      requestBody:
+      consumes:
+      - application/json
+      description: Creates a new product in the PVZ system.
+      operationId: CreateProduct
+      parameters:
+      - description: Product creation payload
+        in: body
+        name: input
         required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                type:
-                  type: string
-                  enum: [электроника, одежда, обувь]
-                pvzId:
-                  type: string
-                  format: uuid
-              required: [type, pvzId]
+        schema:
+          $ref: '#/definitions/product.CreateRequest'
+      produces:
+      - application/json
       responses:
-        '201':
-          description: Товар добавлен
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Product'
-        '400':
-          description: Неверный запрос или нет активной приемки
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-        '403':
-          description: Доступ запрещен
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+        "201":
+          description: Product successfully created
+          schema:
+            $ref: '#/definitions/product.CreateResponse'
+        "400":
+          description: No reception is currently in progress
+          schema:
+            $ref: '#/definitions/response.Error'
+        "409":
+          description: Product already exists or conflict error
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Error'
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new product
+      tags:
+      - Product
+  /pvz:
+    get:
+      description: Get a list of PVZ points with optional filters. Requires JWT-Token
+        with Employee or Moderator role.
+      parameters:
+      - description: Filter by city
+        in: query
+        name: city
+        type: string
+      - description: Limit number of results
+        in: query
+        name: limit
+        type: integer
+      - description: Page for pagination
+        in: query
+        name: page
+        type: integer
+      responses:
+        "200":
+          description: List of PVZ points
+          schema:
+            items:
+              $ref: '#/definitions/pvz.PVZListResponse'
+            type: array
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Error'
+      security:
+      - ApiKeyAuth: []
+      summary: List PVZ points
+      tags:
+      - PVZ
+    post:
+      consumes:
+      - application/json
+      description: Create new PVZ. Requires JWT-Token with Employee role.
+      operationId: CreatePVZ
+      parameters:
+      - description: PVZ creation data
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/pvz.CreateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: PVZ successfully created
+          schema:
+            $ref: '#/definitions/pvz.CreateResponse'
+        "400":
+          description: Invalid request or validation failed
+          schema:
+            $ref: '#/definitions/response.Error'
+        "404":
+          description: City not found
+          schema:
+            $ref: '#/definitions/response.Error'
+        "409":
+          description: Pvz with this id already exists
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Error'
+      security:
+      - ApiKeyAuth: []
+      summary: Create PVZ
+      tags:
+      - PVZ
+  /pvz/{pvzID}/close_last_reception:
+    post:
+      description: Close the last reception for a given PVZ ID. Requires JWT-Token
+        with Employee role.
+      operationId: CloseLastReception
+      parameters:
+      - description: PVZ ID
+        in: path
+        name: pvzID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully closed last reception
+          schema:
+            $ref: '#/definitions/reception.CloseLastReceptionResponse'
+        "400":
+          description: Invalid or missing PVZ ID
+          schema:
+            $ref: '#/definitions/response.Error'
+        "404":
+          description: No open reception found for this PVZ
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Error'
+      security:
+      - ApiKeyAuth: []
+      summary: Close Last Reception
+      tags:
+      - PVZ
+  /pvz/{pvzID}/delete_last_product:
+    post:
+      consumes:
+      - application/json
+      description: Deletes the most recently added product for the given PVZ ID.
+      operationId: DeleteLastProduct
+      parameters:
+      - description: PVZ ID (UUID)
+        in: path
+        name: pvzID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully deleted
+          schema:
+            $ref: '#/definitions/response.Empty'
+        "400":
+          description: Invalid pvzID format
+          schema:
+            $ref: '#/definitions/response.Error'
+        "409":
+          description: No products to delete
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Error'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete the last product of a PVZ
+      tags:
+      - PVZ
+  /receptions:
+    post:
+      consumes:
+      - application/json
+      description: Create a new reception entry. Requires JWT-Token with Employee
+        role.
+      operationId: CreateReception
+      parameters:
+      - description: Reception creation data
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/reception.CreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Reception successfully created
+          schema:
+            $ref: '#/definitions/reception.CreateResponse'
+        "400":
+          description: Invalid request or validation failed
+          schema:
+            $ref: '#/definitions/response.Error'
+        "404":
+          description: PVZ not found
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Error'
+      security:
+      - ApiKeyAuth: []
+      summary: Create Reception
+      tags:
+      - Reception
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user with role and returns created user data.
+      operationId: Register
+      parameters:
+      - description: User registration payload
+        in: body
+        name: input
+        required: true
+        schema:
+          $ref: '#/definitions/auth.RegisterRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: User successfully created
+          schema:
+            $ref: '#/definitions/auth.RegisterResponse'
+        "400":
+          description: Invalid request or validation failed
+          schema:
+            $ref: '#/definitions/response.Error'
+        "409":
+          description: Email already exists
+          schema:
+            $ref: '#/definitions/response.Error'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/response.Error'
+      summary: Register new user
+      tags:
+      - Auth
+securityDefinitions:
+  ApiKeyAuth:
+    description: 'JWT Bearer authentication. The API enforces role-based authorization
+      with two roles: moderator and employee.'
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

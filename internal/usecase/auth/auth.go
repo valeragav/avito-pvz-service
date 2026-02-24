@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/valeragav/avito-pvz-service/internal/domain"
-	"github.com/valeragav/avito-pvz-service/internal/dto"
 	"github.com/valeragav/avito-pvz-service/internal/infra"
+	"github.com/valeragav/avito-pvz-service/internal/usecase/dto"
 	"golang.org/x/crypto/bcrypt"
 )
 

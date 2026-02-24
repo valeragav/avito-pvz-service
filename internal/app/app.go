@@ -9,8 +9,8 @@ import (
 	"github.com/valeragav/avito-pvz-service/internal/usecase/product"
 	"github.com/valeragav/avito-pvz-service/internal/usecase/pvz"
 	"github.com/valeragav/avito-pvz-service/internal/usecase/reception"
-	"github.com/valeragav/avito-pvz-service/internal/validation"
 	"github.com/valeragav/avito-pvz-service/pkg/logger"
+	"github.com/valeragav/avito-pvz-service/pkg/validation"
 )
 
 type App struct {

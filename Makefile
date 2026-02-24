@@ -76,7 +76,7 @@ lint: $(LOCAL_BIN)/golangci-lint
 ## swagger-init: Generate Swagger API documentation
 .PHONY: swagger-init
 swagger-init: $(LOCAL_BIN)/swag
-	$(LOCAL_BIN)/swag init -g internal/api/swagger.go -o docs
+	$(LOCAL_BIN)/swag init -g internal/api/swagger.go -o api/v1/swagger
 
 ## generate-proto: Generate gRPC and Protobuf code with validation
 .PHONY: generate-proto

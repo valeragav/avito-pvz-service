@@ -5,7 +5,7 @@ import (
 	middlewareChi "github.com/go-chi/chi/middleware"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	httpSwagger "github.com/swaggo/http-swagger"
-	_ "github.com/valeragav/avito-pvz-service/docs"
+	_ "github.com/valeragav/avito-pvz-service/api/v1/swagger"
 	"github.com/valeragav/avito-pvz-service/internal/api/http/handlers"
 	"github.com/valeragav/avito-pvz-service/internal/api/http/handlers/auth"
 	"github.com/valeragav/avito-pvz-service/internal/api/http/handlers/product"

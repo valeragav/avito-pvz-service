@@ -8,8 +8,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/valeragav/avito-pvz-service/internal/domain"
-	"github.com/valeragav/avito-pvz-service/internal/dto"
 	"github.com/valeragav/avito-pvz-service/internal/infra"
+	"github.com/valeragav/avito-pvz-service/internal/usecase/dto"
 )
 
 //go:generate ${LOCAL_BIN}/mockgen -source=product.go -destination=./mocks/product_mock.go -package=mocks

@@ -70,3 +70,7 @@ func (s *Server) Shutdown(ctx context.Context) error {
 	s.grpcServer.GracefulStop()
 	return nil
 }
+
+func (s *Server) Addr() string {
+	return s.listener.Addr().String()
+}

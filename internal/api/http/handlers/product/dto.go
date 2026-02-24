@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/valeragav/avito-pvz-service/internal/domain"
-	"github.com/valeragav/avito-pvz-service/internal/dto"
+	"github.com/valeragav/avito-pvz-service/internal/usecase/dto"
 )
 
 type CreateRequest struct {

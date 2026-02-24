@@ -16,8 +16,8 @@ import (
 	"github.com/valeragav/avito-pvz-service/internal/api/http/handlers/product/mocks"
 	"github.com/valeragav/avito-pvz-service/internal/api/http/handlers/response"
 	"github.com/valeragav/avito-pvz-service/internal/domain"
-	"github.com/valeragav/avito-pvz-service/internal/validation"
 	"github.com/valeragav/avito-pvz-service/pkg/testutils"
+	"github.com/valeragav/avito-pvz-service/pkg/validation"
 	"go.uber.org/mock/gomock"
 )
 
