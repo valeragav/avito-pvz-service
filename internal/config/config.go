@@ -78,9 +78,9 @@ func LoadConfig(configPath string) *Config {
 	var err error
 
 	if configPath == "" {
-		err = godotenv.Load()
+		err = godotenv.Overload()
 	} else {
-		err = godotenv.Load(configPath)
+		err = godotenv.Overload(configPath)
 	}
 
 	if err != nil {
