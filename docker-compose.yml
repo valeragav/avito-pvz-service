@@ -31,17 +31,20 @@ services:
         condition: service_completed_successfully  
 
   postgres:
-    image: postgres:16.1-alpine3.18
-    privileged: false
+    image: postgres:18.0
     container_name: avito-pvz-service_postgresql
+    command: >
+      postgres
+      -c max_connections=300
+      -c shared_buffers=512MB
+      -c effective_cache_size=2GB
     environment:
       POSTGRES_DB: ${DB_NAME:-pvz-service_db}
       POSTGRES_USER: ${DB_USER:-root}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-root}
       TZ: Europe/Moscow
     volumes:
-      - .:/docker-entrypoint-initdb.d
-      - avito-pvz-service_pgdata:/var/lib/postgresql/data
+      - avito-pvz-service_pgdata:/var/lib/postgresql/18/main
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-root} -d ${DB_NAME:-pvz-service_db}"]
       interval: 5s
@@ -53,8 +56,42 @@ services:
     networks:
       - avito-pvz-service_network
 
+
+  pgbouncer:
+    image: edoburu/pgbouncer:v1.25.1-p0
+    container_name: avito-pvz-service_pgbouncer
+    environment:
+      DB_HOST: postgres
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-pvz-service_db}
+      DB_USER: ${DB_USER:-root}
+      DB_PASSWORD: ${DB_PASSWORD:-root}
+
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: 3000
+      DEFAULT_POOL_SIZE: 150
+      MIN_POOL_SIZE: 20
+      RESERVE_POOL_SIZE: 20
+      RESERVE_POOL_TIMEOUT: 3
+      SERVER_IDLE_TIMEOUT: 60
+      SERVER_LIFETIME: 3600
+      QUERY_WAIT_TIMEOUT: 5
+      AUTH_TYPE: scram-sha-256
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -p 5432 -U ${DB_USER:-root}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - ${PGBOUNCER_PORT:-5433}:5432
+    networks:
+      - avito-pvz-service_network
+
   postgres_test:
-    image: postgres:16.1-alpine3.18
+    image: postgres:18.0
     container_name: avito-pvz-service_postgresql_test
     depends_on:
       - postgres
@@ -64,8 +101,7 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD:-root}
       TZ: Europe/Moscow
     volumes:
-      - .:/docker-entrypoint-initdb.d
-      - avito-pvz-service_pgdata_test:/var/lib/postgresql/data
+      - avito-pvz-service_pgdata_test:/var/lib/postgresql/18/main
     ports:
       - ${TEST_DB_PORT:-5439}:5432
     networks:
@@ -85,13 +121,6 @@ services:
       -verbose up
     networks:
       - avito-pvz-service_network
-
-  lint:
-    image: golangci/golangci-lint:latest
-    volumes:
-      - .:/app
-    working_dir: /app
-    command: golangci-lint run
 
   prometheus:
     image: prom/prometheus:v3.5.1
@@ -117,6 +146,21 @@ services:
     networks:
       - avito-pvz-service_network
 
+  seeder:
+    build:
+      context: .
+      dockerfile: Dockerfile.seeder
+    container_name: avito-pvz-service_seeder
+    env_file:
+      - .env
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    networks:
+      - avito-pvz-service_network
+    profiles:
+      - seeder
+
   k6-load-test:
     image: grafana/k6:1.6.0
     container_name: avito-pvz-service_k6-load-test
@@ -128,6 +172,8 @@ services:
       - app
     restart: "no"
     command: run /scripts/load_test.js
+    profiles:
+      - load-test
 
 volumes:
   avito-pvz-service_pgdata:

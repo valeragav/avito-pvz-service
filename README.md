@@ -31,6 +31,10 @@ cp .env.example .env
 ```bash
 make start
 ```
+4. Наполните базу начальными данными (города, типы продуктов, статусы приёмок):
+```bash
+make seeder
+```
 
 ## Команды
 
@@ -97,3 +101,38 @@ erDiagram
     receptions ||--o{ products : "reception_id"
     product_types ||--o{ products : "type_id"
 ```
+
+## Проблема производительности
+
+Добавили PgBouncer, потому что после ~300 RPS PostgreSQL упирался в `max_connections`.
+Ввел `middleware.Concurrency` для ограничения числа одновременных запросов.
+
+При нагрузке 500+ RPS k6 показывал `p(99)=1.1-1.4s` при пороге `p(99)<100ms`. Фактический предел сервиса был на 400 RPS.
+
+Включил `pg_stat_statements` и нашли проблемный запрос: получения списка PVZ делал JOIN с таблицей `receptions`. `mean_exec_time`: 164ms в 800 раз медленнее всех остальных.
+
+**Причины медленного запроса**
+
+`JOIN receptions` дублировал строки PVZ — по одной на каждую приёмку, что вынуждало использовать `GROUP BY` на всех строках до применения `LIMIT`. Postgres обрабатывал все 20000+ строк чтобы вернуть 10.
+
+```sql
+-- было
+JOIN receptions ON receptions.pvz_id = pvz.id
+GROUP BY pvz.id ...
+
+-- стало  
+WHERE EXISTS (
+    SELECT 1 FROM receptions 
+    WHERE receptions.pvz_id = pvz.id 
+    AND receptions.date_time BETWEEN $1 AND $2
+)
+```
+
+Добавили два индекса:
+
+```sql
+CREATE INDEX idx_receptions_pvz_date ON receptions(pvz_id, date_time);
+CREATE INDEX idx_pvz_registration_date ON pvz(registration_date DESC);
+```
+
+В итоге `p(99)=1.1-1.4s` уменьшилось до `84ms`. Ускорение запроса за счёт устранения HashAggregate и добавления индексов.

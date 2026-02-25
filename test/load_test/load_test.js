@@ -1,6 +1,6 @@
 import http from 'k6/http';
 import { check, fail, sleep } from 'k6';
-import { randomString} from 'https://jslib.k6.io/k6-utils/1.4.0/index.js';
+import { randomString } from 'https://jslib.k6.io/k6-utils/1.4.0/index.js';
 
 // Нагрузка задаётся через open model (constant-arrival-rate),
 // чтобы гарантировать фиксированный поток 1000 RPS независимо от времени ответа.
@@ -24,41 +24,40 @@ const BASE_URL = 'http://app:8080';
 
 export const options = {
     scenarios: {
-        // Auth: 10% от общей RPS
         auth_scenario: {
             executor: 'constant-arrival-rate',
-            rate: 100,            // RPS
+            rate: 100,           // 10% от 1000
             timeUnit: '1s',
             duration: '2m',
-            preAllocatedVUs: 20,  // VU для стабильной работы
-            maxVUs: 50,
+            preAllocatedVUs: 100,
+            maxVUs: 150,
             exec: 'authScenario',
         },
 
-        // PVZ: 45% от общей RPS
         pvz_scenario: {
             executor: 'constant-arrival-rate',
-            rate: 450,
+            rate: 450,           // 45% от 1000
             timeUnit: '1s',
             duration: '2m',
-            preAllocatedVUs: 100,
-            maxVUs: 150,
+            preAllocatedVUs: 450,
+            maxVUs: 550,
             exec: 'pvzScenario',
         },
 
-        // Reception: 45% от общей RPS
         reception_scenario: {
             executor: 'constant-arrival-rate',
-            rate: 450,
+            rate: 450,           // 45% от 1000
             timeUnit: '1s',
             duration: '2m',
-            preAllocatedVUs: 100,
-            maxVUs: 150,
+            preAllocatedVUs: 450,
+            maxVUs: 550,
             exec: 'receptionE2EScenario',
         },
     },
-    http_req_failed: ['rate<0.0001'],
-    http_req_duration: ['p(99)<100'],
+    thresholds: {
+        http_req_failed: ['rate<0.0001'],
+        http_req_duration: ['p(99)<100'],
+    },
 };
 
 function getAuthHeaders(token) {
@@ -85,6 +84,24 @@ export function setup() {
     const employeeToken = registerAndLogin('employee');
 
     const moderatorToken = registerAndLogin('moderator');
+
+    const moderatorHeaders = getAuthHeaders(moderatorToken); // ← определяем до использования
+
+    for (let i = 0; i < 10; i++) {
+        http.post(`${BASE_URL}/pvz`, JSON.stringify({
+            city: "Москва",
+            id: crypto.randomUUID(),
+            registrationDate: "2025-09-22T18:04:04.605Z",
+        }), { headers: moderatorHeaders });
+    }
+
+    for (let i = 0; i < 10; i++) {
+        http.post(`${BASE_URL}/pvz`, JSON.stringify({
+            city: "Москва",
+            id: crypto.randomUUID(),
+            registrationDate: "2025-09-22T18:04:04.605Z",
+        }), { headers: moderatorHeaders });
+    }
 
     return { employeeToken, moderatorToken };
 }

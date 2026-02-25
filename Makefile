@@ -36,11 +36,16 @@ help:
 fast-start:
 	go run cmd/app/main.go
 
+## seeder: Run utilities that fill the database with initial data.
+.PHONY: seeder
+seeder:
+	docker compose --profile seeder up --build seeder --abort-on-container-exit
+
 ## start: Build and run the application binary
 .PHONY: start
-start:
+start: seeder
 	./script/generate_secrets.sh
-	docker compose up -d
+	docker compose up -d --wait
 
 ## test: Run all unit tests with verbose output
 .PHONY: test
@@ -52,6 +57,11 @@ test:
 		./...
 	grep -vE '\.pb\.|_mock\.go|_gen\.go|/schema/|/logger/' coverage.out > coverage.filtered.out
 	mv coverage.filtered.out coverage.out
+
+## load-test: Run k6 load tests against the running application (requires app to be up)
+.PHONY: load-test
+load-test:
+	docker compose --profile load-test up k6-load-test --abort-on-container-exit
 
 ## coverage: Show coverage report
 .PHONY: coverage

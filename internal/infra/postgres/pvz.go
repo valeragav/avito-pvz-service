@@ -73,7 +73,12 @@ func (r *PVZRepository) Get(ctx context.Context, filter domain.PVZ) (*domain.PVZ
 	return schema.NewDomainPVZ(result), nil
 }
 
-func (r *PVZRepository) ListPvzByAcceptanceDateAndCity(ctx context.Context, pagination *listparams.Pagination, startDate, endDate *time.Time) ([]*domain.PVZ, error) {
+// ListPvzByAcceptanceDateAndCitySlow выполняет JOIN с таблицей receptions,
+// что приводит к дублированию строк PVZ (по одной на каждую приёмку),
+// вынуждает использовать GROUP BY на всём результате до применения LIMIT
+// и не позволяет использовать индексы для сортировки.
+// Используйте ListPvzByAcceptanceDateAndCity с EXISTS вместо этого.
+func (r *PVZRepository) ListPvzByAcceptanceDateAndCitySlow(ctx context.Context, pagination *listparams.Pagination, startDate, endDate *time.Time) ([]*domain.PVZ, error) {
 	qb := r.sqb.
 		Select(schema.PVZWithCityName{}.Columns()...).
 		From("pvz").
@@ -102,6 +107,36 @@ func (r *PVZRepository) ListPvzByAcceptanceDateAndCity(ctx context.Context, pagi
 		"cities.name",
 		"cities.id",
 	)
+
+	results, err := CollectRows(ctx, r.db, qb, pgx.RowToStructByName[schema.PVZWithCityName])
+	if err != nil {
+		return nil, err
+	}
+
+	return schema.NewDomainPVZWithCityNameList(results), nil
+}
+
+func (r *PVZRepository) ListPvzByAcceptanceDateAndCity(ctx context.Context, pagination *listparams.Pagination, startDate, endDate *time.Time) ([]*domain.PVZ, error) {
+	qb := r.sqb.
+		Select(schema.PVZWithCityName{}.Columns()...).
+		From("pvz").
+		Join("cities ON cities.id = pvz.city_id").
+		OrderBy("pvz.registration_date DESC")
+
+	if pagination != nil {
+		qb = qb.Limit(uint64(pagination.Limit)).
+			Offset(uint64(pagination.Offset()))
+	}
+
+	if startDate != nil && endDate != nil {
+		qb = qb.Where(
+			sq.Expr(
+				"EXISTS (SELECT 1 FROM receptions WHERE receptions.pvz_id = pvz.id AND receptions.date_time >= ? AND receptions.date_time <= ?)",
+				startDate,
+				endDate,
+			),
+		)
+	}
 
 	results, err := CollectRows(ctx, r.db, qb, pgx.RowToStructByName[schema.PVZWithCityName])
 	if err != nil {
