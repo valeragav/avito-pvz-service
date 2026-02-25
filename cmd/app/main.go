@@ -42,7 +42,7 @@ func main() {
 
 	appService, err := app.New(cfg, lg, connPostgres)
 	if err != nil {
-		logger.Error("database connection error", "err", err)
+		logger.Error("failed to initialize application service", "err", err)
 		return
 	}
 

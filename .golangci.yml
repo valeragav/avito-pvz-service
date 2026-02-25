@@ -98,10 +98,13 @@ linters:
     generated: lax
     rules:
         - linters:
+          - revive
           - dupl
           - goconst
           - noctx
           - usestdlibvars
+          - wrapcheck
+          - gosec
           path: _test\.go$
         - linters:
           - dupl
@@ -121,4 +124,4 @@ linters:
           text: "G304: Potential file inclusion via variable"
         - linters:
           - gosec
-          text: "G117: Exported struct field "
+          text: "G117: Exported struct field"

@@ -10,7 +10,7 @@ PROJECT_NAME = avito-pvz-service
 
 # Migration config
 DOCKER_NETWORK = avito-pvz-service_avito-pvz-service_network
-DATABASE_URL = "postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_INTERNAL_PORT)/$(DB_NAME)?$(DB_OPTION)"
+DATABASE_URL = "postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?$(DB_OPTION)"
 
 # Proto config
 PROTO_DIR = ./api/v1/proto

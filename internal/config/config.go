@@ -108,6 +108,7 @@ func LoadConfig(configPath string) *Config {
 		},
 
 		SwaggerServer: SwaggerServer{
+			// NOTE:in prod, you need to turn off
 			Enabled:      MustGetDef("SWAGGER_SERVER_ENABLED", true),
 			Address:      MustGetDef("SWAGGER_SERVER_ADDRESS", ":8081"),
 			ReadTimeout:  MustGetDef("SWAGGER_SERVER_READ_TIMEOUT", 3*time.Second),
@@ -151,9 +152,9 @@ func MustGet[T any](key string) T {
 		log.Fatalf("env %s is not set", key)
 	}
 
-	result, err := parseEnvValue[T](raw, raw)
+	result, err := parseEnvValue[T](key, raw)
 	if err != nil {
-		panic(err)
+		log.Fatalf("env %s: %v", key, err)
 	}
 	return result
 }
@@ -163,9 +164,9 @@ func MustGetDef[T any](key string, def T) T {
 	if raw == "" {
 		return def
 	}
-	result, err := parseEnvValue[T](raw, raw)
+	result, err := parseEnvValue[T](key, raw)
 	if err != nil {
-		panic(err)
+		log.Fatalf("env %s: %v", key, err)
 	}
 	return result
 }

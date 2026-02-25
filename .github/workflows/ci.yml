@@ -33,7 +33,7 @@ jobs:
 
   lint:
     name: Lint
-    needs: test
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

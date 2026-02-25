@@ -8,7 +8,7 @@ import (
 
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/valeragav/avito-pvz-service/pkg/logger"
-	"github.com/valeragav/avito-pvz-service/pkg/request_id"
+	"github.com/valeragav/avito-pvz-service/pkg/requestid"
 )
 
 func NewLogger(log *logger.Logger) func(next http.Handler) http.Handler {
@@ -21,7 +21,7 @@ type chiLoggerMiddleware struct {
 
 func (m *chiLoggerMiddleware) NewLogEntry(r *http.Request) middleware.LogEntry {
 	log := m.log.With(
-		slog.String(request_id.LogFieldRequestID, request_id.GetReqID(r.Context())),
+		slog.String(requestid.LogFieldRequestID, requestid.GetReqID(r.Context())),
 		slog.String("http_method", r.Method),
 		slog.String("remote_addr", r.RemoteAddr),
 		slog.String("uri", r.RequestURI),

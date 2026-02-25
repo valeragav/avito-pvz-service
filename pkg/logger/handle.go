@@ -4,10 +4,10 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/valeragav/avito-pvz-service/pkg/request_id"
+	"github.com/valeragav/avito-pvz-service/pkg/requestid"
 )
 
-// ctxHandler — обёртка для slog.Handler, добавляющая request_id из контекста
+// ctxHandler — обёртка для slog.Handler, добавляющая requestid из контекста
 type ctxHandler struct {
 	slog.Handler
 }
@@ -21,8 +21,8 @@ func (h *ctxHandler) WithGroup(name string) slog.Handler {
 }
 
 func (h *ctxHandler) Handle(ctx context.Context, r slog.Record) error {
-	if reqID := request_id.GetReqID(ctx); reqID != "" {
-		r.AddAttrs(slog.String(request_id.LogFieldRequestID, reqID))
+	if reqID := requestid.GetReqID(ctx); reqID != "" {
+		r.AddAttrs(slog.String(requestid.LogFieldRequestID, reqID))
 	}
 
 	return h.Handler.Handle(ctx, r)

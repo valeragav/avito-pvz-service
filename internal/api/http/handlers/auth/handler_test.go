@@ -234,7 +234,7 @@ func TestAuthHandlers_Register(t *testing.T) {
 				"password": validPassword,
 				"role":     userRoleEmployee,
 			},
-			expectedCode: http.StatusBadRequest,
+			expectedCode: http.StatusConflict,
 			expectedError: &response.Error{
 				Message: "email already exists",
 				Details: domain.ErrAlreadyExists.Error(),
@@ -370,7 +370,7 @@ func TestAuthHandlers_Login(t *testing.T) {
 				"email":    validEmail,
 				"password": validPassword,
 			},
-			expectedCode: http.StatusBadRequest,
+			expectedCode: http.StatusUnauthorized,
 			authServiceMock: func(authService *mocks.MockauthService) {
 				authService.
 					EXPECT().
@@ -388,7 +388,7 @@ func TestAuthHandlers_Login(t *testing.T) {
 				"email":    validEmail,
 				"password": validPassword,
 			},
-			expectedCode: http.StatusBadRequest,
+			expectedCode: http.StatusConflict,
 			authServiceMock: func(authService *mocks.MockauthService) {
 				authService.
 					EXPECT().

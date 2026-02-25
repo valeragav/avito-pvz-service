@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/google/uuid"
 	"github.com/valeragav/avito-pvz-service/internal/domain"
 )
 
@@ -78,6 +79,10 @@ func (j JwtService) SignJwt(userClaims domain.UserClaims) (string, error) {
 
 func (j JwtService) registeredClaims() jwt.RegisteredClaims {
 	return jwt.RegisteredClaims{
+		// NOTE: simplified JWT setup for testing purposes.
+		// In production: add `sub` (user ID), persist `jti` for revocation, implement refresh token rotation.
+		// Subject: userID
+		ID:        uuid.NewString(), // jti
 		ExpiresAt: jwt.NewNumericDate(time.Now().Add(j.accessLifeTime)),
 		IssuedAt:  jwt.NewNumericDate(time.Now()),
 		Issuer:    j.iss,

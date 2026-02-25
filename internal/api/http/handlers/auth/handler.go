@@ -162,11 +162,11 @@ func mapErrorToHTTP(err error) (msg string, statusCode int) {
 	switch {
 	case errors.Is(err, domain.ErrAlreadyExists):
 		msg = "email already exists"
-		statusCode = http.StatusBadRequest
+		statusCode = http.StatusConflict
 
 	case errors.Is(err, domain.ErrInvalidEmailOrPassword):
 		msg = err.Error()
-		statusCode = http.StatusBadRequest
+		statusCode = http.StatusUnauthorized
 
 	case errors.Is(err, domain.ErrInvalidRole):
 		msg = err.Error()

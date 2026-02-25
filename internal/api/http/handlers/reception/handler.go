@@ -131,7 +131,7 @@ func mapErrorToHTTP(err error) (msg string, statusCode int) {
 
 	case errors.Is(err, domain.ErrReceptionNotFound), errors.Is(err, domain.ErrPVZNotFound):
 		msg = err.Error()
-		statusCode = http.StatusBadRequest
+		statusCode = http.StatusNotFound
 
 	default:
 		statusCode = http.StatusInternalServerError

@@ -48,6 +48,22 @@ make swagger-init # генерация swagger документации
 make bin-deps    # установка зависимостей
 ```
 
+## Стек
+
+- **Go 1.25** — основной язык
+- **PostgreSQL 18**— база данных
+- **PgBouncer** — пул соединений
+- **chi** — HTTP роутер
+- **gRPC** — gRPC сервер
+- **pgx** — драйвер PostgreSQL
+- **squirrel** — query builder
+- **golang-jwt** — JWT аутентификация
+- **Prometheus** + **Grafana** — метрики и дашборды
+- **Swagger** — документация API
+- **Docker** + **Docker Compose** — контейнеризация
+- **k6** — нагрузочное тестирование
+- **golangci-lint** — линтер
+- **migrate** — миграции БД
 
 ## Таблицы
 
@@ -109,11 +125,11 @@ erDiagram
 
 При нагрузке 500+ RPS k6 показывал `p(99)=1.1-1.4s` при пороге `p(99)<100ms`. Фактический предел сервиса был на 400 RPS.
 
-Включил `pg_stat_statements` и нашли проблемный запрос: получения списка PVZ делал JOIN с таблицей `receptions`. `mean_exec_time`: 164ms в 800 раз медленнее всех остальных.
+Включил `pg_stat_statements` и нашел проблемный запрос: получения списка PVZ, делал JOIN с таблицей `receptions`, `mean_exec_time`: 164ms в 800 раз медленнее всех остальных.
 
 **Причины медленного запроса**
 
-`JOIN receptions` дублировал строки PVZ — по одной на каждую приёмку, что вынуждало использовать `GROUP BY` на всех строках до применения `LIMIT`. Postgres обрабатывал все 20000+ строк чтобы вернуть 10.
+`JOIN receptions` дублировал строки PVZ - по одной на каждую приёмку, что вынуждало использовать `GROUP BY` на всех строках до применения `LIMIT`. Postgres обрабатывал все 20000+ строк чтобы вернуть 10.
 
 ```sql
 -- было
@@ -131,8 +147,11 @@ WHERE EXISTS (
 Добавили два индекса:
 
 ```sql
-CREATE INDEX idx_receptions_pvz_date ON receptions(pvz_id, date_time);
+CREATE INDEX idx_receptions_pvz_date ON receptions(pvz_id, date_time); 
 CREATE INDEX idx_pvz_registration_date ON pvz(registration_date DESC);
 ```
 
-В итоге `p(99)=1.1-1.4s` уменьшилось до `84ms`. Ускорение запроса за счёт устранения HashAggregate и добавления индексов.
+1. Находим нужные приёмки по `pvz_id` и сразу фильтруем по `date_time` не обращаясь к таблице это `Index Only Scan` вместо `Seq` 
+2. Без индекса сортируются все строки и берутся первые 10. С индексом  строки читаются уже в нужном порядке и останавливается на 10-й - это позволило использовать `Nested Loop` вместо `HashAggregate` + `Sort`.
+
+В итоге `p(99)=1.1-1.4s` уменьшилось до `84ms`. Ускорение запроса за счёт устранения `HashAggregate` и добавления индексов.

@@ -23,7 +23,7 @@ func WriteError(w http.ResponseWriter, ctx context.Context, status int, errorMsg
 	}
 
 	if err != nil {
-		// TODO: убрать для пользователя
+		// NOTE: remove it for the user, and leave it for the moderator
 		response.Details = err.Error()
 	}
 

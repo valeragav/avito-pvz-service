@@ -93,7 +93,6 @@ func (s *PVZUseCase) ListOverview(ctx context.Context, pvzListParams *dto.PVZLis
 	return pvzEnts, nil
 }
 
-// TODO: поменять название ListFull
 func (s *PVZUseCase) List(ctx context.Context, pvzListParams *dto.PVZListParams) ([]*domain.PVZ, error) {
 	const op = "pvz.List"
 
@@ -127,7 +126,7 @@ func (s *PVZUseCase) List(ctx context.Context, pvzListParams *dto.PVZListParams)
 		return nil, fmt.Errorf("%s: failed to get list receptions: %w", op, err)
 	}
 
-	receptionIDs := make([]uuid.UUID, 0, len(pvzEnts))
+	receptionIDs := make([]uuid.UUID, 0, len(receptionEnts))
 	mapPvzIDReceptions := make(map[uuid.UUID][]*domain.Reception, len(receptionEnts))
 	for _, receptionEnt := range receptionEnts {
 		receptionIDs = append(receptionIDs, receptionEnt.ID)

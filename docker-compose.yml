@@ -56,6 +56,28 @@ services:
     networks:
       - avito-pvz-service_network
 
+  postgres_test:
+    image: postgres:18.0
+    container_name: avito-pvz-service_postgresql_test
+    depends_on:
+      - postgres
+    environment:
+      POSTGRES_DB: ${DB_NAME:-pvz-service_db}
+      POSTGRES_USER: ${DB_USER:-root}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-root}
+      TZ: Europe/Moscow
+    volumes:
+      - avito-pvz-service_pgdata_test:/var/lib/postgresql/18/main
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-root} -d ${DB_NAME:-pvz-service_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    ports:
+      - ${TEST_DB_PORT:-5439}:5432
+    networks:
+      - avito-pvz-service_network
 
   pgbouncer:
     image: edoburu/pgbouncer:v1.25.1-p0
@@ -66,7 +88,6 @@ services:
       DB_NAME: ${DB_NAME:-pvz-service_db}
       DB_USER: ${DB_USER:-root}
       DB_PASSWORD: ${DB_PASSWORD:-root}
-
       POOL_MODE: transaction
       MAX_CLIENT_CONN: 3000
       DEFAULT_POOL_SIZE: 150
@@ -87,23 +108,6 @@ services:
       retries: 5
     ports:
       - ${PGBOUNCER_PORT:-5433}:5432
-    networks:
-      - avito-pvz-service_network
-
-  postgres_test:
-    image: postgres:18.0
-    container_name: avito-pvz-service_postgresql_test
-    depends_on:
-      - postgres
-    environment:
-      POSTGRES_DB: ${DB_NAME:-pvz-service_db}
-      POSTGRES_USER: ${DB_USER:-root}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-root}
-      TZ: Europe/Moscow
-    volumes:
-      - avito-pvz-service_pgdata_test:/var/lib/postgresql/18/main
-    ports:
-      - ${TEST_DB_PORT:-5439}:5432
     networks:
       - avito-pvz-service_network
 

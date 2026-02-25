@@ -6,7 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/valeragav/avito-pvz-service/pkg/logger"
-	"github.com/valeragav/avito-pvz-service/pkg/request_id"
+	"github.com/valeragav/avito-pvz-service/pkg/requestid"
 )
 
 func RequestID(next http.Handler) http.Handler {
@@ -14,9 +14,9 @@ func RequestID(next http.Handler) http.Handler {
 		requestID := uuid.NewString()
 		ctx := r.Context()
 
-		ctx = request_id.SetReqID(ctx, requestID)
+		ctx = requestid.SetReqID(ctx, requestID)
 
-		ctx = logger.WithCtx(ctx, slog.String(request_id.LogFieldRequestID, requestID))
+		ctx = logger.WithCtx(ctx, slog.String(requestid.LogFieldRequestID, requestID))
 
 		r = r.WithContext(ctx)
 

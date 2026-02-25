@@ -40,11 +40,16 @@ func (s *PVZServer) GetPVZList(ctx context.Context, _ *pvz_v1.GetPVZListRequest)
 
 func pvzListToResponse(pvzs []*domain.PVZ) []*pvz_v1.PVZ {
 	pvzList := make([]*pvz_v1.PVZ, 0, len(pvzs))
+
 	for _, pvz := range pvzs {
+		var city string
+		if pvz.City != nil {
+			city = pvz.City.Name
+		}
 		pvzList = append(pvzList, &pvz_v1.PVZ{
 			Id:               pvz.ID.String(),
 			RegistrationDate: timestamppb.New(pvz.RegistrationDate),
-			City:             pvz.City.Name,
+			City:             city,
 		})
 	}
 

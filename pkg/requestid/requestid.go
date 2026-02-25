@@ -1,4 +1,4 @@
-package request_id
+package requestid
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 
 type ctxKeyRequestID string
 
-const ReqIDKey ctxKeyRequestID = "request_id"
+const ReqIDKey ctxKeyRequestID = "requestid"
 
 const LogFieldRequestID = string(ReqIDKey)
 

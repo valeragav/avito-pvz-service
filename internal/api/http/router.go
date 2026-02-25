@@ -21,6 +21,7 @@ func NewRouter(appService *app.App, cfg *config.Config) *chi.Mux {
 	router := chi.NewRouter()
 
 	router.Use(middlewareChi.RealIP)
+	router.Use(middleware.MaxBytesMiddleware(1 << 20)) // 1MB
 
 	router.Use(middleware.RequestID)
 
@@ -28,7 +29,7 @@ func NewRouter(appService *app.App, cfg *config.Config) *chi.Mux {
 
 	router.Use(middleware.Cors(nil))
 	router.Use(middleware.NewLogger(logger.GetLogger()))
-	router.Use(middlewareChi.Recoverer) // обязательно после NewLogger
+	router.Use(middlewareChi.Recoverer) // be sure to follow NewLogger
 	router.Use(middleware.Metrics)
 
 	authMiddleware := middleware.NewAuthMiddleware(appService.JwtService)
