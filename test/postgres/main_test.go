@@ -21,6 +21,7 @@ import (
 	"github.com/valeragav/avito-pvz-service/migrations"
 	"github.com/valeragav/avito-pvz-service/pkg/dbconnect"
 	"github.com/valeragav/avito-pvz-service/pkg/seeder"
+	"go.uber.org/goleak"
 )
 
 var testApp *TestApp
@@ -31,6 +32,7 @@ func TestMain(m *testing.M) {
 }
 
 func run(m *testing.M) int {
+	goleak.VerifyTestMain(m)
 	app, err := NewTestApp()
 	if err != nil {
 		log.Printf("failed to init test app: %v", err)

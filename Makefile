@@ -17,7 +17,7 @@ PROTO_DIR = ./api/v1/proto
 OUT_DIR = ./internal/api/grpc/gen/v1
 
 # Tool versions
-GOLANGCI_LINT_VERSION = v2.10.1 # old version is being installed from go.mod 
+GOLANGCI_LINT_VERSION := 2.10.1
 SWAG_VERSION          := $(shell go list -m -f '{{.Version}}' github.com/swaggo/swag 2>/dev/null)
 MIGRATE_VERSION       := $(shell go list -m -f '{{.Version}}' github.com/golang-migrate/migrate/v4 2>/dev/null)
 MOCKGEN_VERSION       := $(shell go list -m -f '{{.Version}}' go.uber.org/mock 2>/dev/null)
@@ -31,9 +31,9 @@ help:
 	@echo 'Usage:'
 	@sed -n 's/^##//p' ${MAKEFILE_LIST} | column -t -s ':' | sed -e 's/^/ /'
 
-## fast-start: Run the application quickly without building a binary
-.PHONY: fast-start
-fast-start:
+## start-local: Running the application in a local environment
+.PHONY: start-local
+start-local:
 	go run cmd/app/main.go
 
 ## seeder: Run utilities that fill the database with initial data.
@@ -43,7 +43,7 @@ seeder:
 
 ## start: Build and run the application binary
 .PHONY: start
-start: seeder
+start:
 	./script/generate_secrets.sh
 	docker compose up -d --wait
 
@@ -136,13 +136,7 @@ bin-deps: \
 $(LOCAL_BIN)/golangci-lint:
 	@echo ">>> Installing golangci-lint $(GOLANGCI_LINT_VERSION)..."
 	@mkdir -p $(LOCAL_BIN)
-	@tmp_dir=$$(mktemp -d); \
-	git clone --depth 1 --branch $(GOLANGCI_LINT_VERSION) https://github.com/golangci/golangci-lint.git $$tmp_dir; \
-	cd $$tmp_dir/cmd/golangci-lint; \
-	go build -o $(LOCAL_BIN)/golangci-lint .; \
-	cd -; \
-	rm -rf $$tmp_dir
-	@echo ">>> golangci-lint installed successfully"
+	GOBIN=$(LOCAL_BIN) go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v$(GOLANGCI_LINT_VERSION)
 
 $(LOCAL_BIN)/swag:
 	@echo ">>> Installing swag $(SWAG_VERSION)..."

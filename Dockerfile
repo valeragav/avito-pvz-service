@@ -7,8 +7,6 @@ RUN go mod download
 
 COPY . .
 
-RUN apk add --no-cache bash protobuf protobuf-dev git make
-
 RUN go build -o avito-pvz-service ./cmd/app
 
 FROM alpine:3.18 AS runtime
@@ -17,7 +15,7 @@ WORKDIR /app
 
 COPY --from=build /app/avito-pvz-service .
 
-RUN apk add --no-cache curl tzdata ca-certificates
+RUN apk add --no-cache tzdata ca-certificates
 
 ENV TZ=Europe/Moscow
 

@@ -77,9 +77,7 @@ type Jwt struct {
 func LoadConfig(configPath string) *Config {
 	var err error
 
-	if configPath == "" {
-		err = godotenv.Overload()
-	} else {
+	if configPath != "" {
 		err = godotenv.Overload(configPath)
 	}
 
