@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
     container_name: avito-pvz-service_app
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:${HTTP_SERVER_DOCKER_PORT:-8080}/ping"]
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:${HTTP_SERVER_DOCKER_PORT:-8080}/ping"]
       interval: 30s
       timeout: 10s
       retries: 5
