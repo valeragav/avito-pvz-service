@@ -55,7 +55,7 @@ test:
 		-covermode=atomic \
 		-coverpkg=./... \
 		./...
-	grep -vE '\.pb\.|_mock\.go|_gen\.go|/schema/|/logger/' coverage.out > coverage.filtered.out
+	grep -vE '\.pb\.|_mock\.go|_gen\.go|/schema/|/logger/|/testutils/' coverage.out > coverage.filtered.out
 	mv coverage.filtered.out coverage.out
 
 ## test-e2e: Run e2e tests
