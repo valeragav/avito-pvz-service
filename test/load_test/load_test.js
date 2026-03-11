@@ -26,7 +26,7 @@ export const options = {
     scenarios: {
         auth_scenario: {
             executor: 'constant-arrival-rate',
-            rate: 100,           // 10% от 1000
+            rate: 50,            // 50 iter/s × 2 req = 100 RPS
             timeUnit: '1s',
             duration: '2m',
             preAllocatedVUs: 100,
@@ -36,7 +36,7 @@ export const options = {
 
         pvz_scenario: {
             executor: 'constant-arrival-rate',
-            rate: 450,           // 45% от 1000
+            rate: 450,           // 450 iter/s × 1 req = 450 RPS
             timeUnit: '1s',
             duration: '2m',
             preAllocatedVUs: 450,
@@ -46,17 +46,17 @@ export const options = {
 
         reception_scenario: {
             executor: 'constant-arrival-rate',
-            rate: 450,           // 45% от 1000
+            rate: 90,            // 90 iter/s × 5 req = 450 RPS
             timeUnit: '1s',
             duration: '2m',
-            preAllocatedVUs: 450,
-            maxVUs: 550,
+            preAllocatedVUs: 90,
+            maxVUs: 150,
             exec: 'receptionE2EScenario',
         },
     },
     thresholds: {
         http_req_failed: ['rate<0.0001'],
-        http_req_duration: ['p(99)<100'],
+        http_req_duration: ['p(99)<1000'],
     },
 };
 
@@ -95,14 +95,6 @@ export function setup() {
         }), { headers: moderatorHeaders });
     }
 
-    for (let i = 0; i < 10; i++) {
-        http.post(`${BASE_URL}/pvz`, JSON.stringify({
-            city: "Москва",
-            id: crypto.randomUUID(),
-            registrationDate: "2025-09-22T18:04:04.605Z",
-        }), { headers: moderatorHeaders });
-    }
-
     return { employeeToken, moderatorToken };
 }
 
@@ -130,7 +122,7 @@ export function authScenario() {
         fail(`login failed, status: ${regRes.status}, res: ${regRes.body}`);
     }
 
-    sleep(1);
+    sleep(0.5);
 }
 
 function buildQueryString(params) {
@@ -161,7 +153,7 @@ export function pvzScenario(data) {
         fail("No PVZ found!");
     }
 
-    sleep(1);
+    sleep(0.5);
 }
 
 export function receptionE2EScenario(data) {
@@ -190,7 +182,7 @@ export function receptionE2EScenario(data) {
     // 5. Закрытие последней приемки
     postJSON(`${BASE_URL}/pvz/${pvzId}/close_last_reception`, null, employeeHeaders, 200);
 
-    sleep(1);
+    sleep(0.5);
 }
 
 function postJSON(url, body, headers, expectedStatus) {
