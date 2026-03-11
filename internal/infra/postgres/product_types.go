@@ -11,18 +11,20 @@ import (
 )
 
 type ProductTypeRepository struct {
-	db  DBTX
-	sqb sq.StatementBuilderType
+	provider QueryEngineProvider
+	sqb      sq.StatementBuilderType
 }
 
-func NewProductTypeRepository(db DBTX) *ProductTypeRepository {
+func NewProductTypeRepository(provider QueryEngineProvider) *ProductTypeRepository {
 	return &ProductTypeRepository{
-		db:  db,
-		sqb: sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
+		provider: provider,
+		sqb:      sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
 	}
 }
 
 func (r *ProductTypeRepository) Get(ctx context.Context, filter domain.ProductType) (*domain.ProductType, error) {
+	db := r.provider.GetQueryEngine(ctx)
+
 	where := sq.Eq{}
 	if filter.ID != uuid.Nil {
 		where[schema.ProductTypeCols.ID] = filter.ID
@@ -38,7 +40,7 @@ func (r *ProductTypeRepository) Get(ctx context.Context, filter domain.ProductTy
 		From(record.TableName()).
 		Where(where)
 
-	result, err := CollectOneRow(ctx, r.db, qb, pgx.RowToStructByName[schema.ProductType])
+	result, err := CollectOneRow(ctx, db, qb, pgx.RowToStructByName[schema.ProductType])
 	if err != nil {
 		return nil, err
 	}
@@ -47,6 +49,8 @@ func (r *ProductTypeRepository) Get(ctx context.Context, filter domain.ProductTy
 }
 
 func (r ProductTypeRepository) CreateBatch(ctx context.Context, productTypes []domain.ProductType) error {
+	db := r.provider.GetQueryEngine(ctx)
+
 	qb := r.sqb.
 		Insert(schema.ProductType{}.TableName()).
 		Columns(schema.ProductType{}.InsertColumns()...)
@@ -61,5 +65,5 @@ func (r ProductTypeRepository) CreateBatch(ctx context.Context, productTypes []d
 
 	qb = qb.Suffix("ON CONFLICT (name) DO NOTHING")
 
-	return Exec(ctx, r.db, qb)
+	return Exec(ctx, db, qb)
 }

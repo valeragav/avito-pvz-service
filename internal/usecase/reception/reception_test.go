@@ -174,6 +174,7 @@ func TestReceptionUseCase_Create(t *testing.T) {
 			tt.mockFn(tt, receptionMocks)
 
 			useCase := New(
+				nil,
 				receptionMocks.MockReceptionRepo,
 				receptionMocks.MockReceptionStatusRepo,
 				receptionMocks.MockPvzRepo,
@@ -385,6 +386,7 @@ func TestReceptionUseCase_CloseLastReception(t *testing.T) {
 			tt.mockFn(tt, receptionMocks)
 
 			useCase := New(
+				nil,
 				receptionMocks.MockReceptionRepo,
 				receptionMocks.MockReceptionStatusRepo,
 				receptionMocks.MockPvzRepo,

@@ -30,9 +30,11 @@ func main() {
 		return
 	}
 
-	cityRepo := postgres.NewCityRepository(connPostgres)
-	statusRepo := postgres.NewReceptionStatusRepository(connPostgres)
-	productTypeRepo := postgres.NewProductTypeRepository(connPostgres)
+	tm := postgres.NewTransactionManager(connPostgres)
+
+	cityRepo := postgres.NewCityRepository(tm)
+	statusRepo := postgres.NewReceptionStatusRepository(tm)
+	productTypeRepo := postgres.NewProductTypeRepository(tm)
 
 	sd := seeder.New()
 	sd.Add(seeder.NewGenericSeed("Create ProductTypes", productTypeRepo, seed.ProductTypesEnt))

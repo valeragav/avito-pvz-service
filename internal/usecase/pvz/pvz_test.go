@@ -173,6 +173,7 @@ func TestPVZUseCase_Create(t *testing.T) {
 			tt.mockFn(tt, pvzMocks)
 
 			useCase := New(
+				nil,
 				pvzMocks.MockPvzRepo,
 				pvzMocks.MockCityRepo,
 				pvzMocks.MockReceptionRepo,
@@ -356,6 +357,7 @@ func TestPVZUseCase_List(t *testing.T) {
 			tt.mockFn(pvzMocks)
 
 			useCase := New(
+				nil,
 				pvzMocks.MockPvzRepo,
 				pvzMocks.MockCityRepo,
 				pvzMocks.MockReceptionRepo,

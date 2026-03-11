@@ -12,18 +12,20 @@ import (
 )
 
 type ReceptionRepository struct {
-	db  DBTX
-	sqb sq.StatementBuilderType
+	provider QueryEngineProvider
+	sqb      sq.StatementBuilderType
 }
 
-func NewReceptionRepository(db DBTX) *ReceptionRepository {
+func NewReceptionRepository(provider QueryEngineProvider) *ReceptionRepository {
 	return &ReceptionRepository{
-		db:  db,
-		sqb: sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
+		provider: provider,
+		sqb:      sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
 	}
 }
 
 func (r ReceptionRepository) Create(ctx context.Context, reception domain.Reception) (*domain.Reception, error) {
+	db := r.provider.GetQueryEngine(ctx)
+
 	if reception.ID == uuid.Nil {
 		reception.ID = uuid.New()
 	}
@@ -36,7 +38,7 @@ func (r ReceptionRepository) Create(ctx context.Context, reception domain.Recept
 		Values(record.Values()...).
 		Suffix("RETURNING " + strings.Join(record.Columns(), ", "))
 
-	productCreate, err := CollectOneRow(ctx, r.db, qb, pgx.RowToStructByName[schema.Reception])
+	productCreate, err := CollectOneRow(ctx, db, qb, pgx.RowToStructByName[schema.Reception])
 	if err != nil {
 		return nil, err
 	}
@@ -45,6 +47,8 @@ func (r ReceptionRepository) Create(ctx context.Context, reception domain.Recept
 }
 
 func (r *ReceptionRepository) GetList(ctx context.Context, filter domain.Reception) ([]*domain.Reception, error) {
+	db := r.provider.GetQueryEngine(ctx)
+
 	where := ToWhereMap(filter)
 
 	record := schema.NewReception(&filter)
@@ -54,7 +58,7 @@ func (r *ReceptionRepository) GetList(ctx context.Context, filter domain.Recepti
 		From(record.TableName()).
 		Where(where)
 
-	results, err := CollectRows(ctx, r.db, qb, pgx.RowToStructByName[schema.Reception])
+	results, err := CollectRows(ctx, db, qb, pgx.RowToStructByName[schema.Reception])
 	if err != nil {
 		return nil, err
 	}
@@ -63,6 +67,8 @@ func (r *ReceptionRepository) GetList(ctx context.Context, filter domain.Recepti
 }
 
 func (r *ReceptionRepository) Get(ctx context.Context, filter domain.Reception) (*domain.Reception, error) {
+	db := r.provider.GetQueryEngine(ctx)
+
 	where := ToWhereMap(filter)
 
 	record := schema.NewReception(&filter)
@@ -72,7 +78,7 @@ func (r *ReceptionRepository) Get(ctx context.Context, filter domain.Reception) 
 		From(record.TableName()).
 		Where(where)
 
-	result, err := CollectOneRow(ctx, r.db, qb, pgx.RowToStructByName[schema.Reception])
+	result, err := CollectOneRow(ctx, db, qb, pgx.RowToStructByName[schema.Reception])
 	if err != nil {
 		return nil, err
 	}
@@ -81,13 +87,15 @@ func (r *ReceptionRepository) Get(ctx context.Context, filter domain.Reception) 
 }
 
 func (r *ReceptionRepository) ListByIDsWithStatus(ctx context.Context, pvzIDs []uuid.UUID) ([]*domain.Reception, error) {
+	db := r.provider.GetQueryEngine(ctx)
+
 	qb := r.sqb.
 		Select(schema.ReceptionWithStatus{}.Columns()...).
 		From(schema.Reception{}.TableName()).
 		Join("reception_statuses ON reception_statuses.id = receptions.status_id").
 		Where(sq.Eq{"receptions.pvz_id": pvzIDs})
 
-	results, err := CollectRows(ctx, r.db, qb, pgx.RowToStructByName[schema.ReceptionWithStatus])
+	results, err := CollectRows(ctx, db, qb, pgx.RowToStructByName[schema.ReceptionWithStatus])
 	if err != nil {
 		return nil, err
 	}
@@ -96,6 +104,8 @@ func (r *ReceptionRepository) ListByIDsWithStatus(ctx context.Context, pvzIDs []
 }
 
 func (r *ReceptionRepository) FindByStatus(ctx context.Context, statusName domain.ReceptionStatusCode, filter domain.Reception) (*domain.Reception, error) {
+	db := r.provider.GetQueryEngine(ctx)
+
 	where := ToWhereMap(filter)
 
 	where["reception_statuses.name"] = statusName
@@ -108,7 +118,7 @@ func (r *ReceptionRepository) FindByStatus(ctx context.Context, statusName domai
 		OrderBy("receptions.date_time DESC").
 		Limit(1)
 
-	result, err := CollectOneRow(ctx, r.db, qb, pgx.RowToStructByName[schema.ReceptionWithStatus])
+	result, err := CollectOneRow(ctx, db, qb, pgx.RowToStructByName[schema.ReceptionWithStatus])
 	if err != nil {
 		return nil, err
 	}
@@ -117,6 +127,8 @@ func (r *ReceptionRepository) FindByStatus(ctx context.Context, statusName domai
 }
 
 func (r *ReceptionRepository) Update(ctx context.Context, receptionID uuid.UUID, update domain.Reception) (*domain.Reception, error) {
+	db := r.provider.GetQueryEngine(ctx)
+
 	qb := r.sqb.
 		Update(schema.Reception{}.TableName()).
 		Where(sq.Eq{schema.ReceptionCols.ID: receptionID}).
@@ -139,7 +151,7 @@ func (r *ReceptionRepository) Update(ctx context.Context, receptionID uuid.UUID,
 
 	qb = qb.SetMap(clauses)
 
-	result, err := CollectOneRow(ctx, r.db, qb, pgx.RowToStructByName[schema.Reception])
+	result, err := CollectOneRow(ctx, db, qb, pgx.RowToStructByName[schema.Reception])
 	if err != nil {
 		return nil, err
 	}

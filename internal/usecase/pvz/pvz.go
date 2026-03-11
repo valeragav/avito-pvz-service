@@ -32,15 +32,21 @@ type productRepo interface {
 	ListByReceptionIDsWithTypeName(ctx context.Context, receptionIDs []uuid.UUID) ([]*domain.Product, error)
 }
 
+type transactionManager interface {
+	RunRepeatableRead(ctx context.Context, fn func(ctx context.Context) error) error
+}
+
 type PVZUseCase struct {
+	tm            transactionManager
 	pvzRepo       pvzRepo
 	cityRepo      cityRepo
 	receptionRepo receptionRepo
 	productRepo   productRepo
 }
 
-func New(pvzRepo pvzRepo, cityRepo cityRepo, receptionRepo receptionRepo, productRepo productRepo) *PVZUseCase {
+func New(tm transactionManager, pvzRepo pvzRepo, cityRepo cityRepo, receptionRepo receptionRepo, productRepo productRepo) *PVZUseCase {
 	return &PVZUseCase{
+		tm,
 		pvzRepo,
 		cityRepo,
 		receptionRepo,
@@ -96,6 +102,22 @@ func (s *PVZUseCase) ListOverview(ctx context.Context, pvzListParams *dto.PVZLis
 func (s *PVZUseCase) List(ctx context.Context, pvzListParams *dto.PVZListParams) ([]*domain.PVZ, error) {
 	const op = "pvz.List"
 
+	var result []*domain.PVZ
+
+	err := s.tm.RunRepeatableRead(ctx, func(ctx context.Context) error {
+		var txErr error
+		result, txErr = s.list(ctx, pvzListParams)
+		return txErr
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return result, nil
+}
+
+func (s *PVZUseCase) list(ctx context.Context, pvzListParams *dto.PVZListParams) ([]*domain.PVZ, error) {
 	var pagination *listparams.Pagination
 	var startDate, endDate *time.Time
 
@@ -109,7 +131,7 @@ func (s *PVZUseCase) List(ctx context.Context, pvzListParams *dto.PVZListParams)
 
 	pvzEnts, err := s.pvzRepo.ListPvzByAcceptanceDateAndCity(ctx, pagination, startDate, endDate)
 	if err != nil {
-		return nil, fmt.Errorf("%s: failed to get list pvz: %w", op, err)
+		return nil, fmt.Errorf("failed to get list pvz: %w", err)
 	}
 
 	if len(pvzEnts) == 0 {
@@ -123,7 +145,7 @@ func (s *PVZUseCase) List(ctx context.Context, pvzListParams *dto.PVZListParams)
 
 	receptionEnts, err := s.receptionRepo.ListByIDsWithStatus(ctx, pvzIDs)
 	if err != nil {
-		return nil, fmt.Errorf("%s: failed to get list receptions: %w", op, err)
+		return nil, fmt.Errorf("failed to get list receptions: %w", err)
 	}
 
 	receptionIDs := make([]uuid.UUID, 0, len(receptionEnts))
@@ -135,7 +157,7 @@ func (s *PVZUseCase) List(ctx context.Context, pvzListParams *dto.PVZListParams)
 
 	productEnts, err := s.productRepo.ListByReceptionIDsWithTypeName(ctx, receptionIDs)
 	if err != nil {
-		return nil, fmt.Errorf("%s: failed to get list products: %w", op, err)
+		return nil, fmt.Errorf("failed to get list products: %w", err)
 	}
 
 	mapReceptionIDProducts := make(map[uuid.UUID][]*domain.Product, len(productEnts))
@@ -143,6 +165,14 @@ func (s *PVZUseCase) List(ctx context.Context, pvzListParams *dto.PVZListParams)
 		mapReceptionIDProducts[productEnt.ReceptionID] = append(mapReceptionIDProducts[productEnt.ReceptionID], productEnt)
 	}
 
+	return s.buildPVZList(pvzEnts, mapPvzIDReceptions, mapReceptionIDProducts), nil
+}
+
+func (s *PVZUseCase) buildPVZList(
+	pvzEnts []*domain.PVZ,
+	mapPvzIDReceptions map[uuid.UUID][]*domain.Reception,
+	mapReceptionIDProducts map[uuid.UUID][]*domain.Product,
+) []*domain.PVZ {
 	outs := make([]*domain.PVZ, 0, len(pvzEnts))
 
 	for _, pvz := range pvzEnts {
@@ -158,16 +188,13 @@ func (s *PVZUseCase) List(ctx context.Context, pvzListParams *dto.PVZListParams)
 		}
 
 		receptionsWithProducts := make([]*domain.Reception, 0, len(pvzReceptions))
-
 		for _, reception := range pvzReceptions {
-			productsWithTypeName := mapReceptionIDProducts[reception.ID]
-
 			receptionsWithProducts = append(receptionsWithProducts, &domain.Reception{
 				ID:              reception.ID,
 				PvzID:           reception.PvzID,
 				DateTime:        reception.DateTime,
 				StatusID:        reception.StatusID,
-				Products:        productsWithTypeName,
+				Products:        mapReceptionIDProducts[reception.ID],
 				ReceptionStatus: reception.ReceptionStatus,
 			})
 		}
@@ -181,5 +208,5 @@ func (s *PVZUseCase) List(ctx context.Context, pvzListParams *dto.PVZListParams)
 		})
 	}
 
-	return outs, nil
+	return outs
 }

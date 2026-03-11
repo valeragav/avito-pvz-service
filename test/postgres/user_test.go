@@ -13,8 +13,8 @@ import (
 )
 
 func TestUserRepository_Create(t *testing.T) {
-	WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
-		userRepo := postgres.NewUserRepository(tx)
+	WithTx(t, func(ctx context.Context, qeProvider postgres.QueryEngineProvider) {
+		userRepo := postgres.NewUserRepository(qeProvider)
 
 		user1 := domain.User{
 			ID:           uuid.New(),
@@ -49,8 +49,8 @@ func TestUserRepository_Create(t *testing.T) {
 }
 
 func TestUserRepository_Get(t *testing.T) {
-	WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
-		userRepo := postgres.NewUserRepository(tx)
+	WithTx(t, func(ctx context.Context, qeProvider postgres.QueryEngineProvider) {
+		userRepo := postgres.NewUserRepository(qeProvider)
 
 		users := []domain.User{
 			{

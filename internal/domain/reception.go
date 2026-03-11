@@ -31,3 +31,4 @@ type Reception struct {
 
 var ErrNoReceptionIsCurrentlyInProgress = errors.New("no reception is currently in progress")
 var ErrReceptionNotFound = errors.New("reception not found")
+var ErrStatusNotFound = errors.New("status not found")

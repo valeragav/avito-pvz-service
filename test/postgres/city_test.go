@@ -12,8 +12,8 @@ import (
 )
 
 func TestCityRepository_Create(t *testing.T) {
-	WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
-		cityRepo := postgres.NewCityRepository(tx)
+	WithTx(t, func(ctx context.Context, qeProvider postgres.QueryEngineProvider) {
+		cityRepo := postgres.NewCityRepository(qeProvider)
 
 		city1 := domain.City{
 			ID:   uuid.New(),
@@ -40,13 +40,13 @@ func TestCityRepository_Create(t *testing.T) {
 }
 
 func TestCityRepository_Get(t *testing.T) {
-	WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
-		cityRepo := postgres.NewCityRepository(tx)
+	WithTx(t, func(ctx context.Context, qeProvider postgres.QueryEngineProvider) {
+		cityRepo := postgres.NewCityRepository(qeProvider)
 
 		// создаём город напрямую
 		id := uuid.New()
 		name := "TestCity"
-		_, err := tx.Exec(ctx, `INSERT INTO cities (id, name) VALUES ($1, $2)`, id, name)
+		_, err := qeProvider.GetQueryEngine(ctx).Exec(ctx, `INSERT INTO cities (id, name) VALUES ($1, $2)`, id, name)
 		require.NoError(t, err)
 
 		tests := []struct {
@@ -79,8 +79,8 @@ func TestCityRepository_Get(t *testing.T) {
 }
 
 func TestCityRepository_CreateBatch(t *testing.T) {
-	WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
-		cityRepo := postgres.NewCityRepository(tx)
+	WithTx(t, func(ctx context.Context, qeProvider postgres.QueryEngineProvider) {
+		cityRepo := postgres.NewCityRepository(qeProvider)
 
 		tests := []struct {
 			name    string

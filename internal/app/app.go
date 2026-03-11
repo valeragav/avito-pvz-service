@@ -24,14 +24,16 @@ type App struct {
 }
 
 func New(cfg *config.Config, lg *logger.Logger, db *pgxpool.Pool) (*App, error) {
+	tm := postgres.NewTransactionManager(db)
+
 	// repos
-	userRepo := postgres.NewUserRepository(db)
-	pvzRepo := postgres.NewPVZRepository(db)
-	cityRepo := postgres.NewCityRepository(db)
-	receptionRepo := postgres.NewReceptionRepository(db)
-	statusRepo := postgres.NewReceptionStatusRepository(db)
-	productRepo := postgres.NewProductRepository(db)
-	productTypeRepo := postgres.NewProductTypeRepository(db)
+	userRepo := postgres.NewUserRepository(tm)
+	pvzRepo := postgres.NewPVZRepository(tm)
+	cityRepo := postgres.NewCityRepository(tm)
+	receptionRepo := postgres.NewReceptionRepository(tm)
+	statusRepo := postgres.NewReceptionStatusRepository(tm)
+	productRepo := postgres.NewProductRepository(tm)
+	productTypeRepo := postgres.NewProductTypeRepository(tm)
 
 	// services
 	jwtService, err := security.New(
@@ -48,9 +50,9 @@ func New(cfg *config.Config, lg *logger.Logger, db *pgxpool.Pool) (*App, error) 
 
 	// usecases
 	authUC := auth.New(jwtService, userRepo)
-	pvzUC := pvz.New(pvzRepo, cityRepo, receptionRepo, productRepo)
-	receptionUC := reception.New(receptionRepo, statusRepo, pvzRepo)
-	productUC := product.New(productRepo, receptionRepo, productTypeRepo, pvzRepo)
+	pvzUC := pvz.New(tm, pvzRepo, cityRepo, receptionRepo, productRepo)
+	receptionUC := reception.New(tm, receptionRepo, statusRepo, pvzRepo)
+	productUC := product.New(tm, productRepo, receptionRepo, productTypeRepo, pvzRepo)
 
 	return &App{
 		AuthUseCase:      authUC,

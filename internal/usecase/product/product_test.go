@@ -162,6 +162,7 @@ func TestProductUseCase_Create(t *testing.T) {
 			tt.mockFn(tt, productMocks)
 
 			useCase := New(
+				nil,
 				productMocks.MockProductRepo,
 				productMocks.MockReceptionRepo,
 				productMocks.MockProductTypeRepo,
@@ -320,6 +321,7 @@ func TestProductUseCase_DeleteLastProduct(t *testing.T) {
 			tt.mockFn(tt, productMocks)
 
 			useCase := New(
+				nil,
 				productMocks.MockProductRepo,
 				productMocks.MockReceptionRepo,
 				productMocks.MockProductTypeRepo,

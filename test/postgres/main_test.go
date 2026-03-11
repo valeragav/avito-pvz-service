@@ -10,8 +10,9 @@ import (
 	"time"
 
 	"github.com/golang-migrate/migrate/v4"
-	postgresDB "github.com/golang-migrate/migrate/v4/database/postgres"
+	postgresMigrate "github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/golang-migrate/migrate/v4/source/iofs"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/stretchr/testify/require"
@@ -55,6 +56,7 @@ func run(m *testing.M) int {
 
 type TestApp struct {
 	DB *pgxpool.Pool
+	TM *postgres.TransactionManager
 }
 
 func NewTestApp() (*TestApp, error) {
@@ -63,7 +65,10 @@ func NewTestApp() (*TestApp, error) {
 		return nil, err
 	}
 
-	app := &TestApp{DB: db}
+	app := &TestApp{
+		DB: db,
+		TM: postgres.NewTransactionManager(&postgres.PoolAdapter{Pool: db}),
+	}
 
 	if err := app.Migrate(); err != nil {
 		return nil, err
@@ -108,7 +113,7 @@ const (
 	SeedProductTypes
 )
 
-func (a TestApp) Seed(ctx context.Context, db postgres.DBTX, targets ...SeedTarget) error {
+func (a TestApp) Seed(ctx context.Context, db postgres.QueryEngineProvider, targets ...SeedTarget) error {
 	if len(targets) == 0 {
 		// по умолчанию сидим всё
 		targets = []SeedTarget{SeedCities, SeedReceptionStatuses, SeedProductTypes}
@@ -136,7 +141,7 @@ func (a TestApp) Seed(ctx context.Context, db postgres.DBTX, targets ...SeedTarg
 func (a TestApp) Migrate() error {
 	sqlDB := stdlib.OpenDBFromPool(a.DB)
 
-	driver, err := postgresDB.WithInstance(sqlDB, &postgresDB.Config{})
+	driver, err := postgresMigrate.WithInstance(sqlDB, &postgresMigrate.Config{})
 	if err != nil {
 		return err
 	}
@@ -214,17 +219,22 @@ func loadTestConfig() *config.Config {
 	}
 }
 
-func WithTx(t *testing.T, fn func(ctx context.Context, tx postgres.DBTX)) {
+func WithTx(t *testing.T, fn func(ctx context.Context, qeProvider postgres.QueryEngineProvider)) {
 	t.Helper()
-
 	ctx := context.Background()
 
-	tx, err := testApp.DB.Begin(ctx)
-	require.NoError(t, err)
+	err := testApp.TM.RunTx(ctx, pgx.TxOptions{
+		IsoLevel:   pgx.RepeatableRead,
+		AccessMode: pgx.ReadWrite,
+	}, func(ctx context.Context) error {
+		fn(ctx, testApp.TM)
+		return ErrRollbackTest // always return an error to roll back the transaction.
+	})
 
-	defer func() {
-		_ = tx.Rollback(ctx)
-	}()
-
-	fn(ctx, tx)
+	// expect our error to be rolled back
+	if !errors.Is(err, ErrRollbackTest) {
+		require.NoError(t, err)
+	}
 }
+
+var ErrRollbackTest = errors.New("test rollback")

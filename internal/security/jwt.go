@@ -101,7 +101,7 @@ func (j JwtService) ValidateJwt(incomingToken string) (*domain.UserClaims, error
 	token, err := jwt.ParseWithClaims(incomingToken, claims, keyFunc)
 
 	if err != nil || token == nil {
-		return nil, fmt.Errorf("%w: %w", ErrInvalidToken, err)
+		return nil, ErrInvalidToken
 	}
 
 	if claims.Issuer != j.iss {

@@ -12,18 +12,20 @@ import (
 )
 
 type UserRepository struct {
-	db  DBTX
-	sqb sq.StatementBuilderType
+	provider QueryEngineProvider
+	sqb      sq.StatementBuilderType
 }
 
-func NewUserRepository(db DBTX) *UserRepository {
+func NewUserRepository(provider QueryEngineProvider) *UserRepository {
 	return &UserRepository{
-		db:  db,
-		sqb: sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
+		provider: provider,
+		sqb:      sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
 	}
 }
 
 func (r UserRepository) Create(ctx context.Context, user domain.User) (*domain.User, error) {
+	db := r.provider.GetQueryEngine(ctx)
+
 	if user.ID == uuid.Nil {
 		user.ID = uuid.New()
 	}
@@ -36,7 +38,7 @@ func (r UserRepository) Create(ctx context.Context, user domain.User) (*domain.U
 		Values(record.Values()...).
 		Suffix("RETURNING " + strings.Join(record.Columns(), ", "))
 
-	userCreate, err := CollectOneRow(ctx, r.db, qb, pgx.RowToStructByName[schema.User])
+	userCreate, err := CollectOneRow(ctx, db, qb, pgx.RowToStructByName[schema.User])
 	if err != nil {
 		return nil, err
 	}
@@ -45,6 +47,8 @@ func (r UserRepository) Create(ctx context.Context, user domain.User) (*domain.U
 }
 
 func (r *UserRepository) Get(ctx context.Context, filter domain.User) (*domain.User, error) {
+	db := r.provider.GetQueryEngine(ctx)
+
 	where := sq.Eq{}
 	if filter.ID != uuid.Nil {
 		where[schema.UserCols.ID] = filter.ID
@@ -63,7 +67,7 @@ func (r *UserRepository) Get(ctx context.Context, filter domain.User) (*domain.U
 		From(record.TableName()).
 		Where(where)
 
-	result, err := CollectOneRow(ctx, r.db, qb, pgx.RowToStructByName[schema.User])
+	result, err := CollectOneRow(ctx, db, qb, pgx.RowToStructByName[schema.User])
 	if err != nil {
 		return nil, err
 	}

@@ -14,11 +14,11 @@ import (
 )
 
 func TestReceptionRepository_Create(t *testing.T) {
-	WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
-		cityRepo := postgres.NewCityRepository(tx)
-		pvzRepo := postgres.NewPVZRepository(tx)
-		statusRepo := postgres.NewReceptionStatusRepository(tx)
-		receptionRepo := postgres.NewReceptionRepository(tx)
+	WithTx(t, func(ctx context.Context, qeProvider postgres.QueryEngineProvider) {
+		cityRepo := postgres.NewCityRepository(qeProvider)
+		pvzRepo := postgres.NewPVZRepository(qeProvider)
+		statusRepo := postgres.NewReceptionStatusRepository(qeProvider)
+		receptionRepo := postgres.NewReceptionRepository(qeProvider)
 
 		city, err := cityRepo.Create(ctx, domain.City{ID: uuid.New(), Name: "TestCity"})
 		require.NoError(t, err)
@@ -70,11 +70,11 @@ func TestReceptionRepository_Create(t *testing.T) {
 }
 
 func TestReceptionRepository_GetList(t *testing.T) {
-	WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
-		cityRepo := postgres.NewCityRepository(tx)
-		pvzRepo := postgres.NewPVZRepository(tx)
-		statusRepo := postgres.NewReceptionStatusRepository(tx)
-		receptionRepo := postgres.NewReceptionRepository(tx)
+	WithTx(t, func(ctx context.Context, qeProvider postgres.QueryEngineProvider) {
+		cityRepo := postgres.NewCityRepository(qeProvider)
+		pvzRepo := postgres.NewPVZRepository(qeProvider)
+		statusRepo := postgres.NewReceptionStatusRepository(qeProvider)
+		receptionRepo := postgres.NewReceptionRepository(qeProvider)
 
 		city, err := cityRepo.Create(ctx, domain.City{ID: uuid.New(), Name: "TestCity"})
 		require.NoError(t, err)
@@ -130,11 +130,11 @@ func TestReceptionRepository_GetList(t *testing.T) {
 }
 
 func TestReceptionRepository_Get(t *testing.T) {
-	WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
-		cityRepo := postgres.NewCityRepository(tx)
-		pvzRepo := postgres.NewPVZRepository(tx)
-		statusRepo := postgres.NewReceptionStatusRepository(tx)
-		receptionRepo := postgres.NewReceptionRepository(tx)
+	WithTx(t, func(ctx context.Context, qeProvider postgres.QueryEngineProvider) {
+		cityRepo := postgres.NewCityRepository(qeProvider)
+		pvzRepo := postgres.NewPVZRepository(qeProvider)
+		statusRepo := postgres.NewReceptionStatusRepository(qeProvider)
+		receptionRepo := postgres.NewReceptionRepository(qeProvider)
 
 		city, err := cityRepo.Create(ctx, domain.City{ID: uuid.New(), Name: "TestCity"})
 		require.NoError(t, err)
@@ -182,11 +182,11 @@ func TestReceptionRepository_Get(t *testing.T) {
 }
 
 func TestReceptionRepository_ListByIDsWithStatus(t *testing.T) {
-	WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
-		cityRepo := postgres.NewCityRepository(tx)
-		pvzRepo := postgres.NewPVZRepository(tx)
-		statusRepo := postgres.NewReceptionStatusRepository(tx)
-		receptionRepo := postgres.NewReceptionRepository(tx)
+	WithTx(t, func(ctx context.Context, qeProvider postgres.QueryEngineProvider) {
+		cityRepo := postgres.NewCityRepository(qeProvider)
+		pvzRepo := postgres.NewPVZRepository(qeProvider)
+		statusRepo := postgres.NewReceptionStatusRepository(qeProvider)
+		receptionRepo := postgres.NewReceptionRepository(qeProvider)
 
 		city, err := cityRepo.Create(ctx, domain.City{ID: uuid.New(), Name: "City"})
 		require.NoError(t, err)
@@ -247,11 +247,11 @@ func TestReceptionRepository_ListByIDsWithStatus(t *testing.T) {
 }
 
 func TestReceptionRepository_FindByStatus(t *testing.T) {
-	WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
-		cityRepo := postgres.NewCityRepository(tx)
-		pvzRepo := postgres.NewPVZRepository(tx)
-		statusRepo := postgres.NewReceptionStatusRepository(tx)
-		receptionRepo := postgres.NewReceptionRepository(tx)
+	WithTx(t, func(ctx context.Context, qeProvider postgres.QueryEngineProvider) {
+		cityRepo := postgres.NewCityRepository(qeProvider)
+		pvzRepo := postgres.NewPVZRepository(qeProvider)
+		statusRepo := postgres.NewReceptionStatusRepository(qeProvider)
+		receptionRepo := postgres.NewReceptionRepository(qeProvider)
 
 		city, err := cityRepo.Create(ctx, domain.City{ID: uuid.New(), Name: "City"})
 		require.NoError(t, err)
@@ -315,11 +315,11 @@ func TestReceptionRepository_FindByStatus(t *testing.T) {
 }
 
 func TestReceptionRepository_Update(t *testing.T) {
-	WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
-		cityRepo := postgres.NewCityRepository(tx)
-		pvzRepo := postgres.NewPVZRepository(tx)
-		statusRepo := postgres.NewReceptionStatusRepository(tx)
-		receptionRepo := postgres.NewReceptionRepository(tx)
+	WithTx(t, func(ctx context.Context, qeProvider postgres.QueryEngineProvider) {
+		cityRepo := postgres.NewCityRepository(qeProvider)
+		pvzRepo := postgres.NewPVZRepository(qeProvider)
+		statusRepo := postgres.NewReceptionStatusRepository(qeProvider)
+		receptionRepo := postgres.NewReceptionRepository(qeProvider)
 
 		city, err := cityRepo.Create(ctx, domain.City{ID: uuid.New(), Name: "City"})
 		require.NoError(t, err)

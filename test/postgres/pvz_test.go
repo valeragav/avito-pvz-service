@@ -15,8 +15,8 @@ import (
 )
 
 func TestPVZRepository_Create(t *testing.T) {
-	WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
-		cityRepo := postgres.NewCityRepository(tx)
+	WithTx(t, func(ctx context.Context, qeProvider postgres.QueryEngineProvider) {
+		cityRepo := postgres.NewCityRepository(qeProvider)
 
 		city, err := cityRepo.Create(ctx, domain.City{
 			ID:   uuid.New(),
@@ -25,7 +25,7 @@ func TestPVZRepository_Create(t *testing.T) {
 		require.NoError(t, err)
 		require.NotNil(t, city)
 
-		pvzRepo := postgres.NewPVZRepository(tx)
+		pvzRepo := postgres.NewPVZRepository(qeProvider)
 
 		now := time.Now()
 		pvz := domain.PVZ{
@@ -46,8 +46,8 @@ func TestPVZRepository_Create(t *testing.T) {
 }
 
 func TestPVZRepository_Get(t *testing.T) {
-	WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
-		cityRepo := postgres.NewCityRepository(tx)
+	WithTx(t, func(ctx context.Context, qeProvider postgres.QueryEngineProvider) {
+		cityRepo := postgres.NewCityRepository(qeProvider)
 
 		city, err := cityRepo.Create(ctx, domain.City{
 			ID:   uuid.New(),
@@ -55,7 +55,7 @@ func TestPVZRepository_Get(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		pvzRepo := postgres.NewPVZRepository(tx)
+		pvzRepo := postgres.NewPVZRepository(qeProvider)
 
 		pvz := domain.PVZ{
 			ID:               uuid.New(),
@@ -80,8 +80,8 @@ func TestPVZRepository_Get(t *testing.T) {
 }
 
 func TestPVZRepository_GetList(t *testing.T) {
-	WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
-		cityRepo := postgres.NewCityRepository(tx)
+	WithTx(t, func(ctx context.Context, qeProvider postgres.QueryEngineProvider) {
+		cityRepo := postgres.NewCityRepository(qeProvider)
 
 		city, err := cityRepo.Create(ctx, domain.City{
 			ID:   uuid.New(),
@@ -89,7 +89,7 @@ func TestPVZRepository_GetList(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		pvzRepo := postgres.NewPVZRepository(tx)
+		pvzRepo := postgres.NewPVZRepository(qeProvider)
 
 		pvzList := []domain.PVZ{
 			{ID: uuid.New(), RegistrationDate: time.Now(), CityID: city.ID},
@@ -119,8 +119,8 @@ func TestPVZRepository_GetList(t *testing.T) {
 
 		// откатываем транзакцию, чтобы удалить все записи
 		// или создаём новую транзакцию без вставок
-		WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
-			emptyRepo := postgres.NewPVZRepository(tx)
+		WithTx(t, func(ctx context.Context, qeProvider postgres.QueryEngineProvider) {
+			emptyRepo := postgres.NewPVZRepository(qeProvider)
 			list, err := emptyRepo.GetList(ctx, nil)
 			require.NoError(t, err)
 			require.Empty(t, list)
@@ -129,10 +129,10 @@ func TestPVZRepository_GetList(t *testing.T) {
 }
 
 func TestPVZRepository_ListPvzByAcceptanceDateAndCity(t *testing.T) {
-	WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
-		cityRepo := postgres.NewCityRepository(tx)
-		receptionRepo := postgres.NewReceptionRepository(tx)
-		pvzRepo := postgres.NewPVZRepository(tx)
+	WithTx(t, func(ctx context.Context, qeProvider postgres.QueryEngineProvider) {
+		cityRepo := postgres.NewCityRepository(qeProvider)
+		receptionRepo := postgres.NewReceptionRepository(qeProvider)
+		pvzRepo := postgres.NewPVZRepository(qeProvider)
 
 		city1, err := cityRepo.Create(ctx, domain.City{ID: uuid.New(), Name: "City1"})
 		require.NoError(t, err)
@@ -151,7 +151,7 @@ func TestPVZRepository_ListPvzByAcceptanceDateAndCity(t *testing.T) {
 		require.NoError(t, err)
 
 		receptionStatusID := uuid.New()
-		receptionStatusRepo := postgres.NewReceptionStatusRepository(tx)
+		receptionStatusRepo := postgres.NewReceptionStatusRepository(qeProvider)
 		err = receptionStatusRepo.CreateBatch(ctx, []domain.ReceptionStatus{{
 			ID:   receptionStatusID,
 			Name: domain.ReceptionStatusClose,
@@ -208,16 +208,16 @@ func TestPVZRepository_ListPvzByAcceptanceDateAndCity(t *testing.T) {
 }
 
 func TestPVZRepository_ListPvzByAcceptanceDateAndCity_Pagination(t *testing.T) {
-	WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
-		cityRepo := postgres.NewCityRepository(tx)
-		receptionRepo := postgres.NewReceptionRepository(tx)
-		pvzRepo := postgres.NewPVZRepository(tx)
+	WithTx(t, func(ctx context.Context, qeProvider postgres.QueryEngineProvider) {
+		cityRepo := postgres.NewCityRepository(qeProvider)
+		receptionRepo := postgres.NewReceptionRepository(qeProvider)
+		pvzRepo := postgres.NewPVZRepository(qeProvider)
 
 		city, err := cityRepo.Create(ctx, domain.City{ID: uuid.New(), Name: "City"})
 		require.NoError(t, err)
 
 		receptionStatusID := uuid.New()
-		receptionStatusRepo := postgres.NewReceptionStatusRepository(tx)
+		receptionStatusRepo := postgres.NewReceptionStatusRepository(qeProvider)
 		err = receptionStatusRepo.CreateBatch(ctx, []domain.ReceptionStatus{{
 			ID:   receptionStatusID,
 			Name: domain.ReceptionStatusClose,

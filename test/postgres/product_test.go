@@ -14,8 +14,8 @@ import (
 )
 
 type productFixture struct {
-	ctx context.Context
-	tx  postgres.DBTX
+	ctx                 context.Context
+	queryEngineProvider postgres.QueryEngineProvider
 
 	productRepo *postgres.ProductRepository
 
@@ -23,17 +23,17 @@ type productFixture struct {
 	reception   *domain.Reception
 }
 
-func newProductFixture(t *testing.T, ctx context.Context, tx postgres.DBTX) *productFixture {
+func newProductFixture(t *testing.T, ctx context.Context, queryEngineProvider postgres.QueryEngineProvider) *productFixture {
 	t.Helper()
 
-	require.NoError(t, testApp.Seed(ctx, tx, SeedReceptionStatuses, SeedProductTypes))
+	require.NoError(t, testApp.Seed(ctx, queryEngineProvider, SeedReceptionStatuses, SeedProductTypes))
 
 	stableNow := time.Now().UTC().Truncate(time.Millisecond)
-	productTypeRepo := postgres.NewProductTypeRepository(tx)
-	receptionStatusRepo := postgres.NewReceptionStatusRepository(tx)
-	cityRepo := postgres.NewCityRepository(tx)
-	pvzRepo := postgres.NewPVZRepository(tx)
-	receptionRepo := postgres.NewReceptionRepository(tx)
+	productTypeRepo := postgres.NewProductTypeRepository(queryEngineProvider)
+	receptionStatusRepo := postgres.NewReceptionStatusRepository(queryEngineProvider)
+	cityRepo := postgres.NewCityRepository(queryEngineProvider)
+	pvzRepo := postgres.NewPVZRepository(queryEngineProvider)
+	receptionRepo := postgres.NewReceptionRepository(queryEngineProvider)
 
 	productType, err := productTypeRepo.Get(ctx, domain.ProductType{
 		Name: "электроника",
@@ -67,11 +67,11 @@ func newProductFixture(t *testing.T, ctx context.Context, tx postgres.DBTX) *pro
 	require.NoError(t, err)
 
 	return &productFixture{
-		ctx:         ctx,
-		tx:          tx,
-		productRepo: postgres.NewProductRepository(tx),
-		productType: productType,
-		reception:   reception,
+		ctx:                 ctx,
+		queryEngineProvider: queryEngineProvider,
+		productRepo:         postgres.NewProductRepository(queryEngineProvider),
+		productType:         productType,
+		reception:           reception,
 	}
 }
 
@@ -85,9 +85,9 @@ func newProduct(typeID, receptionID uuid.UUID, at time.Time) domain.Product {
 }
 
 func TestProductRepository_CreateAndGet(t *testing.T) {
-	WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
+	WithTx(t, func(ctx context.Context, qeProvider postgres.QueryEngineProvider) {
 		now := time.Now().UTC().Truncate(time.Millisecond)
-		f := newProductFixture(t, ctx, tx)
+		f := newProductFixture(t, ctx, qeProvider)
 		product := newProduct(f.productType.ID, f.reception.ID, now)
 
 		created, err := f.productRepo.Create(ctx, product)
@@ -109,8 +109,8 @@ func TestProductRepository_CreateAndGet(t *testing.T) {
 }
 
 func TestProductRepository_GetLastProductInReception(t *testing.T) {
-	WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
-		f := newProductFixture(t, ctx, tx)
+	WithTx(t, func(ctx context.Context, qeProvider postgres.QueryEngineProvider) {
+		f := newProductFixture(t, ctx, qeProvider)
 		stableNow := time.Now().UTC().Truncate(time.Millisecond)
 
 		t1 := stableNow.Add(-2 * time.Hour)
@@ -145,11 +145,11 @@ func TestProductRepository_GetLastProductInReception(t *testing.T) {
 }
 
 func TestProductRepository_ListByReceptionIDsWithTypeName(t *testing.T) {
-	WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
-		f := newProductFixture(t, ctx, tx)
+	WithTx(t, func(ctx context.Context, qeProvider postgres.QueryEngineProvider) {
+		f := newProductFixture(t, ctx, qeProvider)
 
 		stableNow := time.Now().UTC().Truncate(time.Millisecond)
-		receptionRepo := postgres.NewReceptionRepository(tx)
+		receptionRepo := postgres.NewReceptionRepository(qeProvider)
 
 		secondReception, err := receptionRepo.Create(ctx, domain.Reception{
 			ID:       uuid.New(),
@@ -211,9 +211,9 @@ func TestProductRepository_ListByReceptionIDsWithTypeName(t *testing.T) {
 }
 
 func TestProductRepository_DeleteProduct(t *testing.T) {
-	WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
+	WithTx(t, func(ctx context.Context, qeProvider postgres.QueryEngineProvider) {
 		stableNow := time.Now().UTC().Truncate(time.Millisecond)
-		f := newProductFixture(t, ctx, tx)
+		f := newProductFixture(t, ctx, qeProvider)
 
 		product, err := f.productRepo.Create(ctx,
 			newProduct(f.productType.ID, f.reception.ID, stableNow),

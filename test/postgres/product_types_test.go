@@ -12,12 +12,12 @@ import (
 )
 
 func TestProductTypeRepository_Get(t *testing.T) {
-	WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
-		repo := postgres.NewProductTypeRepository(tx)
+	WithTx(t, func(ctx context.Context, qeProvider postgres.QueryEngineProvider) {
+		repo := postgres.NewProductTypeRepository(qeProvider)
 
 		id := uuid.New()
 		name := "Test"
-		_, err := tx.Exec(ctx, `INSERT INTO product_types (id, name) VALUES ($1, $2)`, id, name)
+		_, err := qeProvider.GetQueryEngine(ctx).Exec(ctx, `INSERT INTO product_types (id, name) VALUES ($1, $2)`, id, name)
 		require.NoError(t, err)
 
 		tests := []struct {
@@ -50,8 +50,8 @@ func TestProductTypeRepository_Get(t *testing.T) {
 }
 
 func TestProductTypeRepository_CreateBatch(t *testing.T) {
-	WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
-		repo := postgres.NewProductTypeRepository(tx)
+	WithTx(t, func(ctx context.Context, qeProvider postgres.QueryEngineProvider) {
+		repo := postgres.NewProductTypeRepository(qeProvider)
 
 		tests := []struct {
 			name         string

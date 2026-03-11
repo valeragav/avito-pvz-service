@@ -12,8 +12,8 @@ import (
 )
 
 func TestReceptionStatusRepository_Get(t *testing.T) {
-	WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
-		receptionStatusRepo := postgres.NewReceptionStatusRepository(tx)
+	WithTx(t, func(ctx context.Context, qeProvider postgres.QueryEngineProvider) {
+		receptionStatusRepo := postgres.NewReceptionStatusRepository(qeProvider)
 
 		statuses := []domain.ReceptionStatus{
 			{ID: uuid.New(), Name: "Open"},
@@ -44,8 +44,8 @@ func TestReceptionStatusRepository_Get(t *testing.T) {
 }
 
 func TestReceptionStatusRepository_CreateBatch(t *testing.T) {
-	WithTx(t, func(ctx context.Context, tx postgres.DBTX) {
-		receptionStatusRepo := postgres.NewReceptionStatusRepository(tx)
+	WithTx(t, func(ctx context.Context, qeProvider postgres.QueryEngineProvider) {
+		receptionStatusRepo := postgres.NewReceptionStatusRepository(qeProvider)
 
 		statuses := []domain.ReceptionStatus{
 			{ID: uuid.New(), Name: "Open"},

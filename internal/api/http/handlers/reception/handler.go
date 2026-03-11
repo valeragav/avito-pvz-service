@@ -129,7 +129,7 @@ func mapErrorToHTTP(err error) (msg string, statusCode int) {
 		msg = err.Error()
 		statusCode = http.StatusNotFound
 
-	case errors.Is(err, domain.ErrReceptionNotFound), errors.Is(err, domain.ErrPVZNotFound):
+	case errors.Is(err, domain.ErrReceptionNotFound), errors.Is(err, domain.ErrPVZNotFound), errors.Is(err, domain.ErrStatusNotFound):
 		msg = err.Error()
 		statusCode = http.StatusNotFound
 

@@ -16,7 +16,7 @@ type builder interface {
 	ToSql() (string, []any, error)
 }
 
-func Exec(ctx context.Context, db DBTX, builder builder) error {
+func Exec(ctx context.Context, db QueryEngine, builder builder) error {
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		logger.DebugCtx(ctx, "err builder", "sql", sql, "args", args, "err", err)
@@ -27,7 +27,7 @@ func Exec(ctx context.Context, db DBTX, builder builder) error {
 }
 
 // CollectRows executes a sql query built by sqb, collects rows into dst using RowMapper.
-func CollectRows[T any](ctx context.Context, db DBTX, builder builder, rowMapper func(pgx.CollectableRow) (T, error)) ([]T, error) {
+func CollectRows[T any](ctx context.Context, db QueryEngine, builder builder, rowMapper func(pgx.CollectableRow) (T, error)) ([]T, error) {
 	sql, args, err := builder.ToSql()
 	if err != nil {
 		logger.DebugCtx(ctx, "err builder", "sql", sql, "args", args, "err", err)
@@ -54,7 +54,7 @@ func CollectRows[T any](ctx context.Context, db DBTX, builder builder, rowMapper
 }
 
 // CollectOneRow executes a sql query built by sqb, collects a single row into dst using RowMapper.
-func CollectOneRow[T any](ctx context.Context, db DBTX, builder builder, rowMapper func(pgx.CollectableRow) (T, error)) (T, error) {
+func CollectOneRow[T any](ctx context.Context, db QueryEngine, builder builder, rowMapper func(pgx.CollectableRow) (T, error)) (T, error) {
 	var zero T
 
 	sql, args, err := builder.ToSql()

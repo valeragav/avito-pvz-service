@@ -14,18 +14,20 @@ import (
 )
 
 type ProductRepository struct {
-	db  DBTX
-	sqb sq.StatementBuilderType
+	provider QueryEngineProvider
+	sqb      sq.StatementBuilderType
 }
 
-func NewProductRepository(db DBTX) *ProductRepository {
+func NewProductRepository(provider QueryEngineProvider) *ProductRepository {
 	return &ProductRepository{
-		db:  db,
-		sqb: sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
+		provider: provider,
+		sqb:      sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
 	}
 }
 
 func (r ProductRepository) Create(ctx context.Context, product domain.Product) (*domain.Product, error) {
+	db := r.provider.GetQueryEngine(ctx)
+
 	if product.ID == uuid.Nil {
 		product.ID = uuid.New()
 	}
@@ -38,7 +40,7 @@ func (r ProductRepository) Create(ctx context.Context, product domain.Product) (
 		Values(record.Values()...).
 		Suffix("RETURNING " + strings.Join(record.Columns(), ", "))
 
-	productCreate, err := CollectOneRow(ctx, r.db, qb, pgx.RowToStructByName[schema.Product])
+	productCreate, err := CollectOneRow(ctx, db, qb, pgx.RowToStructByName[schema.Product])
 	if err != nil {
 		return nil, err
 	}
@@ -47,6 +49,8 @@ func (r ProductRepository) Create(ctx context.Context, product domain.Product) (
 }
 
 func (r ProductRepository) Get(ctx context.Context, filter domain.Product) (*domain.Product, error) {
+	db := r.provider.GetQueryEngine(ctx)
+
 	where := sq.Eq{}
 	if filter.ID != uuid.Nil {
 		where["products.id"] = filter.ID
@@ -69,7 +73,7 @@ func (r ProductRepository) Get(ctx context.Context, filter domain.Product) (*dom
 		Join("product_types ON product_types.id = products.type_id").
 		Where(where)
 
-	results, err := CollectOneRow(ctx, r.db, qb, pgx.RowToStructByName[schema.ProductWithTypeName])
+	results, err := CollectOneRow(ctx, db, qb, pgx.RowToStructByName[schema.ProductWithTypeName])
 	if err != nil {
 		return nil, err
 	}
@@ -78,6 +82,8 @@ func (r ProductRepository) Get(ctx context.Context, filter domain.Product) (*dom
 }
 
 func (r *ProductRepository) GetLastProductInReception(ctx context.Context, receptionID uuid.UUID) (*domain.Product, error) {
+	db := r.provider.GetQueryEngine(ctx)
+
 	qb := r.sqb.
 		Select(schema.ProductWithTypeName{}.Columns()...).
 		From(schema.Product{}.TableName()).
@@ -86,7 +92,7 @@ func (r *ProductRepository) GetLastProductInReception(ctx context.Context, recep
 		OrderBy(fmt.Sprintf("%s %s", schema.ProductCols.DateTime, "DESC")).
 		Limit(1)
 
-	result, err := CollectOneRow(ctx, r.db, qb, pgx.RowToStructByName[schema.ProductWithTypeName])
+	result, err := CollectOneRow(ctx, db, qb, pgx.RowToStructByName[schema.ProductWithTypeName])
 	if err != nil {
 		return nil, err
 	}
@@ -95,6 +101,8 @@ func (r *ProductRepository) GetLastProductInReception(ctx context.Context, recep
 }
 
 func (r *ProductRepository) DeleteProduct(ctx context.Context, productID uuid.UUID) error {
+	db := r.provider.GetQueryEngine(ctx)
+
 	qb := r.sqb.
 		Delete(schema.Product{}.TableName()).
 		Where(sq.Eq{schema.ProductCols.ID: productID})
@@ -104,7 +112,7 @@ func (r *ProductRepository) DeleteProduct(ctx context.Context, productID uuid.UU
 		return fmt.Errorf("%w: %w", ErrBuildQuery, err)
 	}
 
-	tag, err := r.db.Exec(ctx, sql, args...)
+	tag, err := db.Exec(ctx, sql, args...)
 	if err != nil {
 		return fmt.Errorf("%w: %w", ErrExecuteQuery, err)
 	}
@@ -117,13 +125,15 @@ func (r *ProductRepository) DeleteProduct(ctx context.Context, productID uuid.UU
 }
 
 func (r *ProductRepository) ListByReceptionIDsWithTypeName(ctx context.Context, receptionIDs []uuid.UUID) ([]*domain.Product, error) {
+	db := r.provider.GetQueryEngine(ctx)
+
 	qb := r.sqb.
 		Select(schema.ProductWithTypeName{}.Columns()...).
 		From(schema.Product{}.TableName()).
 		Join("product_types ON product_types.id = products.type_id").
 		Where(sq.Eq{"products.reception_id": receptionIDs})
 
-	results, err := CollectRows(ctx, r.db, qb, pgx.RowToStructByName[schema.ProductWithTypeName])
+	results, err := CollectRows(ctx, db, qb, pgx.RowToStructByName[schema.ProductWithTypeName])
 	if err != nil {
 		return nil, err
 	}

@@ -14,18 +14,20 @@ import (
 )
 
 type PVZRepository struct {
-	db  DBTX
-	sqb sq.StatementBuilderType
+	provider QueryEngineProvider
+	sqb      sq.StatementBuilderType
 }
 
-func NewPVZRepository(db DBTX) *PVZRepository {
+func NewPVZRepository(provider QueryEngineProvider) *PVZRepository {
 	return &PVZRepository{
-		db:  db,
-		sqb: sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
+		provider: provider,
+		sqb:      sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
 	}
 }
 
 func (r PVZRepository) Create(ctx context.Context, pvz domain.PVZ) (*domain.PVZ, error) {
+	db := r.provider.GetQueryEngine(ctx)
+
 	if pvz.ID == uuid.Nil {
 		pvz.ID = uuid.New()
 	}
@@ -38,7 +40,7 @@ func (r PVZRepository) Create(ctx context.Context, pvz domain.PVZ) (*domain.PVZ,
 		Values(record.Values()...).
 		Suffix("RETURNING " + strings.Join(record.Columns(), ", "))
 
-	pvzCreate, err := CollectOneRow(ctx, r.db, qb, pgx.RowToStructByName[schema.PVZ])
+	pvzCreate, err := CollectOneRow(ctx, db, qb, pgx.RowToStructByName[schema.PVZ])
 	if err != nil {
 		return nil, err
 	}
@@ -47,6 +49,8 @@ func (r PVZRepository) Create(ctx context.Context, pvz domain.PVZ) (*domain.PVZ,
 }
 
 func (r *PVZRepository) Get(ctx context.Context, filter domain.PVZ) (*domain.PVZ, error) {
+	db := r.provider.GetQueryEngine(ctx)
+
 	where := sq.Eq{}
 	if filter.ID != uuid.Nil {
 		where[schema.PVZCols.ID] = filter.ID
@@ -65,7 +69,7 @@ func (r *PVZRepository) Get(ctx context.Context, filter domain.PVZ) (*domain.PVZ
 		From(record.TableName()).
 		Where(where)
 
-	result, err := CollectOneRow(ctx, r.db, qb, pgx.RowToStructByName[schema.PVZ])
+	result, err := CollectOneRow(ctx, db, qb, pgx.RowToStructByName[schema.PVZ])
 	if err != nil {
 		return nil, err
 	}
@@ -79,6 +83,8 @@ func (r *PVZRepository) Get(ctx context.Context, filter domain.PVZ) (*domain.PVZ
 // и не позволяет использовать индексы для сортировки.
 // Используйте ListPvzByAcceptanceDateAndCity с EXISTS вместо этого.
 func (r *PVZRepository) ListPvzByAcceptanceDateAndCitySlow(ctx context.Context, pagination *listparams.Pagination, startDate, endDate *time.Time) ([]*domain.PVZ, error) {
+	db := r.provider.GetQueryEngine(ctx)
+
 	qb := r.sqb.
 		Select(schema.PVZWithCityName{}.Columns()...).
 		From("pvz").
@@ -108,7 +114,7 @@ func (r *PVZRepository) ListPvzByAcceptanceDateAndCitySlow(ctx context.Context, 
 		"cities.id",
 	)
 
-	results, err := CollectRows(ctx, r.db, qb, pgx.RowToStructByName[schema.PVZWithCityName])
+	results, err := CollectRows(ctx, db, qb, pgx.RowToStructByName[schema.PVZWithCityName])
 	if err != nil {
 		return nil, err
 	}
@@ -117,6 +123,8 @@ func (r *PVZRepository) ListPvzByAcceptanceDateAndCitySlow(ctx context.Context, 
 }
 
 func (r *PVZRepository) ListPvzByAcceptanceDateAndCity(ctx context.Context, pagination *listparams.Pagination, startDate, endDate *time.Time) ([]*domain.PVZ, error) {
+	db := r.provider.GetQueryEngine(ctx)
+
 	qb := r.sqb.
 		Select(schema.PVZWithCityName{}.Columns()...).
 		From("pvz").
@@ -138,7 +146,7 @@ func (r *PVZRepository) ListPvzByAcceptanceDateAndCity(ctx context.Context, pagi
 		)
 	}
 
-	results, err := CollectRows(ctx, r.db, qb, pgx.RowToStructByName[schema.PVZWithCityName])
+	results, err := CollectRows(ctx, db, qb, pgx.RowToStructByName[schema.PVZWithCityName])
 	if err != nil {
 		return nil, err
 	}
@@ -147,6 +155,8 @@ func (r *PVZRepository) ListPvzByAcceptanceDateAndCity(ctx context.Context, pagi
 }
 
 func (r *PVZRepository) GetList(ctx context.Context, pagination *listparams.Pagination) ([]*domain.PVZ, error) {
+	db := r.provider.GetQueryEngine(ctx)
+
 	qb := r.sqb.
 		Select(schema.PVZWithCityName{}.Columns()...).
 		From(schema.PVZ{}.TableName()).
@@ -157,7 +167,7 @@ func (r *PVZRepository) GetList(ctx context.Context, pagination *listparams.Pagi
 			Offset(uint64(pagination.Offset()))
 	}
 
-	results, err := CollectRows(ctx, r.db, qb, pgx.RowToStructByName[schema.PVZWithCityName])
+	results, err := CollectRows(ctx, db, qb, pgx.RowToStructByName[schema.PVZWithCityName])
 	if err != nil {
 		return nil, err
 	}

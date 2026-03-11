@@ -13,18 +13,20 @@ import (
 )
 
 type CityRepository struct {
-	db  DBTX
-	sqb sq.StatementBuilderType
+	provider QueryEngineProvider
+	sqb      sq.StatementBuilderType
 }
 
-func NewCityRepository(db DBTX) *CityRepository {
+func NewCityRepository(provider QueryEngineProvider) *CityRepository {
 	return &CityRepository{
-		db:  db,
-		sqb: sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
+		provider: provider,
+		sqb:      sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
 	}
 }
 
 func (r CityRepository) Create(ctx context.Context, city domain.City) (*domain.City, error) {
+	db := r.provider.GetQueryEngine(ctx)
+
 	if city.ID == uuid.Nil {
 		city.ID = uuid.New()
 	}
@@ -37,7 +39,7 @@ func (r CityRepository) Create(ctx context.Context, city domain.City) (*domain.C
 		Values(record.Values()...).
 		Suffix("RETURNING " + strings.Join(record.Columns(), ", "))
 
-	result, err := CollectOneRow(ctx, r.db, qb, pgx.RowToStructByName[schema.City])
+	result, err := CollectOneRow(ctx, db, qb, pgx.RowToStructByName[schema.City])
 	if err != nil {
 		return nil, err
 	}
@@ -46,6 +48,8 @@ func (r CityRepository) Create(ctx context.Context, city domain.City) (*domain.C
 }
 
 func (r *CityRepository) Get(ctx context.Context, filter domain.City) (*domain.City, error) {
+	db := r.provider.GetQueryEngine(ctx)
+
 	where := sq.Eq{}
 	if filter.ID != uuid.Nil {
 		where[schema.CityCols.ID] = filter.ID
@@ -61,7 +65,7 @@ func (r *CityRepository) Get(ctx context.Context, filter domain.City) (*domain.C
 		From(record.TableName()).
 		Where(where)
 
-	result, err := CollectOneRow(ctx, r.db, qb, pgx.RowToStructByName[schema.City])
+	result, err := CollectOneRow(ctx, db, qb, pgx.RowToStructByName[schema.City])
 	if err != nil {
 		return nil, err
 	}
@@ -70,6 +74,8 @@ func (r *CityRepository) Get(ctx context.Context, filter domain.City) (*domain.C
 }
 
 func (r CityRepository) CreateBatchPgx(ctx context.Context, cities []domain.City) error {
+	db := r.provider.GetQueryEngine(ctx)
+
 	batch := &pgx.Batch{}
 
 	for _, city := range cities {
@@ -87,7 +93,7 @@ func (r CityRepository) CreateBatchPgx(ctx context.Context, cities []domain.City
 		batch.Queue(sql, city.ID, city.Name)
 	}
 
-	br := r.db.SendBatch(ctx, batch)
+	br := db.SendBatch(ctx, batch)
 	defer br.Close()
 
 	for range cities {
@@ -100,6 +106,8 @@ func (r CityRepository) CreateBatchPgx(ctx context.Context, cities []domain.City
 }
 
 func (r CityRepository) CreateBatch(ctx context.Context, cities []domain.City) error {
+	db := r.provider.GetQueryEngine(ctx)
+
 	qb := r.sqb.
 		Insert(schema.City{}.TableName()).
 		Columns(schema.City{}.InsertColumns()...)
@@ -114,5 +122,5 @@ func (r CityRepository) CreateBatch(ctx context.Context, cities []domain.City) e
 
 	qb = qb.Suffix("ON CONFLICT (name) DO NOTHING")
 
-	return Exec(ctx, r.db, qb)
+	return Exec(ctx, db, qb)
 }

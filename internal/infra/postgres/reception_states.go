@@ -11,18 +11,20 @@ import (
 )
 
 type ReceptionStatusRepository struct {
-	db  DBTX
-	sqb sq.StatementBuilderType
+	provider QueryEngineProvider
+	sqb      sq.StatementBuilderType
 }
 
-func NewReceptionStatusRepository(db DBTX) *ReceptionStatusRepository {
+func NewReceptionStatusRepository(provider QueryEngineProvider) *ReceptionStatusRepository {
 	return &ReceptionStatusRepository{
-		db:  db,
-		sqb: sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
+		provider: provider,
+		sqb:      sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
 	}
 }
 
 func (r *ReceptionStatusRepository) Get(ctx context.Context, filter domain.ReceptionStatus) (*domain.ReceptionStatus, error) {
+	db := r.provider.GetQueryEngine(ctx)
+
 	where := sq.Eq{}
 	if filter.ID != uuid.Nil {
 		where[schema.ReceptionStatusCols.ID] = filter.ID
@@ -38,7 +40,7 @@ func (r *ReceptionStatusRepository) Get(ctx context.Context, filter domain.Recep
 		From(record.TableName()).
 		Where(where)
 
-	result, err := CollectOneRow(ctx, r.db, qb, pgx.RowToStructByName[schema.ReceptionStatus])
+	result, err := CollectOneRow(ctx, db, qb, pgx.RowToStructByName[schema.ReceptionStatus])
 	if err != nil {
 		return nil, err
 	}
@@ -47,6 +49,8 @@ func (r *ReceptionStatusRepository) Get(ctx context.Context, filter domain.Recep
 }
 
 func (r ReceptionStatusRepository) CreateBatch(ctx context.Context, statuses []domain.ReceptionStatus) error {
+	db := r.provider.GetQueryEngine(ctx)
+
 	qb := r.sqb.
 		Insert(schema.ReceptionStatus{}.TableName()).
 		Columns(schema.ReceptionStatus{}.InsertColumns()...)
@@ -61,5 +65,5 @@ func (r ReceptionStatusRepository) CreateBatch(ctx context.Context, statuses []d
 
 	qb = qb.Suffix("ON CONFLICT (name) DO NOTHING")
 
-	return Exec(ctx, r.db, qb)
+	return Exec(ctx, db, qb)
 }
