@@ -11,6 +11,7 @@ import (
 	"github.com/valeragav/avito-pvz-service/internal/domain"
 	"github.com/valeragav/avito-pvz-service/internal/infra"
 	"github.com/valeragav/avito-pvz-service/internal/infra/postgres"
+	"github.com/valeragav/avito-pvz-service/pkg/testutils"
 )
 
 type productFixture struct {
@@ -26,7 +27,7 @@ type productFixture struct {
 func newProductFixture(t *testing.T, ctx context.Context, queryEngineProvider postgres.QueryEngineProvider) *productFixture {
 	t.Helper()
 
-	require.NoError(t, testApp.Seed(ctx, queryEngineProvider, SeedReceptionStatuses, SeedProductTypes))
+	require.NoError(t, testutils.Seed(ctx, queryEngineProvider, testutils.SeedReceptionStatuses, testutils.SeedProductTypes))
 
 	stableNow := time.Now().UTC().Truncate(time.Millisecond)
 	productTypeRepo := postgres.NewProductTypeRepository(queryEngineProvider)

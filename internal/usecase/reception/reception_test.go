@@ -19,6 +19,7 @@ type receptionMocks struct {
 	MockReceptionRepo       *mocks.MockreceptionRepo
 	MockReceptionStatusRepo *mocks.MockreceptionStatusRepo
 	MockPvzRepo             *mocks.MockpvzRepo
+	MockTm                  *mocks.MocktransactionManager
 }
 
 func newReceptionMocks(t *testing.T) *receptionMocks {
@@ -28,7 +29,26 @@ func newReceptionMocks(t *testing.T) *receptionMocks {
 		MockReceptionRepo:       mocks.NewMockreceptionRepo(ctrl),
 		MockReceptionStatusRepo: mocks.NewMockreceptionStatusRepo(ctrl),
 		MockPvzRepo:             mocks.NewMockpvzRepo(ctrl),
+		MockTm:                  mocks.NewMocktransactionManager(ctrl),
 	}
+}
+
+func mockTmRepeatableReadOK(m *receptionMocks) {
+	m.MockTm.EXPECT().
+		RunRepeatableRead(gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, fn func(ctx context.Context) error) error {
+			return fn(ctx)
+		}).
+		Times(1)
+}
+
+func mockTmReadCommittedOK(m *receptionMocks) {
+	m.MockTm.EXPECT().
+		RunReadCommitted(gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, fn func(ctx context.Context) error) error {
+			return fn(ctx)
+		}).
+		Times(1)
 }
 
 func TestReceptionUseCase_Create(t *testing.T) {
@@ -47,27 +67,25 @@ func TestReceptionUseCase_Create(t *testing.T) {
 	testcases := []fields{
 		{
 			name: "ok",
-			req: dto.ReceptionCreate{
-				PvzID: uuid.New(),
-			},
+			req:  dto.ReceptionCreate{PvzID: uuid.New()},
 			mockFn: func(f fields, m *receptionMocks) {
 				statusID := uuid.New()
 
+				m.MockPvzRepo.EXPECT().
+					Get(ctx, domain.PVZ{ID: f.req.PvzID}).
+					Return(&domain.PVZ{ID: f.req.PvzID}, nil).
+					Times(1)
+
+				mockTmRepeatableReadOK(m)
+
 				m.MockReceptionRepo.EXPECT().
-					FindByStatus(ctx, domain.ReceptionStatusInProgress, domain.Reception{
-						PvzID: f.req.PvzID,
-					}).
+					FindByStatus(ctx, domain.ReceptionStatusInProgress, domain.Reception{PvzID: f.req.PvzID}).
 					Return(nil, infra.ErrNotFound).
 					Times(1)
 
 				m.MockReceptionStatusRepo.EXPECT().
-					Get(ctx, domain.ReceptionStatus{
-						Name: domain.ReceptionStatusInProgress,
-					}).
-					Return(&domain.ReceptionStatus{
-						ID:   statusID,
-						Name: domain.ReceptionStatusInProgress,
-					}, nil).
+					Get(ctx, domain.ReceptionStatus{Name: domain.ReceptionStatusInProgress}).
+					Return(&domain.ReceptionStatus{ID: statusID, Name: domain.ReceptionStatusInProgress}, nil).
 					Times(1)
 
 				m.MockReceptionRepo.EXPECT().
@@ -81,80 +99,107 @@ func TestReceptionUseCase_Create(t *testing.T) {
 			wantErr: nil,
 		},
 		{
-			name: "previous reception not found (business error)",
-			req: dto.ReceptionCreate{
-				PvzID: uuid.New(),
-			},
+			name: "pvz not found",
+			req:  dto.ReceptionCreate{PvzID: uuid.New()},
 			mockFn: func(f fields, m *receptionMocks) {
+				m.MockPvzRepo.EXPECT().
+					Get(ctx, domain.PVZ{ID: f.req.PvzID}).
+					Return(nil, infra.ErrNotFound).
+					Times(1)
+			},
+			wantErr: domain.ErrPVZNotFound,
+		},
+		{
+			name: "failed to get pvz",
+			req:  dto.ReceptionCreate{PvzID: uuid.New()},
+			mockFn: func(f fields, m *receptionMocks) {
+				m.MockPvzRepo.EXPECT().
+					Get(ctx, domain.PVZ{ID: f.req.PvzID}).
+					Return(nil, errors.New("db error")).
+					Times(1)
+			},
+			wantErr: errors.New("failed to find pvz: db error"),
+		},
+		{
+			name: "previous reception is still open (business error)",
+			req:  dto.ReceptionCreate{PvzID: uuid.New()},
+			mockFn: func(f fields, m *receptionMocks) {
+				m.MockPvzRepo.EXPECT().
+					Get(ctx, domain.PVZ{ID: f.req.PvzID}).
+					Return(&domain.PVZ{ID: f.req.PvzID}, nil).
+					Times(1)
+
+				mockTmRepeatableReadOK(m)
+
 				m.MockReceptionRepo.EXPECT().
-					FindByStatus(ctx, domain.ReceptionStatusInProgress, domain.Reception{
-						PvzID: f.req.PvzID,
-					}).
-					Return(nil, nil).
+					FindByStatus(ctx, domain.ReceptionStatusInProgress, domain.Reception{PvzID: f.req.PvzID}).
+					Return(&domain.Reception{PvzID: f.req.PvzID}, nil).
 					Times(1)
 			},
 			wantErr: domain.ErrNoReceptionIsCurrentlyInProgress,
 		},
 		{
 			name: "failed to check last reception status",
-			req: dto.ReceptionCreate{
-				PvzID: uuid.New(),
-			},
+			req:  dto.ReceptionCreate{PvzID: uuid.New()},
 			mockFn: func(f fields, m *receptionMocks) {
+				m.MockPvzRepo.EXPECT().
+					Get(ctx, domain.PVZ{ID: f.req.PvzID}).
+					Return(&domain.PVZ{ID: f.req.PvzID}, nil).
+					Times(1)
+
+				mockTmRepeatableReadOK(m)
+
 				m.MockReceptionRepo.EXPECT().
-					FindByStatus(ctx, domain.ReceptionStatusInProgress, domain.Reception{
-						PvzID: f.req.PvzID,
-					}).
+					FindByStatus(ctx, domain.ReceptionStatusInProgress, domain.Reception{PvzID: f.req.PvzID}).
 					Return(nil, errors.New("db error")).
 					Times(1)
 			},
-			wantErr: errors.New("receptions.Create: failed to check last reception status: db error"),
+			wantErr: errors.New("failed to check last reception status: db error"),
 		},
 		{
 			name: "failed to get status",
-			req: dto.ReceptionCreate{
-				PvzID: uuid.New(),
-			},
+			req:  dto.ReceptionCreate{PvzID: uuid.New()},
 			mockFn: func(f fields, m *receptionMocks) {
+				m.MockPvzRepo.EXPECT().
+					Get(ctx, domain.PVZ{ID: f.req.PvzID}).
+					Return(&domain.PVZ{ID: f.req.PvzID}, nil).
+					Times(1)
+
+				mockTmRepeatableReadOK(m)
+
 				m.MockReceptionRepo.EXPECT().
-					FindByStatus(ctx, domain.ReceptionStatusInProgress, domain.Reception{
-						PvzID: f.req.PvzID,
-					}).
+					FindByStatus(ctx, domain.ReceptionStatusInProgress, domain.Reception{PvzID: f.req.PvzID}).
 					Return(nil, infra.ErrNotFound).
 					Times(1)
 
 				m.MockReceptionStatusRepo.EXPECT().
-					Get(ctx, domain.ReceptionStatus{
-						Name: domain.ReceptionStatusInProgress,
-					}).
+					Get(ctx, domain.ReceptionStatus{Name: domain.ReceptionStatusInProgress}).
 					Return(nil, errors.New("status error")).
 					Times(1)
 			},
-			wantErr: errors.New("receptions.Create: failed to get status: status error"),
+			wantErr: errors.New("failed to get status: status error"),
 		},
 		{
 			name: "failed to create reception",
-			req: dto.ReceptionCreate{
-				PvzID: uuid.New(),
-			},
+			req:  dto.ReceptionCreate{PvzID: uuid.New()},
 			mockFn: func(f fields, m *receptionMocks) {
 				statusID := uuid.New()
 
+				m.MockPvzRepo.EXPECT().
+					Get(ctx, domain.PVZ{ID: f.req.PvzID}).
+					Return(&domain.PVZ{ID: f.req.PvzID}, nil).
+					Times(1)
+
+				mockTmRepeatableReadOK(m)
+
 				m.MockReceptionRepo.EXPECT().
-					FindByStatus(ctx, domain.ReceptionStatusInProgress, domain.Reception{
-						PvzID: f.req.PvzID,
-					}).
+					FindByStatus(ctx, domain.ReceptionStatusInProgress, domain.Reception{PvzID: f.req.PvzID}).
 					Return(nil, infra.ErrNotFound).
 					Times(1)
 
 				m.MockReceptionStatusRepo.EXPECT().
-					Get(ctx, domain.ReceptionStatus{
-						Name: domain.ReceptionStatusInProgress,
-					}).
-					Return(&domain.ReceptionStatus{
-						ID:   statusID,
-						Name: domain.ReceptionStatusInProgress,
-					}, nil).
+					Get(ctx, domain.ReceptionStatus{Name: domain.ReceptionStatusInProgress}).
+					Return(&domain.ReceptionStatus{ID: statusID, Name: domain.ReceptionStatusInProgress}, nil).
 					Times(1)
 
 				m.MockReceptionRepo.EXPECT().
@@ -162,7 +207,7 @@ func TestReceptionUseCase_Create(t *testing.T) {
 					Return(nil, errors.New("create error")).
 					Times(1)
 			},
-			wantErr: errors.New("receptions.Create: failed to create reception: create error"),
+			wantErr: errors.New("failed to create reception: create error"),
 		},
 	}
 
@@ -174,7 +219,7 @@ func TestReceptionUseCase_Create(t *testing.T) {
 			tt.mockFn(tt, receptionMocks)
 
 			useCase := New(
-				nil,
+				receptionMocks.MockTm,
 				receptionMocks.MockReceptionRepo,
 				receptionMocks.MockReceptionStatusRepo,
 				receptionMocks.MockPvzRepo,
@@ -223,35 +268,21 @@ func TestReceptionUseCase_CloseLastReception(t *testing.T) {
 					Return(&domain.PVZ{ID: f.pvzID}, nil).
 					Times(1)
 
+				mockTmReadCommittedOK(m)
+
 				m.MockReceptionRepo.EXPECT().
-					FindByStatus(ctx, domain.ReceptionStatusInProgress, domain.Reception{
-						PvzID: f.pvzID,
-					}).
-					Return(&domain.Reception{
-						ID:    receptionID,
-						PvzID: f.pvzID,
-					}, nil).
+					FindByStatus(ctx, domain.ReceptionStatusInProgress, domain.Reception{PvzID: f.pvzID}).
+					Return(&domain.Reception{ID: receptionID, PvzID: f.pvzID}, nil).
 					Times(1)
 
 				m.MockReceptionStatusRepo.EXPECT().
-					Get(ctx, domain.ReceptionStatus{
-						Name: domain.ReceptionStatusClose,
-					}).
-					Return(&domain.ReceptionStatus{
-						ID:   statusID,
-						Name: domain.ReceptionStatusClose,
-					}, nil).
+					Get(ctx, domain.ReceptionStatus{Name: domain.ReceptionStatusClose}).
+					Return(&domain.ReceptionStatus{ID: statusID, Name: domain.ReceptionStatusClose}, nil).
 					Times(1)
 
 				m.MockReceptionRepo.EXPECT().
-					Update(ctx, receptionID, domain.Reception{
-						StatusID: statusID,
-					}).
-					Return(&domain.Reception{
-						ID:       receptionID,
-						PvzID:    f.pvzID,
-						StatusID: statusID,
-					}, nil).
+					Update(ctx, receptionID, domain.Reception{StatusID: statusID}).
+					Return(&domain.Reception{ID: receptionID, PvzID: f.pvzID, StatusID: statusID}, nil).
 					Times(1)
 			},
 			wantErr: nil,
@@ -276,7 +307,7 @@ func TestReceptionUseCase_CloseLastReception(t *testing.T) {
 					Return(nil, errors.New("db error")).
 					Times(1)
 			},
-			wantErr: errors.New("receptions.CloseLastReception: failed to find pvz: db error"),
+			wantErr: errors.New("failed to find pvz: db error"),
 		},
 		{
 			name:  "no reception in progress",
@@ -287,10 +318,10 @@ func TestReceptionUseCase_CloseLastReception(t *testing.T) {
 					Return(&domain.PVZ{ID: f.pvzID}, nil).
 					Times(1)
 
+				mockTmReadCommittedOK(m)
+
 				m.MockReceptionRepo.EXPECT().
-					FindByStatus(ctx, domain.ReceptionStatusInProgress, domain.Reception{
-						PvzID: f.pvzID,
-					}).
+					FindByStatus(ctx, domain.ReceptionStatusInProgress, domain.Reception{PvzID: f.pvzID}).
 					Return(nil, infra.ErrNotFound).
 					Times(1)
 			},
@@ -305,14 +336,14 @@ func TestReceptionUseCase_CloseLastReception(t *testing.T) {
 					Return(&domain.PVZ{ID: f.pvzID}, nil).
 					Times(1)
 
+				mockTmReadCommittedOK(m)
+
 				m.MockReceptionRepo.EXPECT().
-					FindByStatus(ctx, domain.ReceptionStatusInProgress, domain.Reception{
-						PvzID: f.pvzID,
-					}).
+					FindByStatus(ctx, domain.ReceptionStatusInProgress, domain.Reception{PvzID: f.pvzID}).
 					Return(nil, errors.New("reception error")).
 					Times(1)
 			},
-			wantErr: errors.New("receptions.CloseLastReception: failed to find pvz: reception error"),
+			wantErr: errors.New("failed to find reception: reception error"),
 		},
 		{
 			name:  "failed to get close status",
@@ -325,21 +356,19 @@ func TestReceptionUseCase_CloseLastReception(t *testing.T) {
 					Return(&domain.PVZ{ID: f.pvzID}, nil).
 					Times(1)
 
+				mockTmReadCommittedOK(m)
+
 				m.MockReceptionRepo.EXPECT().
-					FindByStatus(ctx, domain.ReceptionStatusInProgress, domain.Reception{
-						PvzID: f.pvzID,
-					}).
+					FindByStatus(ctx, domain.ReceptionStatusInProgress, domain.Reception{PvzID: f.pvzID}).
 					Return(&domain.Reception{ID: receptionID}, nil).
 					Times(1)
 
 				m.MockReceptionStatusRepo.EXPECT().
-					Get(ctx, domain.ReceptionStatus{
-						Name: domain.ReceptionStatusClose,
-					}).
+					Get(ctx, domain.ReceptionStatus{Name: domain.ReceptionStatusClose}).
 					Return(nil, errors.New("status error")).
 					Times(1)
 			},
-			wantErr: errors.New("receptions.CloseLastReception: failed to get status: status error"),
+			wantErr: errors.New("failed to get status: status error"),
 		},
 		{
 			name:  "failed to update reception",
@@ -353,24 +382,20 @@ func TestReceptionUseCase_CloseLastReception(t *testing.T) {
 					Return(&domain.PVZ{ID: f.pvzID}, nil).
 					Times(1)
 
+				mockTmReadCommittedOK(m)
+
 				m.MockReceptionRepo.EXPECT().
-					FindByStatus(ctx, domain.ReceptionStatusInProgress, domain.Reception{
-						PvzID: f.pvzID,
-					}).
+					FindByStatus(ctx, domain.ReceptionStatusInProgress, domain.Reception{PvzID: f.pvzID}).
 					Return(&domain.Reception{ID: receptionID}, nil).
 					Times(1)
 
 				m.MockReceptionStatusRepo.EXPECT().
-					Get(ctx, domain.ReceptionStatus{
-						Name: domain.ReceptionStatusClose,
-					}).
+					Get(ctx, domain.ReceptionStatus{Name: domain.ReceptionStatusClose}).
 					Return(&domain.ReceptionStatus{ID: statusID}, nil).
 					Times(1)
 
 				m.MockReceptionRepo.EXPECT().
-					Update(ctx, receptionID, domain.Reception{
-						StatusID: statusID,
-					}).
+					Update(ctx, receptionID, domain.Reception{StatusID: statusID}).
 					Return(nil, errors.New("update error")).
 					Times(1)
 			},
@@ -386,7 +411,7 @@ func TestReceptionUseCase_CloseLastReception(t *testing.T) {
 			tt.mockFn(tt, receptionMocks)
 
 			useCase := New(
-				nil,
+				receptionMocks.MockTm,
 				receptionMocks.MockReceptionRepo,
 				receptionMocks.MockReceptionStatusRepo,
 				receptionMocks.MockPvzRepo,

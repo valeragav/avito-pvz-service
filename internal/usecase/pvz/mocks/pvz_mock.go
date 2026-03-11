@@ -205,3 +205,41 @@ func (mr *MockproductRepoMockRecorder) ListByReceptionIDsWithTypeName(ctx, recep
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListByReceptionIDsWithTypeName", reflect.TypeOf((*MockproductRepo)(nil).ListByReceptionIDsWithTypeName), ctx, receptionIDs)
 }
+
+// MocktransactionManager is a mock of transactionManager interface.
+type MocktransactionManager struct {
+	ctrl     *gomock.Controller
+	recorder *MocktransactionManagerMockRecorder
+	isgomock struct{}
+}
+
+// MocktransactionManagerMockRecorder is the mock recorder for MocktransactionManager.
+type MocktransactionManagerMockRecorder struct {
+	mock *MocktransactionManager
+}
+
+// NewMocktransactionManager creates a new mock instance.
+func NewMocktransactionManager(ctrl *gomock.Controller) *MocktransactionManager {
+	mock := &MocktransactionManager{ctrl: ctrl}
+	mock.recorder = &MocktransactionManagerMockRecorder{mock}
+	return mock
+}
+
+// EXPECT returns an object that allows the caller to indicate expected use.
+func (m *MocktransactionManager) EXPECT() *MocktransactionManagerMockRecorder {
+	return m.recorder
+}
+
+// RunRepeatableRead mocks base method.
+func (m *MocktransactionManager) RunRepeatableRead(ctx context.Context, fn func(context.Context) error) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RunRepeatableRead", ctx, fn)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RunRepeatableRead indicates an expected call of RunRepeatableRead.
+func (mr *MocktransactionManagerMockRecorder) RunRepeatableRead(ctx, fn any) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RunRepeatableRead", reflect.TypeOf((*MocktransactionManager)(nil).RunRepeatableRead), ctx, fn)
+}

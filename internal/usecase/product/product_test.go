@@ -20,6 +20,7 @@ type productMocks struct {
 	MockReceptionRepo   *mocks.MockreceptionRepo
 	MockProductTypeRepo *mocks.MockproductTypeRepo
 	MockPvzRepo         *mocks.MockpvzRepo
+	MockTm              *mocks.MocktransactionManager
 }
 
 func newProductMocks(t *testing.T) *productMocks {
@@ -30,7 +31,26 @@ func newProductMocks(t *testing.T) *productMocks {
 		MockReceptionRepo:   mocks.NewMockreceptionRepo(ctrl),
 		MockProductTypeRepo: mocks.NewMockproductTypeRepo(ctrl),
 		MockPvzRepo:         mocks.NewMockpvzRepo(ctrl),
+		MockTm:              mocks.NewMocktransactionManager(ctrl),
 	}
+}
+
+func mockTmRepeatableReadOK(m *productMocks) {
+	m.MockTm.EXPECT().
+		RunRepeatableRead(gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, fn func(ctx context.Context) error) error {
+			return fn(ctx)
+		}).
+		Times(1)
+}
+
+func mockTmReadCommittedOK(m *productMocks) {
+	m.MockTm.EXPECT().
+		RunReadCommitted(gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, fn func(ctx context.Context) error) error {
+			return fn(ctx)
+		}).
+		Times(1)
 }
 
 func TestProductUseCase_Create(t *testing.T) {
@@ -57,14 +77,21 @@ func TestProductUseCase_Create(t *testing.T) {
 				lastReception := &domain.Reception{ID: uuid.New()}
 				productType := &domain.ProductType{ID: uuid.New()}
 
-				m.MockReceptionRepo.EXPECT().
-					FindByStatus(ctx, domain.ReceptionStatusInProgress, domain.Reception{PvzID: f.req.PvzID}).
-					Return(lastReception, nil).
+				m.MockPvzRepo.EXPECT().
+					Get(ctx, domain.PVZ{ID: f.req.PvzID}).
+					Return(&domain.PVZ{ID: f.req.PvzID}, nil).
 					Times(1)
 
 				m.MockProductTypeRepo.EXPECT().
 					Get(ctx, domain.ProductType{Name: f.req.TypeName}).
 					Return(productType, nil).
+					Times(1)
+
+				mockTmRepeatableReadOK(m)
+
+				m.MockReceptionRepo.EXPECT().
+					FindByStatus(ctx, domain.ReceptionStatusInProgress, domain.Reception{PvzID: f.req.PvzID}).
+					Return(lastReception, nil).
 					Times(1)
 
 				m.MockProductRepo.EXPECT().
@@ -78,12 +105,73 @@ func TestProductUseCase_Create(t *testing.T) {
 			wantErr: nil,
 		},
 		{
+			name: "pvz not found",
+			req: dto.ProductCreate{
+				PvzID:    uuid.New(),
+				TypeName: "Electronics",
+			},
+			mockFn: func(f fields, m *productMocks) {
+				m.MockPvzRepo.EXPECT().
+					Get(ctx, domain.PVZ{ID: f.req.PvzID}).
+					Return(nil, infra.ErrNotFound).
+					Times(1)
+			},
+			wantErr: domain.ErrPVZNotFound,
+		},
+		{
+			name: "pvz repo error",
+			req: dto.ProductCreate{
+				PvzID:    uuid.New(),
+				TypeName: "Electronics",
+			},
+			mockFn: func(f fields, m *productMocks) {
+				m.MockPvzRepo.EXPECT().
+					Get(ctx, domain.PVZ{ID: f.req.PvzID}).
+					Return(nil, errors.New("db error")).
+					Times(1)
+			},
+			wantErr: errors.New("failed to find pvz: db error"),
+		},
+		{
+			name: "product type not found",
+			req: dto.ProductCreate{
+				PvzID:    uuid.New(),
+				TypeName: "Electronics",
+			},
+			mockFn: func(f fields, m *productMocks) {
+				m.MockPvzRepo.EXPECT().
+					Get(ctx, domain.PVZ{ID: f.req.PvzID}).
+					Return(&domain.PVZ{ID: f.req.PvzID}, nil).
+					Times(1)
+
+				m.MockProductTypeRepo.EXPECT().
+					Get(ctx, domain.ProductType{Name: f.req.TypeName}).
+					Return(nil, errors.New("not found")).
+					Times(1)
+			},
+			wantErr: errors.New("failed to find product type 'Electronics': not found"),
+		},
+		{
 			name: "no reception in progress",
 			req: dto.ProductCreate{
 				PvzID:    uuid.New(),
 				TypeName: "Electronics",
 			},
 			mockFn: func(f fields, m *productMocks) {
+				productType := &domain.ProductType{ID: uuid.New()}
+
+				m.MockPvzRepo.EXPECT().
+					Get(ctx, domain.PVZ{ID: f.req.PvzID}).
+					Return(&domain.PVZ{ID: f.req.PvzID}, nil).
+					Times(1)
+
+				m.MockProductTypeRepo.EXPECT().
+					Get(ctx, domain.ProductType{Name: f.req.TypeName}).
+					Return(productType, nil).
+					Times(1)
+
+				mockTmRepeatableReadOK(m)
+
 				m.MockReceptionRepo.EXPECT().
 					FindByStatus(ctx, domain.ReceptionStatusInProgress, domain.Reception{PvzID: f.req.PvzID}).
 					Return(nil, infra.ErrNotFound).
@@ -98,32 +186,26 @@ func TestProductUseCase_Create(t *testing.T) {
 				TypeName: "Electronics",
 			},
 			mockFn: func(f fields, m *productMocks) {
+				productType := &domain.ProductType{ID: uuid.New()}
+
+				m.MockPvzRepo.EXPECT().
+					Get(ctx, domain.PVZ{ID: f.req.PvzID}).
+					Return(&domain.PVZ{ID: f.req.PvzID}, nil).
+					Times(1)
+
+				m.MockProductTypeRepo.EXPECT().
+					Get(ctx, domain.ProductType{Name: f.req.TypeName}).
+					Return(productType, nil).
+					Times(1)
+
+				mockTmRepeatableReadOK(m)
+
 				m.MockReceptionRepo.EXPECT().
 					FindByStatus(ctx, domain.ReceptionStatusInProgress, domain.Reception{PvzID: f.req.PvzID}).
 					Return(nil, errors.New("db error")).
 					Times(1)
 			},
-			wantErr: errors.New("products.Create: failed to find in progress reception: db error"),
-		},
-		{
-			name: "product type not found",
-			req: dto.ProductCreate{
-				PvzID:    uuid.New(),
-				TypeName: "Electronics",
-			},
-			mockFn: func(f fields, m *productMocks) {
-				lastReception := &domain.Reception{ID: uuid.New()}
-				m.MockReceptionRepo.EXPECT().
-					FindByStatus(ctx, domain.ReceptionStatusInProgress, domain.Reception{PvzID: f.req.PvzID}).
-					Return(lastReception, nil).
-					Times(1)
-
-				m.MockProductTypeRepo.EXPECT().
-					Get(ctx, domain.ProductType{Name: f.req.TypeName}).
-					Return(nil, errors.New("not found")).
-					Times(1)
-			},
-			wantErr: errors.New("products.Create: failed to find product type 'Electronics': not found"),
+			wantErr: errors.New("failed to find in progress reception: db error"),
 		},
 		{
 			name: "repo create error",
@@ -135,9 +217,9 @@ func TestProductUseCase_Create(t *testing.T) {
 				lastReception := &domain.Reception{ID: uuid.New()}
 				productType := &domain.ProductType{ID: uuid.New()}
 
-				m.MockReceptionRepo.EXPECT().
-					FindByStatus(ctx, domain.ReceptionStatusInProgress, domain.Reception{PvzID: f.req.PvzID}).
-					Return(lastReception, nil).
+				m.MockPvzRepo.EXPECT().
+					Get(ctx, domain.PVZ{ID: f.req.PvzID}).
+					Return(&domain.PVZ{ID: f.req.PvzID}, nil).
 					Times(1)
 
 				m.MockProductTypeRepo.EXPECT().
@@ -145,12 +227,19 @@ func TestProductUseCase_Create(t *testing.T) {
 					Return(productType, nil).
 					Times(1)
 
+				mockTmRepeatableReadOK(m)
+
+				m.MockReceptionRepo.EXPECT().
+					FindByStatus(ctx, domain.ReceptionStatusInProgress, domain.Reception{PvzID: f.req.PvzID}).
+					Return(lastReception, nil).
+					Times(1)
+
 				m.MockProductRepo.EXPECT().
 					Create(ctx, gomock.Any()).
 					Return(nil, errors.New("db error")).
 					Times(1)
 			},
-			wantErr: errors.New("products.Create: failed to create product: db error"),
+			wantErr: errors.New("failed to create product: db error"),
 		},
 	}
 
@@ -162,7 +251,7 @@ func TestProductUseCase_Create(t *testing.T) {
 			tt.mockFn(tt, productMocks)
 
 			useCase := New(
-				nil,
+				productMocks.MockTm,
 				productMocks.MockProductRepo,
 				productMocks.MockReceptionRepo,
 				productMocks.MockProductTypeRepo,
@@ -180,10 +269,8 @@ func TestProductUseCase_Create(t *testing.T) {
 
 			require.NoError(t, err)
 			require.NotNil(t, product)
-
-			if product.ID == uuid.Nil {
-				require.Error(t, errors.New("id product empty"))
-			}
+			require.NotEqual(t, uuid.Nil, product.ID)
+			require.NotNil(t, product.ProductType)
 		})
 	}
 }
@@ -206,14 +293,15 @@ func TestProductUseCase_DeleteLastProduct(t *testing.T) {
 			name:  "ok",
 			pvzID: uuid.New(),
 			mockFn: func(f fields, m *productMocks) {
-				pvz := &domain.PVZ{ID: f.pvzID}
 				lastReception := &domain.Reception{ID: uuid.New()}
 				lastProduct := &domain.Product{ID: uuid.New()}
 
 				m.MockPvzRepo.EXPECT().
 					Get(ctx, domain.PVZ{ID: f.pvzID}).
-					Return(pvz, nil).
+					Return(&domain.PVZ{ID: f.pvzID}, nil).
 					Times(1)
+
+				mockTmReadCommittedOK(m)
 
 				m.MockReceptionRepo.EXPECT().
 					FindByStatus(ctx, domain.ReceptionStatusInProgress, domain.Reception{PvzID: f.pvzID}).
@@ -244,7 +332,18 @@ func TestProductUseCase_DeleteLastProduct(t *testing.T) {
 			wantErr: domain.ErrPVZNotFound,
 		},
 		{
-			name:  "reception not found",
+			name:  "pvz repo error",
+			pvzID: uuid.New(),
+			mockFn: func(f fields, m *productMocks) {
+				m.MockPvzRepo.EXPECT().
+					Get(ctx, domain.PVZ{ID: f.pvzID}).
+					Return(nil, errors.New("db error")).
+					Times(1)
+			},
+			wantErr: errors.New("failed to find pvz: db error"),
+		},
+		{
+			name:  "no reception in progress",
 			pvzID: uuid.New(),
 			mockFn: func(f fields, m *productMocks) {
 				m.MockPvzRepo.EXPECT().
@@ -252,12 +351,32 @@ func TestProductUseCase_DeleteLastProduct(t *testing.T) {
 					Return(&domain.PVZ{ID: f.pvzID}, nil).
 					Times(1)
 
+				mockTmReadCommittedOK(m)
+
 				m.MockReceptionRepo.EXPECT().
 					FindByStatus(ctx, domain.ReceptionStatusInProgress, domain.Reception{PvzID: f.pvzID}).
 					Return(nil, infra.ErrNotFound).
 					Times(1)
 			},
 			wantErr: domain.ErrNoReceptionIsCurrentlyInProgress,
+		},
+		{
+			name:  "reception repo error",
+			pvzID: uuid.New(),
+			mockFn: func(f fields, m *productMocks) {
+				m.MockPvzRepo.EXPECT().
+					Get(ctx, domain.PVZ{ID: f.pvzID}).
+					Return(&domain.PVZ{ID: f.pvzID}, nil).
+					Times(1)
+
+				mockTmReadCommittedOK(m)
+
+				m.MockReceptionRepo.EXPECT().
+					FindByStatus(ctx, domain.ReceptionStatusInProgress, domain.Reception{PvzID: f.pvzID}).
+					Return(nil, errors.New("reception error")).
+					Times(1)
+			},
+			wantErr: errors.New("failed to find open reception: reception error"),
 		},
 		{
 			name:  "last product not found",
@@ -270,6 +389,8 @@ func TestProductUseCase_DeleteLastProduct(t *testing.T) {
 					Return(&domain.PVZ{ID: f.pvzID}, nil).
 					Times(1)
 
+				mockTmReadCommittedOK(m)
+
 				m.MockReceptionRepo.EXPECT().
 					FindByStatus(ctx, domain.ReceptionStatusInProgress, domain.Reception{PvzID: f.pvzID}).
 					Return(lastReception, nil).
@@ -277,10 +398,35 @@ func TestProductUseCase_DeleteLastProduct(t *testing.T) {
 
 				m.MockProductRepo.EXPECT().
 					GetLastProductInReception(ctx, lastReception.ID).
-					Return(nil, errors.New("not found")).
+					Return(nil, infra.ErrNotFound).
 					Times(1)
 			},
-			wantErr: errors.New("products.DeleteLastProduct: failed to get last product: not found"),
+			wantErr: domain.ErrProductToDelete,
+		},
+		{
+			name:  "last product repo error",
+			pvzID: uuid.New(),
+			mockFn: func(f fields, m *productMocks) {
+				lastReception := &domain.Reception{ID: uuid.New()}
+
+				m.MockPvzRepo.EXPECT().
+					Get(ctx, domain.PVZ{ID: f.pvzID}).
+					Return(&domain.PVZ{ID: f.pvzID}, nil).
+					Times(1)
+
+				mockTmReadCommittedOK(m)
+
+				m.MockReceptionRepo.EXPECT().
+					FindByStatus(ctx, domain.ReceptionStatusInProgress, domain.Reception{PvzID: f.pvzID}).
+					Return(lastReception, nil).
+					Times(1)
+
+				m.MockProductRepo.EXPECT().
+					GetLastProductInReception(ctx, lastReception.ID).
+					Return(nil, errors.New("db error")).
+					Times(1)
+			},
+			wantErr: errors.New("failed to get last product: db error"),
 		},
 		{
 			name:  "delete product error",
@@ -293,6 +439,8 @@ func TestProductUseCase_DeleteLastProduct(t *testing.T) {
 					Get(ctx, domain.PVZ{ID: f.pvzID}).
 					Return(&domain.PVZ{ID: f.pvzID}, nil).
 					Times(1)
+
+				mockTmReadCommittedOK(m)
 
 				m.MockReceptionRepo.EXPECT().
 					FindByStatus(ctx, domain.ReceptionStatusInProgress, domain.Reception{PvzID: f.pvzID}).
@@ -309,7 +457,7 @@ func TestProductUseCase_DeleteLastProduct(t *testing.T) {
 					Return(errors.New("delete error")).
 					Times(1)
 			},
-			wantErr: errors.New("products.DeleteLastProduct: failed to delete product: delete error"),
+			wantErr: errors.New("failed to delete product: delete error"),
 		},
 	}
 
@@ -321,23 +469,25 @@ func TestProductUseCase_DeleteLastProduct(t *testing.T) {
 			tt.mockFn(tt, productMocks)
 
 			useCase := New(
-				nil,
+				productMocks.MockTm,
 				productMocks.MockProductRepo,
 				productMocks.MockReceptionRepo,
 				productMocks.MockProductTypeRepo,
 				productMocks.MockPvzRepo,
 			)
 
-			product, err := useCase.DeleteLastProduct(ctx, tt.pvzID)
+			result, err := useCase.DeleteLastProduct(ctx, tt.pvzID)
 
 			if tt.wantErr != nil {
 				require.Error(t, err)
 				require.Contains(t, err.Error(), tt.wantErr.Error())
-				require.Nil(t, product)
+				require.Nil(t, result)
 				return
 			}
 
 			require.NoError(t, err)
+			require.NotNil(t, result)
+			require.NotEqual(t, uuid.Nil, result.ID)
 		})
 	}
 }

@@ -9,7 +9,6 @@ import (
 	"github.com/valeragav/avito-pvz-service/internal/usecase/product"
 	"github.com/valeragav/avito-pvz-service/internal/usecase/pvz"
 	"github.com/valeragav/avito-pvz-service/internal/usecase/reception"
-	"github.com/valeragav/avito-pvz-service/pkg/logger"
 	"github.com/valeragav/avito-pvz-service/pkg/validation"
 )
 
@@ -23,7 +22,7 @@ type App struct {
 	JwtService *security.JwtService
 }
 
-func New(cfg *config.Config, lg *logger.Logger, db *pgxpool.Pool) (*App, error) {
+func New(cfg *config.Config, db *pgxpool.Pool) (*App, error) {
 	tm := postgres.NewTransactionManager(db)
 
 	// repos

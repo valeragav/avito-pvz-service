@@ -89,7 +89,7 @@ func (s *ProductUseCase) DeleteLastProduct(ctx context.Context, pvzID uuid.UUID)
 	}
 
 	var result *domain.Product
-	err := s.tm.RunRepeatableRead(ctx, func(ctx context.Context) error {
+	err := s.tm.RunReadCommitted(ctx, func(ctx context.Context) error {
 		var txErr error
 		result, txErr = s.deleteLastProduct(ctx, pvzID)
 		return txErr
@@ -102,7 +102,7 @@ func (s *ProductUseCase) DeleteLastProduct(ctx context.Context, pvzID uuid.UUID)
 	return result, nil
 }
 
-func (s *ProductUseCase) create(ctx context.Context, pvzID uuid.UUID, typeID uuid.UUID) (*domain.Product, error) {
+func (s *ProductUseCase) create(ctx context.Context, pvzID, typeID uuid.UUID) (*domain.Product, error) {
 	lastReception, err := s.receptionRepo.FindByStatus(ctx, domain.ReceptionStatusInProgress, domain.Reception{
 		PvzID: pvzID,
 	})

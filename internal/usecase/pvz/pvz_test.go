@@ -22,6 +22,7 @@ type pvzMocks struct {
 	MockCityRepo      *mocks.MockcityRepo
 	MockReceptionRepo *mocks.MockreceptionRepo
 	MockProductRepo   *mocks.MockproductRepo
+	MockTm            *mocks.MocktransactionManager
 }
 
 func newPvZMocks(t *testing.T) *pvzMocks {
@@ -32,7 +33,17 @@ func newPvZMocks(t *testing.T) *pvzMocks {
 		MockCityRepo:      mocks.NewMockcityRepo(ctrl),
 		MockReceptionRepo: mocks.NewMockreceptionRepo(ctrl),
 		MockProductRepo:   mocks.NewMockproductRepo(ctrl),
+		MockTm:            mocks.NewMocktransactionManager(ctrl),
 	}
+}
+
+func mockTmRepeatableReadOK(m *pvzMocks) {
+	m.MockTm.EXPECT().
+		RunRepeatableRead(gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, fn func(ctx context.Context) error) error {
+			return fn(ctx)
+		}).
+		Times(1)
 }
 
 func TestPVZUseCase_Create(t *testing.T) {
@@ -229,6 +240,8 @@ func TestPVZUseCase_List(t *testing.T) {
 		{
 			name: "repo error on pvz list",
 			mockFn: func(m *pvzMocks) {
+				mockTmRepeatableReadOK(m)
+
 				m.MockPvzRepo.EXPECT().
 					ListPvzByAcceptanceDateAndCity(ctx, params.Pagination, &startDate, &endDate).
 					Return(nil, errors.New("db error")).
@@ -239,6 +252,8 @@ func TestPVZUseCase_List(t *testing.T) {
 		{
 			name: "empty pvz list",
 			mockFn: func(m *pvzMocks) {
+				mockTmRepeatableReadOK(m)
+
 				m.MockPvzRepo.EXPECT().
 					ListPvzByAcceptanceDateAndCity(ctx, params.Pagination, &startDate, &endDate).
 					Return([]*domain.PVZ{}, nil).
@@ -254,11 +269,11 @@ func TestPVZUseCase_List(t *testing.T) {
 			mockFn: func(m *pvzMocks) {
 				pvzID := uuid.New()
 
+				mockTmRepeatableReadOK(m)
+
 				m.MockPvzRepo.EXPECT().
 					ListPvzByAcceptanceDateAndCity(ctx, params.Pagination, &startDate, &endDate).
-					Return([]*domain.PVZ{
-						{ID: pvzID},
-					}, nil).
+					Return([]*domain.PVZ{{ID: pvzID}}, nil).
 					Times(1)
 
 				m.MockReceptionRepo.EXPECT().
@@ -274,18 +289,16 @@ func TestPVZUseCase_List(t *testing.T) {
 				pvzID := uuid.New()
 				receptionID := uuid.New()
 
+				mockTmRepeatableReadOK(m)
+
 				m.MockPvzRepo.EXPECT().
 					ListPvzByAcceptanceDateAndCity(ctx, params.Pagination, &startDate, &endDate).
-					Return([]*domain.PVZ{
-						{ID: pvzID},
-					}, nil).
+					Return([]*domain.PVZ{{ID: pvzID}}, nil).
 					Times(1)
 
 				m.MockReceptionRepo.EXPECT().
 					ListByIDsWithStatus(ctx, []uuid.UUID{pvzID}).
-					Return([]*domain.Reception{
-						{ID: receptionID, PvzID: pvzID},
-					}, nil).
+					Return([]*domain.Reception{{ID: receptionID, PvzID: pvzID}}, nil).
 					Times(1)
 
 				m.MockProductRepo.EXPECT().
@@ -319,6 +332,8 @@ func TestPVZUseCase_List(t *testing.T) {
 					ID:          productID,
 					ReceptionID: receptionID,
 				}
+
+				mockTmRepeatableReadOK(m)
 
 				m.MockPvzRepo.EXPECT().
 					ListPvzByAcceptanceDateAndCity(ctx, params.Pagination, &startDate, &endDate).
@@ -357,7 +372,7 @@ func TestPVZUseCase_List(t *testing.T) {
 			tt.mockFn(pvzMocks)
 
 			useCase := New(
-				nil,
+				pvzMocks.MockTm,
 				pvzMocks.MockPvzRepo,
 				pvzMocks.MockCityRepo,
 				pvzMocks.MockReceptionRepo,

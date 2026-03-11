@@ -58,10 +58,15 @@ test:
 	grep -vE '\.pb\.|_mock\.go|_gen\.go|/schema/|/logger/' coverage.out > coverage.filtered.out
 	mv coverage.filtered.out coverage.out
 
-## load-test: Run k6 load tests against the running application (requires app to be up)
-.PHONY: load-test
-load-test:
-	docker compose --profile load-test up k6-load-test --abort-on-container-exit
+## test-e2e: Run e2e tests
+.PHONY: test-e2e
+test-e2e:
+	go test ./test/e2e/... -tags e2e
+
+## test-load: Run k6 load tests against the running application (requires app to be up)
+.PHONY: test-load
+test-load:
+	docker compose --profile test-load up k6-test-load --abort-on-container-exit
 
 ## coverage: Show coverage report
 .PHONY: coverage

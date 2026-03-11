@@ -165,9 +165,9 @@ services:
     profiles:
       - seeder
 
-  k6-load-test:
+  k6-test-load:
     image: grafana/k6:1.6.0
-    container_name: avito-pvz-service_k6-load-test
+    container_name: avito-pvz-service_k6-test-load
     volumes:
       - ./test/load_test:/scripts
     networks:
@@ -177,7 +177,7 @@ services:
     restart: "no"
     command: run /scripts/load_test.js
     profiles:
-      - load-test
+      - test-load
 
 volumes:
   avito-pvz-service_pgdata:
